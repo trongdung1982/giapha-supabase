@@ -26,7 +26,7 @@
 //   để dựng và kiểm phần mềm. Dữ liệu trong đó **toàn bộ là GIẢ**
 //   (`CLAUDE.md` mục 9). Bài kiểm CHỈ ĐỌC, không ghi gì vào file ấy.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { rapCay, boCay, soSanh, coGiDeGhi } from '../js/services/hinh-dang.js';
@@ -46,6 +46,22 @@ function kiem(ten, dung, chiTiet) {
 // ------------------------------------------------------------
 // Dựng bối cảnh: file JSON thật → dòng → cây
 // ------------------------------------------------------------
+//
+// ⚠ `tai-lieu/` CỐ Ý nằm NGOÀI repo này (chủ dự án chốt 03/09/2026). Nó là
+//   bản sao Knowledge Base dùng chung cho cả hai nhánh, và repo này để Public
+//   nên đẩy 87 bước nhật ký thiết kế lên đó là việc không gỡ lại được.
+//
+//   Hệ quả: ai tải repo về từ GitHub sẽ KHÔNG có file dữ liệu, và bài kiểm
+//   này chết bằng một câu `ENOENT` chẳng nói được gì. Nên bắt trước, và nói
+//   rõ đây là chuyện bình thường chứ không phải bộ kiểm hỏng.
+if (!existsSync(FILE)) {
+  console.log('BỎ QUA — không tìm thấy file gia phả thử:\n  ' + FILE + '\n');
+  console.log('Đây KHÔNG phải lỗi của bộ kiểm. Thư mục `tai-lieu/` cố ý nằm');
+  console.log('ngoài repo `giapha-supabase`, nên bài kiểm này chỉ chạy được');
+  console.log('trên máy chủ dự án, nơi có sẵn `Claude_Code/tai-lieu/`.');
+  process.exit(0);
+}
+
 const goc = JSON.parse(readFileSync(FILE, 'utf8'));
 
 // File trên Drive không có `imports` nếu lập trước 29/08/2026, và `changeLog`
