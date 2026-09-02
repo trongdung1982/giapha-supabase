@@ -1,0 +1,22 @@
+# giapha-supabase · .gitignore
+# Cập nhật: 03/09/2026
+#
+# ⚠ REPO NÀY PHẢI ĐỂ PUBLIC — GitHub Pages trên tài khoản miễn phí chỉ phục vụ
+#   repo Public. Nghĩa là **mọi file không nằm trong danh sách dưới đây đều
+#   nhìn thấy được từ mạng**, và lịch sử git giữ lại cả những bản đã xoá sau
+#   này. Thêm gì vào repo cũng phải hỏi trước câu ấy.
+#
+#   (Lý do CŨ bắt để Public — "không thì Apps Script không nạp được module",
+#   `CLAUDE.md` mục 3 — đã hết hiệu lực trên nền này. Nhưng kết luận thì vẫn
+#   thế, chỉ đổi lý do.)
+
+# Thông tin tài khoản của chủ dự án. Giữ trên máy và trong Dropbox, KHÔNG đẩy
+# lên GitHub. Đây chỉ là địa chỉ email chứ không phải mật khẩu, nhưng một repo
+# Public không phải chỗ để dán danh sách email của người trong nhà.
+Thông tin tài khoản.txt
+
+# Rác của hệ điều hành và trình soạn thảo
+Thumbs.db
+desktop.ini
+.DS_Store
+*~

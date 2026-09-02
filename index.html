@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     giapha-supabase · index.html
+     Vai trò  : Trang thật của app trên nền Supabase.
+     Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+
+     ⚠ KHÁC HẲN `gas/index.html` của bản cũ. File kia là một VỎ MỎNG đặt bên
+       trong Apps Script, chỉ để nạp mã thật từ GitHub Pages về. File này
+       chính là trang — mã và trang nay ở cùng một chỗ, không còn nhịp trung
+       gian nào, và cũng không còn màn hình "Google chưa xác minh ứng dụng".
+
+     Không sửa file này để đổi cấu hình. Mọi giá trị phải điền nằm ở
+     `js/cau-hinh.js`.
+     ============================================================ -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- Bước H7 của KE-HOACH-HA-TANG. Gia phả là dữ liệu riêng của dòng họ;
+       không có lý do gì để nó nằm trong kết quả tìm kiếm.
+       ⚠ Thẻ này chỉ nhờ công cụ tìm kiếm tử tế bỏ qua — nó KHÔNG phải rào
+         chắn. Rào chắn thật là Row Level Security: người chưa đăng nhập tải
+         trang này về cũng chỉ thấy một ô đăng nhập trống. -->
+  <meta name="robots" content="noindex, nofollow">
+
+  <title>Gia phả</title>
+
+  <style>
+    html, body { margin:0; height:100%; }
+    body { font-family: system-ui, sans-serif;
+           background:#faf8f5; color:#2a2622; overscroll-behavior:none; }
+    #app { position:fixed; inset:0; }
+    #loi { position:fixed; inset:0; padding:24px; background:#faf8f5;
+           color:#c62828; line-height:1.6; font-size:15px; }
+    #loi code { background:#f0ece6; padding:2px 5px; border-radius:4px;
+                color:#2a2622; word-break:break-all; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="loi" hidden>
+    <p><b>Không tải được ứng dụng.</b></p>
+    <p>Trình duyệt không nạp được mã từ:<br><code id="loi-dia-chi"></code></p>
+    <p>Ba nguyên nhân thường gặp, theo thứ tự hay xảy ra:</p>
+    <ol>
+      <li>Vừa đẩy mã lên GitHub chưa đến một phút — đợi rồi tải lại trang.</li>
+      <li>Thiếu file <code>js/vendor/supabase.js</code> trong repo.</li>
+      <li>Mở file bằng cách bấm đúp từ ổ đĩa. ES Modules không chạy kiểu ấy —
+          phải mở qua một địa chỉ <code>http://</code> hoặc
+          <code>https://</code>.</li>
+    </ol>
+  </div>
+
+  <!-- ⚠ THƯ VIỆN SUPABASE NẠP BẰNG THẺ <script> THƯỜNG, KHÔNG PHẢI MODULE.
+       Supabase không phát hành bản ES Module một file; bản duy nhất chạy
+       thẳng trong trình duyệt không qua bước build là bản UMD, và bản UMD
+       đặt biến toàn cục `window.supabase`. Dự án không có bước build
+       (`CLAUDE.md` mục 3), nên đây là đường duy nhất.
+
+       Thẻ này phải đứng TRƯỚC `js/app.js`. Script thường chạy xong mới tới
+       lượt module, nên thứ tự này bảo đảm `window.supabase` đã có mặt lúc
+       `services/sb.js` cần tới. Đổi chỗ hai thẻ là app hỏng, và hỏng bằng
+       một câu lỗi không nói gì về nguyên nhân.
+
+       File nằm TRONG repo, không nạp từ CDN — luật đã chốt 01/09/2026, xem
+       `js/vendor/DOC-VENDOR.md`. -->
+  <script src="js/vendor/supabase.js"></script>
+
+  <script>
+    // Bắt lỗi nạp module để hiện được khối #loi ở trên. `<script type=module>`
+    // hỏng thì im lặng tuyệt đối — không có onerror nào bắn ra tới đây nếu
+    // không tự gắn.
+    window.addEventListener('error', function (e) {
+      if (e && e.target && e.target.tagName === 'SCRIPT') {
+        var dc = document.getElementById('loi-dia-chi');
+        if (dc) dc.textContent = e.target.src || '(không rõ)';
+        var l = document.getElementById('loi');
+        if (l) l.hidden = false;
+      }
+    }, true);
+  </script>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
