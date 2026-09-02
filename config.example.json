@@ -1,0 +1,7 @@
+{
+  "delayMinutes": 10,
+  "urls": [
+    "https://your-project-1.supabase.co/rest/v1/",
+    "https://your-project-2.supabase.co/rest/v1/"
+  ]
+}
