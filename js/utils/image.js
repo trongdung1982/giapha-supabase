@@ -113,7 +113,7 @@ export async function compressImage(file, tuyChon = {}) {
  * Giữ tham số lại chỉ để tám chỗ gọi khỏi phải sửa.
  *
  * ⚠ Kho `anh` để công khai, nên đường dẫn này ai có cũng mở được. Đó là một
- * quyết định về riêng tư, chưa được chủ dự án chốt — xem `DOC-KHUNG.md`
+ * quyết định về riêng tư, chưa được chủ dự án chốt — xem `KIEN-TRUC.md`
  * mục *"Ảnh: kho công khai hay kho kín"*.
  *
  * @param {string} duongDan  giá trị của `media.driveFileId`, nay là đường dẫn

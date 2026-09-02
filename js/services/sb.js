@@ -472,7 +472,7 @@ export async function xoaAnhThat(dsDuongDan) {
 //
 // `pages/backup.js` đang import bốn hàm ấy qua `services/tuong-thich.js` — file đó
 // không còn tồn tại trong `supabase/`, nên **màn hình Sao lưu chưa mở được**. Đó là
-// một trong bốn việc còn dở ghi ở `DOC-KHUNG.md` mục 7.
+// một trong bốn việc còn dở ghi ở `KIEN-TRUC.md` mục 6.
 //
 // **Dựng gia phả mới** (`gas.taoFileDuLieuMoi`). Trên Postgres việc này là
 // `insert into trees` + `insert into tree_members`, và nó phải là một hàm

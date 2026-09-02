@@ -10,7 +10,7 @@
 //   sót. Gia phả là dữ liệu riêng của một dòng họ; ai được vào là do chủ dự
 //   án quyết, không phải do người ta tự ghi tên. Người mới được thêm bằng
 //   tay trong Supabase (Authentication → Add user), rồi thêm một dòng vào
-//   bảng `tree_members`. Xem `DOC-KHUNG.md` mục "Thêm một người trong họ".
+//   bảng `tree_members`. Xem `HUONG-DAN-DUNG-BANG.md` mục "Thêm một người trong họ".
 //
 //   Nếu ngày nào mở đăng ký tự do thì phải nhớ: `02-rls.sql` cho **mọi**
 //   người đã đăng nhập gọi được `layPhien()`. Họ chưa thấy được gia phả nào

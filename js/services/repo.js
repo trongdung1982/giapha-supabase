@@ -297,7 +297,7 @@ function canhBaoThieuUid(cay) {
  *
  * Nhưng nó phải là một hàm `security definer` trong cơ sở dữ liệu, vì
  * `02-rls.sql` cố ý không cấp cho trình duyệt quyền ghi vào `trees`. Hàm ấy
- * chưa viết — xem `DOC-KHUNG.md` mục 7.
+ * chưa viết — xem `KIEN-TRUC.md` mục 6.
  */
 export async function taoGiaPhaMoi() {
   return {

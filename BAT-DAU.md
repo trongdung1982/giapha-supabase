@@ -4,14 +4,17 @@
 
 > **File này là chỗ đứng của phiên ĐẦU TIÊN làm nhánh Supabase.**
 >
-> **V1.2 (03/09/2026): bộ khung ĐÃ DỰNG XONG.** Mục 3 nay ghi cả repo, địa chỉ
-> app và project Supabase. Đọc tiếp `DOC-KHUNG.md` — nó kể khung gồm những gì,
-> ba quyết định kiến trúc, và **mục 7 kể đúng những gì còn dở**. Rồi
-> `HUONG-DAN-DUNG-BANG.md` cho các bước bấm tay.
+> **V1.2 (03/09/2026): bộ khung ĐÃ DỰNG XONG, và file này thôi làm chỗ đứng
+> hằng ngày.** Từ nay nó là **chứng cứ gốc** — vì sao chuyển nhà, đã chốt
+> những gì — và không sửa nữa trừ khi có quyết định mới.
+>
+> **Chỗ đứng hằng ngày nay là `CHI-DAN.md`** (bảng định tuyến, 80 dòng).
+> Từ đó đi tiếp: `KIEN-TRUC.md` · `DU-LIEU.md` · `KE-HOACH.md` ·
+> `nhat-ky/INDEX.md`. Chủ dự án cần bấm tay thì mở `HUONG-DAN-DUNG-BANG.md`.
 >
 > ⚠ Khung dựng xong **không phải app chạy được**: chưa có project Supabase nào
-> nhận bốn file SQL, chưa ai đăng nhập được. Đừng đọc mục nào khác mà bỏ mục 7
-> của `DOC-KHUNG.md`.
+> nhận bốn file SQL, chưa ai đăng nhập được. **`KIEN-TRUC.md` mục 6** kể đúng
+> những gì còn dở — đừng đọc mục nào khác mà bỏ nó.
 >
 > **V1.1 thêm mục 6 — số đo về VẼ SƠ ĐỒ.** Bản Apps Script đóng băng ở bước 84,
 > nhưng phần VẼ vẫn chạy tiếp tới **bước 86** (02/09/2026): luật ba khối nay là

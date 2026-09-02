@@ -334,7 +334,7 @@ create table if not exists public.user_settings (
 -- 12. KHO ẢNH
 -- ============================================================
 -- ⚠ `public = true` là một QUYẾT ĐỊNH VỀ RIÊNG TƯ, chưa được chủ dự án chốt.
---   Xem `DOC-KHUNG.md` mục "Ảnh: kho công khai hay kho kín". Tóm tắt: kho
+--   Xem `KIEN-TRUC.md` mục 7 "Ảnh: kho công khai hay kho kín". Tóm tắt: kho
 --   công khai cho đường dẫn đoán trước được, nên `utils/image.js` dựng được
 --   URL mà không phải gọi máy chủ — 661 ô trên sơ đồ là 661 tấm, và xin chữ
 --   ký cho từng tấm là một vòng mạng nữa mỗi lần vẽ. Đổi lại, ai biết đường
