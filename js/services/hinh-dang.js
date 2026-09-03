@@ -4,7 +4,7 @@
 //            Ráp dòng thành cây, và so hai cây ra danh sách phép ghi.
 // Lớp      : services — được gọi bởi: services/repo · gọi: utils/date
 // Phụ thuộc: utils/date.js
-// Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+// Phiên bản: 0.2.0 · Cập nhật: 03/09/2026 14:24
 // ============================================================
 //
 // ═══ FILE NÀY LÀ CHỖ DUY NHẤT HAI THẾ GIỚI GẶP NHAU ═══
@@ -62,8 +62,72 @@ const TEN_MEDIA = {
 
 const TEN_SOURCE = { id: null, title: null, author: null, note: null };
 
+// ============================================================
+// BẢNG MẶC ĐỊNH — trường vắng mặt phải thành GIÁ TRỊ RỖNG, không thành `null`
+// ============================================================
+//
+// ⚠ ĐÂY LÀ CHỖ ĐÃ TỪNG HỎNG THẬT (03/09/2026, ngay lần thêm người đầu tiên):
+//   `null value in column "vn" of relation "persons" violates not-null
+//   constraint`. `domains/person.js` dựng người mới không có khoá `vn` —
+//   đúng, vì `vn` chỉ mọc ra khi người dùng điền Đời / Chi / ngày giỗ.
+//
+// Vì sao `default` của Postgres KHÔNG cứu được:
+//
+//   1. Gửi `null` tường minh thì `default` không áp — `default` chỉ áp cho
+//      cột VẮNG MẶT trong câu `insert`.
+//   2. Mà bỏ khoá ra cho vắng mặt cũng không cứu, vì `luu_cay()` đi qua
+//      `jsonb_populate_recordset(null::public.persons, …)`: khoá thiếu trong
+//      JSON cho ra cột `null`, chứ không cho ra `default`.
+//
+//   Nói cách khác, `not null default '{}'` của lược đồ là **hàng rào**, không
+//   phải chỗ điền hộ. Chỗ điền hộ là đây, và chỉ ở đây.
+//
+// Khoá nào KHÔNG có trong bảng này thì cột ấy nhận `null` được (`branch_id`,
+// `media.year`), hoặc bắt buộc phải có sẵn (`id`) — thiếu `id` thì phải hỏng
+// ầm ĩ ngay, đừng lấy chuỗi rỗng che đi.
+//
+// Giá trị phải khớp từng chữ với `default` ở `luoc-do/01-bang.sql`. Bài kiểm
+// `kiem-thu/kiem-hinh-dang.mjs` phép 4 đọc thẳng file SQL ấy để đối chiếu,
+// nên thêm cột `not null` mới mà quên khai ở đây là bộ kiểm đỏ ngay.
+
+const NGAY_RONG = { iso: null, raw: '', place: '' };
+
+const MAC_DINH_PERSON = {
+  uid: '', names: [], sex: 'U', birth: NGAY_RONG, death: NGAY_RONG,
+  burialPlace: '',
+  title: '', occupation: '', education: '', religion: '',
+  residence: '', nationality: '',
+  living: true, photoFileId: '', note: '', deleted: false,
+  vn: {}, meta: {},
+};
+
+const MAC_DINH_UNION = {
+  uid: '', partners: [], partnerOrder: [], ranks: {},
+  status: 'unknown', marriage: NGAY_RONG, note: '', deleted: false,
+};
+
+const MAC_DINH_MEDIA = {
+  subjectId: '', driveFileId: '', driveFileIdLon: '', caption: '',
+  deleted: false, meta: {},
+};
+
+const MAC_DINH_SOURCE = { title: '', author: '', note: '' };
+
 /** Tên cột của một trường. */
 const cot = (bang, khoa) => bang[khoa] || khoa;
+
+/**
+ * Bản sao của giá trị mặc định.
+ *
+ * ⚠ Phải CHÉP, không được dùng chung. Trả thẳng `NGAY_RONG` ra thì mọi người
+ *   mới trong một lần lưu cùng trỏ vào một object; hôm nay chưa ai sửa tại
+ *   chỗ nên chưa hỏng, nhưng đó là loại lỗi chỉ lộ ra rất lâu về sau.
+ */
+function macDinh(bang, khoa) {
+  const v = bang[khoa];
+  if (v === undefined) return null;
+  return v !== null && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+}
 
 /** Một dòng Postgres → một bản ghi hình camelCase. */
 function veCay(bang, dong) {
@@ -73,11 +137,13 @@ function veCay(bang, dong) {
 }
 
 /** Một bản ghi camelCase → một dòng hình snake_case. */
-function veBang(bang, banGhi) {
+function veBang(bang, mac, banGhi) {
   const ra = {};
   for (const khoa of Object.keys(bang)) {
     const v = banGhi[khoa];
-    ra[cot(bang, khoa)] = v === undefined ? null : v;
+    // `undefined` VÀ `null` đều phải điền hộ: bản ghi trình duyệt vừa dựng thì
+    // thiếu hẳn khoá, còn bản ghi đi qua GEDCOM/Excel có thể mang `null` thật.
+    ra[cot(bang, khoa)] = v === undefined || v === null ? macDinh(mac, khoa) : v;
   }
   return ra;
 }
@@ -205,7 +271,8 @@ export function boCay(cay, treeId) {
     }
   }
 
-  const gan = (bang, ds) => (ds || []).map((b) => ({ tree_id: treeId, ...veBang(bang, b) }));
+  const gan = (bang, mac, ds) =>
+    (ds || []).map((b) => ({ tree_id: treeId, ...veBang(bang, mac, b) }));
 
   return {
     tree: {
@@ -218,11 +285,11 @@ export function boCay(cay, treeId) {
       revision:       cay.tree.revision || 0,
       updated_by:     cay.tree.updatedBy || '',
     },
-    persons:  gan(TEN_PERSON, cay.persons),
-    unions:   gan(TEN_UNION,  cay.unions),
+    persons:  gan(TEN_PERSON, MAC_DINH_PERSON, cay.persons),
+    unions:   gan(TEN_UNION,  MAC_DINH_UNION,  cay.unions),
     children,
-    media:    gan(TEN_MEDIA,  cay.media),
-    sources:  gan(TEN_SOURCE, cay.sources),
+    media:    gan(TEN_MEDIA,  MAC_DINH_MEDIA,  cay.media),
+    sources:  gan(TEN_SOURCE, MAC_DINH_SOURCE, cay.sources),
     imports: (cay.imports || []).map((e) => ({
       tree_id: treeId, by_email: e.by || '', file: e.file || '',
       source: e.source || '', source_name: e.sourceName || '',
@@ -262,11 +329,11 @@ export function boCay(cay, treeId) {
 export function soSanh(cu, moi) {
   return {
     tree:     soSanhKhoiCay(cu.tree, moi.tree),
-    persons:  soSanhMang(TEN_PERSON, cu.persons, moi.persons),
-    unions:   soSanhMang(TEN_UNION,  cu.unions,  moi.unions),
+    persons:  soSanhMang(TEN_PERSON, MAC_DINH_PERSON, cu.persons, moi.persons),
+    unions:   soSanhMang(TEN_UNION,  MAC_DINH_UNION,  cu.unions,  moi.unions),
     children: soSanhCon(cu.unions, moi.unions),
-    media:    soSanhMang(TEN_MEDIA,  cu.media,   moi.media),
-    sources:  soSanhMang(TEN_SOURCE, cu.sources, moi.sources),
+    media:    soSanhMang(TEN_MEDIA,  MAC_DINH_MEDIA,  cu.media,   moi.media),
+    sources:  soSanhMang(TEN_SOURCE, MAC_DINH_SOURCE, cu.sources, moi.sources),
     imports:  themMoi(cu.imports, moi.imports),
   };
 }
@@ -295,7 +362,7 @@ function soSanhKhoiCay(cu, moi) {
   };
 }
 
-function soSanhMang(bang, dsCu, dsMoi) {
+function soSanhMang(bang, mac, dsCu, dsMoi) {
   const cu  = theoMa(dsCu);
   const luu = [];
   const xoa = [];
@@ -303,8 +370,17 @@ function soSanhMang(bang, dsCu, dsMoi) {
   for (const banGhi of dsMoi || []) {
     if (!banGhi || !banGhi.id) continue;
     const truoc = cu.get(banGhi.id);
-    if (!truoc || !bangNhau(truoc, banGhi, Object.keys(bang))) {
-      luu.push(veBang(bang, banGhi));
+
+    // ⚠ So DÒNG SẼ GHI XUỐNG, không so hai bản ghi thô. Hai bản ghi cùng nội
+    //   dung vẫn có thể khác nhau về hình: bản đọc từ Postgres mang `vn: {}`,
+    //   bản đọc từ một file JSON sao lưu thì đơn giản là không có khoá `vn`.
+    //   So thô thì cả 681 người đều "đổi" ở mỗi lần khôi phục — đúng cái hỏng
+    //   mà phép kiểm số 2 của `kiem-hinh-dang.mjs` sinh ra để bắt.
+    //   So sau khi điền mặc định thì câu hỏi trở về đúng thứ đáng hỏi:
+    //   *ghi xuống có làm đổi dòng nào không?*
+    const dongMoi = veBang(bang, mac, banGhi);
+    if (!truoc || !bangNhau(veBang(bang, mac, truoc), dongMoi, Object.keys(dongMoi))) {
+      luu.push(dongMoi);
     }
     cu.delete(banGhi.id);
   }

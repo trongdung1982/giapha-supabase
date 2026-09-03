@@ -3,7 +3,7 @@
 // Vai trò  : Kiểm `services/hinh-dang.js` bằng gia phả thật, chạy trong Node.
 //            Không cần Supabase, không cần mạng, không cần trình duyệt.
 // Chạy     : cd supabase/kiem-thu && node kiem-hinh-dang.mjs
-// Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+// Phiên bản: 0.2.0 · Cập nhật: 03/09/2026 14:24
 // ============================================================
 //
 // ═══ BA CÂU HỎI BÀI KIỂM NÀY TRẢ LỜI ═══
@@ -198,6 +198,121 @@ if (uCoCon) {
        keOps(ops4));
 } else {
   console.log('  BỎ QUA  không có cặp nào có con để thử');
+}
+
+// ------------------------------------------------------------
+// 4. Cột `not null` không bao giờ được nhận `null`
+// ------------------------------------------------------------
+//
+// ⚠ PHÉP KIỂM NÀY SINH RA TỪ MỘT LỖI THẬT (03/09/2026). Lần thêm người đầu
+//   tiên trên app thật báo:
+//     null value in column "vn" of relation "persons" violates not-null
+//   `domains/person.js` dựng người mới không có khoá `vn` — đúng, vì `vn`
+//   chỉ mọc ra khi người dùng điền Đời / Chi / ngày giỗ. `veBang()` khi ấy
+//   đổi mọi khoá thiếu thành `null`, và `default` của Postgres không cứu:
+//   `luu_cay()` đi qua `jsonb_populate_recordset`, nơi khoá thiếu cho ra
+//   `null` chứ không cho ra `default`.
+//
+// Danh sách cột đọc THẲNG từ `luoc-do/01-bang.sql`, không chép tay. Chép tay
+// thì ngày ai đó thêm một cột `not null` mới, bộ kiểm vẫn xanh — mà đó đúng
+// là ngày cần nó đỏ.
+console.log('\n4. Cột not null không nhận null');
+
+const FILE_SQL = resolve(DAY, '../luoc-do/01-bang.sql');
+const sql = readFileSync(FILE_SQL, 'utf8');
+
+/** Tên các cột `not null` của một bảng, đọc từ file SQL. */
+function cotBatBuoc(tenBang) {
+  const m = sql.match(new RegExp('create table if not exists public\\.' +
+                                 tenBang + '\\s*\\(([\\s\\S]*?)\\n\\);'));
+  if (!m) return null;
+  const ra = [];
+  for (const dong of m[1].split('\n')) {
+    const sach = dong.replace(/--.*$/, '').trim();
+    if (!/not null/i.test(sach)) continue;
+    const ten = sach.match(/^([a-z_]+)\s+/);
+    if (!ten) continue;                       // primary key / foreign key / constraint
+    if (['primary', 'foreign', 'constraint', 'unique', 'check'].includes(ten[1])) continue;
+    if (ten[1] === 'tree_id') continue;        // `luu_cay()` tự gắn, không đi qua veBang
+    ra.push(ten[1]);
+  }
+  return ra;
+}
+
+// Người mới TOANH, dựng đúng như `domains/person.js` dựng: không có `vn`,
+// không có `branchId`. Đây chính là bản ghi đã làm hỏng app thật.
+const nguoiMoiToanh = {
+  id: 'P9999',
+  uid: 'THU_P9999',
+  names: [], sex: 'U',
+  birth: { iso: null, raw: '', place: '' },
+  death: { iso: null, raw: '', place: '' },
+  burialPlace: '', title: '', occupation: '', education: '',
+  religion: '', residence: '', nationality: '',
+  living: true, photoFileId: '', note: '', deleted: false,
+  meta: { createdAt: '', updatedAt: '', updatedBy: '' },
+};
+
+const cayThemNguoi = JSON.parse(JSON.stringify(lai));
+cayThemNguoi.persons.push(nguoiMoiToanh);
+const opsThem = soSanh(lai, cayThemNguoi);
+
+kiem('thêm một người → đúng 1 dòng persons',
+     opsThem.persons.luu.length === 1, keOps(opsThem));
+
+// Quét CẢ BỐN bảng, không chỉ `persons`. Cùng một cái sai nằm sẵn ở `unions`
+// (`ranks`, `partner_order`), chỉ là chưa ai chạm tới nó.
+const BANG = [
+  ['persons',  'persons'],
+  ['unions',   'unions'],
+  ['media',    'media'],
+  ['sources',  'sources'],
+];
+
+// ⚠ PHÉP KIỂM CỦA PHÉP KIỂM. `cotBatBuoc()` đọc file SQL bằng biểu thức
+//   chính quy; hỏng biểu thức ấy thì nó trả về danh sách RỖNG, và phép quét
+//   dưới đây sẽ "đạt" mà chẳng kiểm gì cả. Một bộ kiểm xanh vì không kiểm gì
+//   còn tệ hơn không có bộ kiểm, nên đếm luôn ở đây.
+const demCot = BANG.map(([t]) => t + '=' + (cotBatBuoc(t) || []).length).join(' · ');
+kiem('đọc được danh sách cột not null từ 01-bang.sql',
+     (cotBatBuoc('persons') || []).length >= 15 &&
+     (cotBatBuoc('unions')  || []).length >= 7 &&
+     (cotBatBuoc('media')   || []).length >= 6 &&
+     (cotBatBuoc('sources') || []).length >= 3,
+     demCot);
+
+const nullSai = [];
+for (const [tenBang, tenOps] of BANG) {
+  const batBuoc = cotBatBuoc(tenBang);
+  if (batBuoc === null) { nullSai.push(tenBang + ': không đọc được lược đồ'); continue; }
+
+  // Mọi dòng sinh ra trong bài kiểm này: dòng của `boCay` (cả cây) và dòng
+  // của `soSanh` (chỉ phần đổi). Cả hai đường đều phải sạch.
+  const dsDong = (dong[tenBang] || []).concat(opsThem[tenOps] ? opsThem[tenOps].luu : []);
+  for (const d of dsDong) {
+    for (const c of batBuoc) {
+      if (d[c] === null || d[c] === undefined) {
+        nullSai.push(tenBang + '.' + c + ' = null  (dòng ' + (d.id || '?') + ')');
+      }
+    }
+  }
+}
+
+kiem('không dòng nào có null ở cột not null', nullSai.length === 0,
+     [...new Set(nullSai)].slice(0, 8).join('\n        '));
+
+// Và mỗi người mới phải mang một object `vn` RIÊNG, không dùng chung.
+if (opsThem.persons.luu.length === 1) {
+  const a = opsThem.persons.luu[0];
+  const cayHaiNguoi = JSON.parse(JSON.stringify(cayThemNguoi));
+  cayHaiNguoi.persons.push({ ...nguoiMoiToanh, id: 'P9998', uid: 'THU_P9998' });
+  const hai = soSanh(lai, cayHaiNguoi).persons.luu;
+  kiem('hai người mới không dùng chung một object vn',
+       hai.length === 2 && hai[0].vn !== hai[1].vn && hai[0].birth !== hai[1].birth,
+       'số dòng = ' + hai.length);
+  kiem('vn của người mới là {} chứ không phải null',
+       a.vn !== null && typeof a.vn === 'object' && Object.keys(a.vn).length === 0,
+       JSON.stringify(a.vn));
 }
 
 // ------------------------------------------------------------
