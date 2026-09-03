@@ -1,11 +1,18 @@
 # HƯỚNG DẪN DỰNG BẢN SAO LƯU TỰ ĐỘNG
 
-*Lập 03/09/2026 17:30 · Nhánh Supabase · dành cho CHỦ DỰ ÁN, không phải cho AI*
+*Lập 03/09/2026 17:30 · Viết lại 04/09/2026 (bỏ khoá bí mật) · Nhánh Supabase
+· dành cho CHỦ DỰ ÁN, không phải cho AI*
 
-> Làm một lần, khoảng 20 phút. Sau đó mỗi đêm máy tự chạy, không phải bấm gì nữa.
+> Làm một lần, khoảng 30 phút. Sau đó mỗi đêm máy tự chạy, không phải bấm gì nữa.
 >
-> **Việc này làm TRƯỚC khi nhập dữ liệu thật.** Nhập gia phả thật vào một hệ
-> thống chưa có sao lưu là việc không sửa lại được.
+> **Việc này làm TRƯỚC khi nhập dữ liệu thật.** Hôm nay dữ liệu còn là dữ liệu
+> giả nên chưa có gì để mất — nhưng cơ chế phải chạy được và phải được nhìn tận
+> mắt một lần *trước* ngày gia phả thật vào bảng.
+>
+> ⚠ **Bản này đã đổi cách làm so với lần đầu (03/09/2026).** Không còn dùng
+> khoá bí mật — nó không chạy được từ Apps Script, và loại thay thế thì sắp bị
+> khai tử. Nay sao lưu đăng nhập bằng một tài khoản riêng chỉ-đọc. Ai đã làm
+> theo bản cũ thì bỏ hết và làm lại từ bước 1; mất thêm khoảng 10 phút.
 
 ---
 
@@ -34,25 +41,109 @@ dự án Apps Script hoàn toàn mới, trống trơn, chỉ để làm việc s
 
 ---
 
-## Bước 1 — Lấy khoá bí mật của Supabase
+## Bước 1 — Chạy file SQL mở đường cho sao lưu
+
+Chạy đúng một lần. File này **không đụng vào dữ liệu gia phả** — nó chỉ thêm
+một vai mới và ba luật đọc.
 
 1. Mở `https://supabase.com`, đăng nhập, bấm vào project gia phả.
-2. Cột trái, cuối cùng: bánh răng **Project Settings**.
-3. Bấm **API Keys**.
-4. Tìm mục **Secret keys** *(không phải "Publishable key" — đó là khoá khác)*.
-5. Bấm biểu tượng con mắt để hiện khoá ra, rồi bấm biểu tượng chép.
+2. Cột trái, bấm biểu tượng **SQL Editor** *(hình tờ giấy có chữ SQL)*.
+3. Bấm **New query**.
+4. Trên máy mở file `Claude_Code\supabase\luoc-do\05-sao-luu.sql`
+   *(chuột phải → Open with → Notepad)*, **Ctrl + A**, **Ctrl + C**.
+5. Dán vào ô soạn thảo của SQL Editor, bấm **Run** *(hoặc Ctrl + Enter)*.
 
-Khoá đúng là một chuỗi **bắt đầu bằng `sb_secret_`**.
+Chạy xong phải hiện **Success. No rows returned**. Chạy lại nhiều lần cũng
+không sao — file viết để không sinh rác.
 
-> ⚠ **Khoá này mở được mọi thứ và bỏ qua mọi phân quyền.** Từ giờ tới hết bước
-> 4, nó nằm trong bộ nhớ tạm của máy. **Đừng dán nó vào chat, vào email, vào
-> Notepad, vào file nào trong thư mục dự án.** Chỗ duy nhất được dán là ô ở
-> bước 4. Lỡ dán nhầm đâu đó thì quay lại đúng màn hình này bấm **Revoke** rồi
-> tạo khoá mới — khoá cũ chết ngay, không sao cả.
+> **Nó vừa làm gì?** Thêm vai `sao_luu` — một vai **chỉ đọc**, không sửa được
+> gì — rồi mở cho vai ấy đọc đủ ba chỗ mà phân quyền vốn che: quyền theo nhánh,
+> cài đặt riêng, và danh sách tài khoản. Vì sao phải làm thế thay vì dùng một
+> cái "chìa vạn năng": xem khung ở cuối bước 3.
 
 ---
 
-## Bước 2 — Tạo dự án Apps Script mới
+## Bước 2 — Tạo tài khoản riêng cho việc sao lưu
+
+Tài khoản này không phải người thật. Nó chỉ để máy dùng khi đi chép dữ liệu.
+
+### 2a. Tạo tài khoản
+
+1. Vẫn ở Supabase, cột trái bấm **Authentication** → **Users**.
+2. Bấm nút **Add user** → chọn **Create new user**.
+3. Điền:
+   - **Email**: `sao-luu@nguyentrongbac.io.vn`
+     *(không cần là hộp thư có thật — không ai gửi thư tới đây)*
+   - **Password**: bấm nút sinh mật khẩu ngẫu nhiên nếu có, hoặc tự gõ một
+     chuỗi **dài, lộn xộn, không liên quan gì tới bạn**.
+   - Bật **Auto Confirm User** nếu có ô ấy.
+4. Bấm **Create user**.
+
+⚠ **Chép mật khẩu ra chỗ tạm ngay lúc này** — Supabase không cho xem lại. Lỡ
+mất thì quay lại đúng màn hình này bấm **Reset password**, không sao cả.
+
+### 2b. Chép mã của tài khoản vừa tạo
+
+Trong danh sách Users, bấm vào dòng vừa tạo. Có một dòng **User UID** — chuỗi
+dài kiểu `a1b2c3d4-…`. Bấm chép nó.
+
+### 2c. Cho tài khoản ấy vào cây
+
+1. Cột trái, quay lại **SQL Editor** → **New query**.
+2. Dán câu dưới đây, **thay `<DÁN_USER_UID>` bằng chuỗi vừa chép**:
+
+```sql
+insert into public.tree_members (tree_id, user_id, role)
+select id, '<DÁN_USER_UID>', 'sao_luu' from public.trees
+on conflict do nothing;
+```
+
+3. Bấm **Run**.
+
+> Câu này thêm tài khoản sao lưu vào **mọi cây đang có**. Sau này dựng thêm cây
+> mới thì chạy lại đúng câu ấy — `on conflict do nothing` khiến chạy lại không
+> hỏng gì.
+
+**Tự kiểm:** chạy tiếp câu này, phải ra ít nhất một dòng có `role = sao_luu`:
+
+```sql
+select tree_id, role from public.tree_members where role = 'sao_luu';
+```
+
+---
+
+## Bước 3 — Lấy khoá CÔNG KHAI
+
+1. Cột trái, bánh răng **Project Settings** → **API Keys**.
+2. Tìm dòng **Publishable key**, bấm biểu tượng chép.
+
+Khoá đúng **bắt đầu bằng `sb_publishable_`**.
+
+> ### ⚠ Lần này KHÔNG lấy khoá bí mật — và đây là lý do
+>
+> Bản sao lưu đầu tiên (03/09/2026) dùng khoá bí mật, và **không chạy nổi**:
+>
+> - Supabase từ chối khoá `sb_secret_…` khi thấy yêu cầu gửi từ thứ trông
+>   giống trình duyệt — nó nhận dạng bằng chữ ký `User-Agent`. Mà Apps Script
+>   **luôn** gửi `Mozilla/5.0 (compatible; Google-Apps-Script; …)`, và **Google
+>   không cho đổi** dòng ấy. Hai luật đụng nhau, không bên nào nhường.
+> - Đường vòng duy nhất là khoá `service_role` đời cũ (`eyJ…`) — nhưng
+>   **Supabase khai tử loại khoá ấy cuối năm 2026**, nên đi đường ấy là hẹn
+>   trước ngày hỏng.
+>
+> Nên cách làm đã đổi hẳn: sao lưu **đăng nhập như một người thường** mang vai
+> `sao_luu`, dùng khoá công khai — loại khoá sinh ra để lộ, không bị chặn, và
+> không có hạn dùng.
+>
+> **Và cách này chặt hơn cách cũ, không phải đánh đổi.** Khoá bí mật vượt qua
+> mọi phân quyền: cầm nó là đọc được *và ghi được* mọi thứ, ở mọi cây, mãi mãi.
+> Vai `sao_luu` thì **không ghi được một dòng nào** — mật khẩu này lọt ra ngoài
+> cũng không ai sửa được gia phả. Thu lại cũng dễ: xoá một dòng trong
+> `tree_members` là xong.
+
+---
+
+## Bước 4 — Tạo dự án Apps Script mới
 
 1. Mở `https://script.google.com`.
 2. Góc trái trên, bấm nút **New project** *(hoặc "Dự án mới")*.
@@ -61,7 +152,7 @@ Khoá đúng là một chuỗi **bắt đầu bằng `sb_secret_`**.
 
 ---
 
-## Bước 3 — Dán mã vào
+## Bước 5 — Dán mã vào
 
 1. Giữa màn hình có một ô soạn thảo, trong đó sẵn mấy dòng
    `function myFunction() { }`. Bấm vào ô ấy, nhấn **Ctrl + A** rồi **Delete**
@@ -77,20 +168,35 @@ Khoá đúng là một chuỗi **bắt đầu bằng `sb_secret_`**.
 
 ---
 
-## Bước 4 — Cất hai giá trị cấu hình
+## Bước 6 — Cất bốn giá trị cấu hình
 
 1. Cột trái, bấm bánh răng **Project Settings**.
 2. Kéo xuống cuối, mục **Script Properties**.
-3. Bấm **Add script property**. Điền:
-   - **Property**: `SUPABASE_URL`
-   - **Value**: `https://hrmwkpnvenezeyhqmmrw.supabase.co`
-4. Bấm **Add script property** lần nữa. Điền:
-   - **Property**: `KHOA_BI_MAT`
-   - **Value**: dán khoá đã chép ở bước 1 *(chuỗi `sb_secret_…`)*
-5. Bấm **Save script properties**.
+3. Bấm **Add script property** bốn lần, mỗi lần điền một dòng dưới đây:
+
+| Property | Value |
+|---|---|
+| `SUPABASE_URL` | `https://hrmwkpnvenezeyhqmmrw.supabase.co` |
+| `KHOA_CONG_KHAI` | khoá đã chép ở **bước 3** *(chuỗi `sb_publishable_…`)* |
+| `EMAIL_SAO_LUU` | email tài khoản tạo ở **bước 2** *(`sao-luu@nguyentrongbac.io.vn`)* |
+| `MAT_KHAU_SAO_LUU` | mật khẩu đã chép ở **bước 2** |
+
+4. Bấm **Save script properties**.
+
+⚠ **Nếu còn dòng `KHOA_BI_MAT` từ lần trước thì xoá hẳn nó đi** (biểu tượng
+thùng rác). Bản sao lưu này không dùng khoá bí mật nữa, và để nó nằm lại chỉ
+tổ có ngày ai đó tưởng nó còn tác dụng.
+
+⚠ Dán mật khẩu bằng **Ctrl + V**, đừng gõ tay. Và nếu mật khẩu có khoảng trắng
+ở đầu hoặc cuối thì giữ nguyên — mã **không** tự cắt, vì cắt lén đi thì lỗi
+hiện ra sẽ là "sai mật khẩu", dẫn bạn đi tìm sai chỗ.
 
 > Đây là chỗ riêng tư thật: nó nằm trong tài khoản Google của bạn, không nằm
 > trong repo GitHub, không ai khác đọc được.
+>
+> Và kể cả nếu mật khẩu này lọt ra ngoài: tài khoản `sao_luu` **chỉ đọc được,
+> không sửa được gì**. Muốn khoá nó lại thì vào SQL Editor chạy
+> `delete from public.tree_members where role = 'sao_luu';` — xong ngay.
 
 **Hai giá trị tuỳ chọn**, chỉ thêm nếu muốn:
 
@@ -101,7 +207,7 @@ Khoá đúng là một chuỗi **bắt đầu bằng `sb_secret_`**.
 
 ---
 
-## Bước 5 — Chạy thử lần đầu, và cho phép
+## Bước 7 — Chạy thử lần đầu, và cho phép
 
 1. Cột trái, bấm biểu tượng **`<>` Editor** để về màn hình mã.
 2. Trên thanh công cụ có ô chọn hàm — chọn **`kiemTraKetNoi`**.
@@ -129,16 +235,19 @@ Kết nối tới: https://hrmwkpnvenezeyhqmmrw.supabase.co
 ```
 
 **Nếu thấy chữ đỏ** thì đọc câu tiếng Việt trong đó — nó nói thẳng phải làm gì.
-Hai câu hay gặp nhất:
+Năm câu hay gặp:
 
 | Câu lỗi | Nghĩa là |
 |---|---|
-| *"Khoá bị từ chối…"* | Chép nhầm khoá ở bước 1. Quay lại lấy đúng dòng **Secret key** |
-| *"KHOA_BI_MAT đang là khoá CÔNG KHAI…"* | Chép nhầm dòng **Publishable key** ngay bên cạnh |
+| *"Chưa điền đủ cấu hình…"* | Thiếu một trong bốn dòng ở bước 6. Câu lỗi kể đủ tên cả bốn |
+| *"KHOA_CONG_KHAI đang là khoá BÍ MẬT"* | Chép nhầm dòng **Secret key**. Lấy đúng dòng **Publishable key** (bước 3) |
+| *"Không đăng nhập được tài khoản sao lưu"* | Sai email hoặc mật khẩu (bước 2). Vào Supabase → Authentication → Users bấm **Reset password** rồi dán lại |
+| *"Bị từ chối dù đã đăng nhập"* | Đăng nhập được nhưng chưa có quyền: **bước 1 chưa chạy**, hoặc bước 2c chưa thêm dòng `role = sao_luu` |
+| *"(tài khoản đăng nhập): 0 người"* | Không đỏ, nhưng sai: hàm `ds_tai_khoan()` chưa có — chạy lại **bước 1** |
 
 ---
 
-## Bước 6 — Sao lưu thật một lần
+## Bước 8 — Sao lưu thật một lần
 
 1. Ô chọn hàm, đổi sang **`saoLuuNgay`**.
 2. Bấm **Run**.
@@ -162,7 +271,7 @@ bản sao lưu là thật, không phải một file rỗng trông giống thật
 
 ---
 
-## Bước 7 — Đặt lịch tự động
+## Bước 9 — Đặt lịch tự động
 
 1. Ô chọn hàm, đổi sang **`datLichSaoLuu`**.
 2. Bấm **Run**.

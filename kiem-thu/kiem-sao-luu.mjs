@@ -4,7 +4,7 @@
 //            Script — bằng cách chạy CHÍNH file ấy trong Node, với một
 //            Supabase giả và một Google Drive giả.
 // Chạy     : cd supabase/kiem-thu && node kiem-sao-luu.mjs
-// Phiên bản: 0.1.0 · Cập nhật: 03/09/2026 17:30
+// Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 00:04
 // ============================================================
 //
 // ═══ VÌ SAO BÀI KIỂM NÀY TỒN TẠI ═══
@@ -32,10 +32,18 @@ const FILE_SQL = resolve(DAY, '../luoc-do/01-bang.sql');
 
 const NGUON_GS = readFileSync(FILE_GS, 'utf8');
 
-// Khoá giả, đúng khuôn khoá bí mật thật. Phép 5 đi tìm đúng chuỗi này trong
-// file sao lưu — nếu nó lọt ra thì bản sao lưu trên Drive đang mang theo chìa
-// khoá vượt mọi phân quyền.
-const KHOA_THU = 'sb_secret_KHOA_GIA_KHONG_CO_THAT_0123456789';
+// Bốn giá trị giả, đúng khuôn thật. Từ bản 0.2.0 sao lưu không dùng khoá bí
+// mật nữa mà đăng nhập bằng email + mật khẩu rồi đọc bằng phiếu — nên thứ
+// **không được lọt** vào file sao lưu nay là mật khẩu và phiếu, chứ không còn
+// là khoá. Phép 5 đi tìm đúng ba chuỗi này trong bản sao lưu sinh ra.
+const KHOA_CONG_KHAI_THU = 'sb_publishable_KHOA_GIA_KHONG_CO_THAT_0123';
+const EMAIL_THU  = 'sao-luu@thunghiem.test';
+const MAT_KHAU_THU = 'mat-khau-gia-khong-co-that-0123456789';
+const PHIEU_THU = 'eyJhbGciOiJIUzI1NiJ9.PHIEU_GIA_KHONG_CO_THAT.chu-ky-gia';
+
+// Khoá bí mật giả — chỉ dùng cho phép 10, nơi phải chứng minh rằng dán nhầm
+// nó vào ô khoá công khai thì bị chặn ngay, không gọi mạng lần nào.
+const KHOA_BI_MAT_THU = 'sb_secret_KHOA_GIA_KHONG_CO_THAT_0123456789';
 const URL_THU = 'https://thunghiem.supabase.co';
 const LUC_THU = new Date('2026-09-03T10:30:00Z');   // 17:30 giờ Việt Nam
 
@@ -60,14 +68,36 @@ function dungMoiTruong(kichBan = {}) {
       nhatKy.goi.push(url);
       if (maLoi) return traLoi(maLoi, '{"message":"gia vo hong"}');
 
-      // Khoá phải được gửi ở CẢ HAI chỗ Supabase đòi.
-      if (opt.headers.apikey !== KHOA_THU ||
-          opt.headers.Authorization !== 'Bearer ' + KHOA_THU) {
-        return traLoi(401, '{"message":"thieu khoa"}');
-      }
-
       const u = new URL(url);
       const duong = u.pathname;
+
+      // ---- Cửa đăng nhập: đổi email + mật khẩu lấy phiếu ----
+      // Phải đứng TRƯỚC phép kiểm phiếu bên dưới — lúc gọi cửa này thì đương
+      // nhiên chưa có phiếu nào để mà kiểm.
+      if (duong === '/auth/v1/token') {
+        if (opt.headers.apikey !== KHOA_CONG_KHAI_THU) {
+          return traLoi(401, '{"message":"khoa cong khai sai"}');
+        }
+        const gui = JSON.parse(opt.payload);
+        if (gui.email !== EMAIL_THU || gui.password !== MAT_KHAU_THU) {
+          return traLoi(400, '{"error":"invalid_grant"}');
+        }
+        return traLoi(200, JSON.stringify({ access_token: PHIEU_THU }));
+      }
+
+      // Khoá công khai nói "khách của project nào", phiếu nói "đã đăng nhập
+      // là ai". Supabase đòi cả hai, và RLS chỉ đọc được `auth.uid()` từ phiếu.
+      if (opt.headers.apikey !== KHOA_CONG_KHAI_THU ||
+          opt.headers.Authorization !== 'Bearer ' + PHIEU_THU) {
+        return traLoi(401, '{"message":"thieu khoa hoac phieu"}');
+      }
+
+      // ---- Danh sách tài khoản: nay là một hàm SQL, không còn Admin API ----
+      // Phải đứng TRƯỚC nhánh `/rest/v1/` chung, kẻo bị bắt nhầm thành một
+      // bảng tên `rpc/ds_tai_khoan`.
+      if (duong === '/rest/v1/rpc/ds_tai_khoan') {
+        return traLoi(200, JSON.stringify(nguoiDung));
+      }
 
       if (duong.startsWith('/rest/v1/')) {
         const bang = duong.slice('/rest/v1/'.length);
@@ -79,15 +109,6 @@ function dungMoiTruong(kichBan = {}) {
         const gioiHan = Number(u.searchParams.get('limit'));
         const bo = Number(u.searchParams.get('offset')) || 0;
         return traLoi(200, JSON.stringify(hang.slice(bo, bo + gioiHan)));
-      }
-
-      if (duong === '/auth/v1/admin/users') {
-        const trang = Number(u.searchParams.get('page')) || 1;
-        const moiTrang = Number(u.searchParams.get('per_page'));
-        const bo = (trang - 1) * moiTrang;
-        return traLoi(200, JSON.stringify({
-          users: nguoiDung.slice(bo, bo + moiTrang)
-        }));
       }
 
       if (duong.startsWith('/storage/v1/object/list/')) {
@@ -143,7 +164,9 @@ function dungMoiTruong(kichBan = {}) {
   // ---- Script Properties giả -----------------------------------------
   const kho = Object.assign({
     SUPABASE_URL: URL_THU,
-    KHOA_BI_MAT: KHOA_THU
+    KHOA_CONG_KHAI: KHOA_CONG_KHAI_THU,
+    EMAIL_SAO_LUU: EMAIL_THU,
+    MAT_KHAU_SAO_LUU: MAT_KHAU_THU
   }, kichBan.thuocTinh || {});
   const PropertiesService = {
     getScriptProperties: () => ({
@@ -298,13 +321,22 @@ console.log('KIỂM SAO LƯU — chạy thẳng sao-luu/SaoLuu.gs trong Node\n')
        ban.khoAnh.tongByte === 4000,
        JSON.stringify(ban.khoAnh.tep));
 
-  // ⚠ Phép đáng giá nhất trong bài: khoá bí mật KHÔNG được có mặt trong thứ
-  //   ghi ra Drive. Bản sao lưu bị chia sẻ nhầm mà mang theo khoá thì người
-  //   nhận cầm luôn chìa khoá vượt mọi phân quyền của cơ sở dữ liệu SỐNG.
+  // ⚠ Phép đáng giá nhất trong bài: thứ mở được cửa KHÔNG được có mặt trong
+  //   thứ ghi ra Drive. Bản sao lưu bị chia sẻ nhầm mà mang theo mật khẩu hay
+  //   phiếu thì người nhận đăng nhập được vào cơ sở dữ liệu SỐNG.
+  //
+  //   Từ bản 0.2.0 danh sách thứ phải canh dài ra: mật khẩu và phiếu đăng
+  //   nhập, chứ không chỉ khoá. Vẫn canh cả `sb_secret_` để bắt trường hợp ai
+  //   đó quay lại cách cũ mà quên bài kiểm này.
   const chu = JSON.stringify(ban);
-  kiem('khoá bí mật KHÔNG lọt vào nội dung bản sao lưu',
-       !chu.includes(KHOA_THU) && !chu.includes('sb_secret_'),
-       chu.includes(KHOA_THU) ? 'CÓ LỌT KHOÁ' : 'sạch');
+  const loLot = [
+    ['mật khẩu', MAT_KHAU_THU],
+    ['phiếu đăng nhập', PHIEU_THU],
+    ['khoá bí mật', 'sb_secret_']
+  ].filter(([, v]) => chu.includes(v)).map(([t]) => t);
+  kiem('mật khẩu · phiếu · khoá bí mật KHÔNG lọt vào nội dung bản sao lưu',
+       loLot.length === 0,
+       loLot.length ? 'CÓ LỌT: ' + loLot.join(', ') : 'sạch');
 }
 
 // ---- 4. Chạy trọn một lần sao lưu ------------------------------------
@@ -428,21 +460,44 @@ console.log('KIỂM SAO LƯU — chạy thẳng sao-luu/SaoLuu.gs trong Node\n')
 
 // ---- 10. Khoá sai bị chặn trước khi chạm mạng ------------------------
 {
+  // ⚠ PHÉP NÀY ĐÃ ĐẢO CHIỀU Ở BẢN 0.2.0. Trước: dán khoá CÔNG KHAI vào ô khoá
+  //   bí mật là lỗi. Nay ngược lại — sao lưu không dùng khoá bí mật nữa, nên
+  //   dán khoá BÍ MẬT vào là lỗi. Để nó ở đây còn có việc thứ hai: ngày ai đó
+  //   định "cho gọn" bằng cách quay lại khoá bí mật, phép này đỏ ngay.
   const a = dungMoiTruong({
-    thuocTinh: { KHOA_BI_MAT: 'sb_publishable_tPNWAhaspw9dEAOrXDTw0Q' }
+    thuocTinh: { KHOA_CONG_KHAI: KHOA_BI_MAT_THU }
   });
   let loiA = '';
   try { a.api.saoLuuNgay(); } catch (e) { loiA = e.message; }
-  kiem('dán nhầm khoá CÔNG KHAI: chặn ngay, không gọi mạng lần nào',
-       /khoá CÔNG KHAI/i.test(loiA) && a.nhatKy.goi.length === 0,
+  kiem('dán nhầm khoá BÍ MẬT: chặn ngay, không gọi mạng lần nào',
+       /khoá BÍ MẬT/i.test(loiA) && a.nhatKy.goi.length === 0,
        `${a.nhatKy.goi.length} lượt gọi · ${loiA.slice(0, 45)}`);
 
-  const b = dungMoiTruong({ thuocTinh: { KHOA_BI_MAT: '' } });
+  const b = dungMoiTruong({ thuocTinh: { KHOA_CONG_KHAI: '' } });
   let loiB = '';
   try { b.api.saoLuuNgay(); } catch (e) { loiB = e.message; }
   kiem('chưa điền khoá: câu lỗi chỉ đúng chỗ phải mở',
        /Script\s*\n?\s*Properties/.test(loiB) || /Script Properties/.test(loiB),
        loiB.slice(0, 60));
+
+  // Thiếu mật khẩu cũng phải chặn tại chỗ. Không có phép này thì thiếu mật
+  // khẩu sẽ đi tới tận cửa đăng nhập rồi mới hỏng, với câu lỗi của Supabase
+  // chứ không phải câu lỗi tiếng Việt chỉ đúng ô phải điền.
+  const mk = dungMoiTruong({ thuocTinh: { MAT_KHAU_SAO_LUU: '' } });
+  let loiMk = '';
+  try { mk.api.saoLuuNgay(); } catch (e) { loiMk = e.message; }
+  kiem('thiếu mật khẩu: chặn trước khi gọi mạng, câu lỗi nêu đủ bốn ô',
+       /MAT_KHAU_SAO_LUU/.test(loiMk) && mk.nhatKy.goi.length === 0,
+       `${mk.nhatKy.goi.length} lượt gọi · ${loiMk.slice(0, 45)}`);
+
+  // Sai mật khẩu thì hỏng ở cửa đăng nhập — và câu lỗi phải nói đúng chỗ ấy,
+  // không được đổ cho bảng hay cho RLS.
+  const sai = dungMoiTruong({ thuocTinh: { MAT_KHAU_SAO_LUU: 'sai-mat-khau' } });
+  let loiSai = '';
+  try { sai.api.saoLuuNgay(); } catch (e) { loiSai = e.message; }
+  kiem('sai mật khẩu: câu lỗi chỉ vào tài khoản sao lưu, không đổ cho bảng',
+       /đăng nhập/i.test(loiSai) && /EMAIL_SAO_LUU|MAT_KHAU_SAO_LUU/.test(loiSai),
+       loiSai.slice(0, 60));
 
   const c = dungMoiTruong({ thuocTinh: { SUPABASE_URL: 'https://x.supabase.co/' } });
   c.api.saoLuuNgay();
@@ -481,9 +536,36 @@ console.log('KIỂM SAO LƯU — chạy thẳng sao-luu/SaoLuu.gs trong Node\n')
 
 // ---- 13. Mã nguồn không cất khoá thật --------------------------------
 {
-  const nghi = NGUON_GS.match(/sb_secret_[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{20,}/g);
+  // Canh cả khoá lẫn mật khẩu: từ bản 0.2.0 thứ nguy hiểm nhất có thể bị dán
+  //   nhầm vào file này là MẬT KHẨU của tài khoản sao lưu, không phải khoá.
+  const nghi = NGUON_GS.match(
+    /sb_secret_[A-Za-z0-9_-]{8,}|sb_publishable_[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{20,}/g);
   kiem('SaoLuu.gs không chứa khoá thật nào — repo này để Public',
        nghi === null, nghi ? nghi.join(' ') : 'sạch');
+
+  // Bốn tên thuộc tính phải xuất hiện đủ trong mã, kèm dòng `Phụ thuộc` ở đầu
+  // file. Thiếu một cái là hướng dẫn và mã đã lệch nhau.
+  const thieuTen = ['SUPABASE_URL', 'KHOA_CONG_KHAI', 'EMAIL_SAO_LUU',
+                    'MAT_KHAU_SAO_LUU'].filter((t) => !NGUON_GS.includes(t));
+  kiem('mã nêu đủ bốn tên thuộc tính mà hướng dẫn bảo điền',
+       thieuTen.length === 0, thieuTen.join(',') || 'đủ bốn');
+
+  // ⚠ Không được còn LỆNH GỌI nào tới cửa Admin API: nó bắt buộc khoá bí mật,
+  //   nên còn sót một lượt gọi tới đó là cả thiết kế 0.2.0 vô nghĩa.
+  //
+  //   Phải bỏ dòng ghi chú ra trước khi soi, theo đúng quy ước của
+  //   `/kiem-tra`: *"chú thích nhắc tên thì KHÔNG tính — chỉ lệnh thật mới
+  //   tính"*. `docNguoiDung_` cố ý nhắc lại cửa cũ để kể vì sao bỏ nó, và một
+  //   phép kiểm cấm người ta viết ghi chú là một phép kiểm sai.
+  //
+  //   ⚠ Ngược lại, phép soi khoá bên trên KHÔNG được bỏ ghi chú: repo để
+  //   Public, nên một cái khoá nằm trong ghi chú vẫn là khoá đã lên mạng.
+  const dongLenh = NGUON_GS.split('\n')
+    .filter((d) => !/^\s*(\/\/|\*|\/\*)/.test(d))
+    .join('\n');
+  kiem('không còn LỆNH gọi /auth/v1/admin/ — cửa ấy bắt buộc khoá bí mật',
+       !dongLenh.includes('/auth/v1/admin'),
+       dongLenh.includes('/auth/v1/admin') ? 'VẪN CÒN' : 'sạch');
 }
 
 // ------------------------------------------------------------

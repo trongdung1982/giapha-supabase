@@ -202,10 +202,16 @@ Ràng buộc `check` đã viết trong `luoc-do/01-bang.sql`; đây là bản tr
 | `persons.sex` | `M` · `F` · `U` |
 | `unions.status` | `married` · `divorced` · `widowed` · `unknown` |
 | `union_children.relation` | `birth` · `adopted` · `step` · `foster` · `thua_tu` |
-| `tree_members.role` | `chu` · `sua` · `xem` |
+| `tree_members.role` | `chu` · `sua` · `xem` · `sao_luu` ⁽¹⁾ |
 | `imports.source` | `GEDCOM` · `EXCEL` |
 | `trees.tree_code` | chữ HOA, chữ số, gạch dưới. Gạch nối `-` thì GEDCOM 7.0 không nhận |
 | `names[].type` | `chinh` · `huy` · `tu` · `thuy` · `phap_danh` · `thuong_goi` · `khac` |
+
+⁽¹⁾ **`sao_luu` không phải một người** — nó là vai của tài khoản máy dùng khi đi
+chép dữ liệu hằng đêm, thêm vào `luoc-do/05-sao-luu.sql` (04/09/2026). Vai này
+**đọc được mọi dòng nhưng không ghi được dòng nào**: `co_the_sua()` chỉ nhận
+`chu` và `sua`, mà cửa ghi duy nhất `luu_cay()` hỏi đúng hàm ấy. Đừng gán vai
+này cho người thật, và đừng đưa nó vào màn hình chọn quyền của app.
 
 ⚠ Sáu trường thông dụng (`title`, `occupation`, `education`, `religion`,
 `residence`, `nationality`) **cố ý không có danh sách chọn** — gia phả cũ chép

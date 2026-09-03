@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 03/09/2026 17:50 · Bước gần nhất: **b90***
+*Cập nhật 04/09/2026 · Bước gần nhất: **b91***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -19,10 +19,14 @@ Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là l�
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
 **Còn thiếu đúng một thứ trước khi được phép nhập dữ liệu thật: sao lưu phải
-CHẠY.** Mã đã viết và đã kiểm (b90), nhưng chưa ai dựng nó lên Apps Script —
-xem việc 1 ngay dưới.
+CHẠY.** Mã đã viết và đã kiểm (b90, viết lại b91), nhưng chưa ai dựng nó lên
+Apps Script — xem việc 1 ngay dưới.
 
-**Mười bốn việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
+đây không phải việc khẩn — không có gì để mất. Nó chặn bước 2 vì thứ tự đúng là
+thế, không phải vì đang có rủi ro nào treo trên đầu.*
+
+**Mười sáu việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -41,7 +45,9 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Tên miền `nguyentrongbac.io.vn` chạy, có HTTPS (H6)** | **b89** | ✓ **03/09/2026 15:57** |
 | Sửa lỗi cột `not null` nhận `null`; bộ kiểm 14 → 19 phép | b89 | ✓ |
 | `gh` CLI trên máy `LapASUS` + `MAY-THU-HAI.md` | b89 | ✓ |
-| **Mã sao lưu (H8) viết xong, bộ kiểm 29 phép** | **b90** | ✓ **03/09/2026** — ⚠ chủ dự án chưa dựng |
+| **Mã sao lưu (H8) viết xong, bộ kiểm 29 phép** | **b90** | ✓ **03/09/2026** |
+| **Sao lưu bỏ hẳn khoá bí mật — vai `sao_luu`, bộ kiểm 33 phép** | **b91** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dựng |
+| `gh` CLI + tự kiểm trên máy thứ hai `LapAMD` | b91 | ✓ **04/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -64,22 +70,43 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. Sao lưu (H8) — ⚠ CÒN MỘT VIỆC CHỦ DỰ ÁN PHẢI BẤM TAY
+### 1. Sao luưu (H8) — ⚠ CÒN MỘT VIỆC CHỦ DỰ ÁN PHẢI BẤM TAY
 
-**Mã đã viết và đã kiểm** (b90, 03/09/2026): `sao-luu/SaoLuu.gs` chép 12 bảng
+**Mã đã viết và đã kiểm** (b90 · viết lại b91): `sao-luu/SaoLuu.gs` chép 12 bảng
 + danh sách tài khoản ra một file JSON trên Drive mỗi đêm, giữ 30 bản gần nhất
 cộng một bản mỗi tháng, gửi thư khi hỏng và khi dữ liệu tụt hơn một nửa. Bộ
 kiểm `kiem-thu/kiem-sao-luu.mjs` chạy chính file `.gs` ấy trong Node với
-Supabase giả và Drive giả: **29/29 đạt**, và sáu phép phá hoại có chủ ý đều
-làm nó đỏ.
+Supabase giả và Drive giả: **33/33 đạt**, và ba phép phá hoại có chủ ý đều làm
+nó đỏ.
 
 **Nhưng chưa ai dựng nó lên, nên vẫn CHƯA CÓ bản sao lưu nào.** Việc còn lại
-là của chủ dự án, khoảng 20 phút, từng bước ở `sao-luu/HUONG-DAN-SAO-LUU.md`:
-tạo dự án Apps Script mới → dán mã → dán khoá bí mật vào Script Properties →
-chạy `kiemTraKetNoi` → `saoLuuNgay` → `datLichSaoLuu`.
+là của chủ dự án, khoảng 30 phút, từng bước ở `sao-luu/HUONG-DAN-SAO-LUU.md`:
+chạy `luoc-do/05-sao-luu.sql` → tạo tài khoản sao lưu → thêm nó vào cây với vai
+`sao_luu` → tạo dự án Apps Script → dán mã → điền bốn giá trị → chạy
+`kiemTraKetNoi` → `saoLuuNgay` → `datLichSaoLuu`.
 
-⚠ **Bước 2 (di dời dữ liệu) không được bắt đầu trước khi việc ấy chạy xong** —
-nhập dữ liệu thật vào một hệ thống chưa có sao lưu là việc không sửa lại được.
+#### ⚠ BẢN 0.2.0 ĐÃ BỎ HẴN KHOÁ BÍ MẬT — đừng "sửa lại cho gọn"
+
+Bản đầu (03/09/2026) dùng khoá bí mật và **không chạy nổi**. Hai luật đụng nhau,
+không bên nào nhường:
+
+* Supabase chặn khoá `sb_secret_…` khi `User-Agent` trông giống trình duyệt;
+* Apps Script **luôn** gửi `Mozilla/5.0 (compatible; Google-Apps-Script; …)`,
+  và Google **không cho đổi** dòng ấy — giới hạn nền tảng, không sửa được bằng mã.
+
+Đường vòng duy nhất là khoá `service_role` đời cũ (`eyJ…`) — mà Supabase khai tử
+loại ấy **cuối 2026**. Nên 04/09/2026 đã giải đúng chỗ thay vì đi đường vòng:
+`luoc-do/05-sao-luu.sql` thêm vai **`sao_luu`** chỉ-đọc rồi mở đúng ba chỗ RLS
+từng chặn, và `SaoLuu.gs` **đăng nhập bằng email + mật khẩu** với khoá công khai.
+
+**Chặt hơn cách cũ, không phải đánh đổi.** Khoá bí mật vượt mọi RLS — cầm nó là
+đọc và **ghi** được mọi thứ, mọi cây, mãi mãi. Vai `sao_luu` thì `co_the_sua()` trả
+`false`, mà cửa ghi duy nhất `luu_cay()` hỏi đúng hàm ấy — nên **không ghi được một
+dòng nào**, kể cả khi mật khẩu lọt ra ngoài. Thu lại bằng một câu `delete`.
+
+Ba phép kiểm mới canh điều này khỏi bị "sửa lại cho gọn": dán khoá bí mật vào là
+chặn ngay; còn sót lệnh gọi `/auth/v1/admin/` là đỏ; thiếu mật khẩu là chặn
+trước khi chạm mạng.
 
 ⚠ Đây là dự án Apps Script **MỚI, RIÊNG**. `KE-HOACH-HA-TANG_V01` bước H8 viết
 *"gỡ deploy dạng web app"* — câu ấy có từ 24/08, trước khi chốt giữ bản Apps
@@ -123,6 +150,8 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 
 | Việc | Ghi ở đâu |
 |---|---|
+| ⚠ **`luoc-do/05-sao-luu.sql` CHƯA chạy trên Supabase thật** — bộ kiểm không chạm được SQL | `nhat-ky/b91` |
+| ⚠ **Dự án Apps Script đang mang mã 0.1.0** — phải dán lại mã và sửa 4 property | `sao-luu/HUONG-DAN-SAO-LUU.md` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |

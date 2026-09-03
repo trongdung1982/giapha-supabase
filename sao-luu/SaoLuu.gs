@@ -6,9 +6,11 @@
 //            7 ngày không có yêu cầu nào, và mỗi lần sao lưu là một yêu cầu.
 // Lớp      : ngoài bậc thang phân lớp của app — mã này chạy trên máy chủ
 //            Google, không nằm trong trình duyệt, không import file nào của repo.
-// Phụ thuộc: Script Properties — SUPABASE_URL · KHOA_BI_MAT (bắt buộc),
+// Phụ thuộc: Script Properties — SUPABASE_URL · KHOA_CONG_KHAI ·
+//            EMAIL_SAO_LUU · MAT_KHAU_SAO_LUU (bắt buộc),
 //            THU_MUC_DRIVE · SO_BAN_GIU (tuỳ chọn)
-// Phiên bản: 0.1.0 · Cập nhật: 03/09/2026 17:30
+//            SQL — luoc-do/05-sao-luu.sql phải chạy trước
+// Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 00:04
 // ============================================================
 //
 // ⚠ ĐÂY KHÔNG PHẢI dự án Apps Script cũ. Dự án cũ (`giapha/gas/`) vẫn đang
@@ -16,18 +18,33 @@
 //   thuộc một dự án Apps Script RIÊNG, chỉ chạy nền, không có web app, không
 //   có ai bấm vào.
 //
-// ⚠ KHOÁ BÍ MẬT KHÔNG NẰM TRONG FILE NÀY, và không được phép nằm ở đây.
-//   Repo `giapha-supabase` để Public, nên mọi chữ trong file này đều đi lên
-//   mạng — kể cả sau khi xoá, vì lịch sử git giữ lại. Khoá cất ở
-//   **Script Properties**, xem `HUONG-DAN-SAO-LUU.md` bước 3.
+// ⚠ KHÔNG MẬT KHẨU, KHÔNG KHOÁ NÀO NẰM TRONG FILE NÀY. Repo
+//   `giapha-supabase` để Public, nên mọi chữ trong file này đều đi lên mạng —
+//   kể cả sau khi xoá, vì lịch sử git giữ lại. Bốn giá trị cấu hình cất ở
+//   **Script Properties**, xem `HUONG-DAN-SAO-LUU.md`.
 //
-// VÌ SAO SAO LƯU PHẢI DÙNG KHOÁ BÍ MẬT, chứ không dùng một tài khoản thường:
-//   `luoc-do/02-rls.sql` cho mỗi người chỉ đọc được phần của mình ở hai bảng
-//   (`user_settings`, `branch_access`). Một tài khoản thường đi sao lưu sẽ
-//   chép thiếu đúng những dòng ấy — và **thiếu trong im lặng**, vì Postgres
-//   không báo lỗi, nó chỉ trả về ít dòng hơn. Khoá bí mật vượt RLS nên chép
-//   được đủ. Đó là đúng vai của nó, và cũng là lý do nó không được rời khỏi
-//   Script Properties.
+// ═══ SAO LƯU KHÔNG DÙNG KHOÁ BÍ MẬT — đọc trước khi định "cho gọn" ═══
+//
+// Bản 0.1.0 dùng khoá bí mật, vì `luoc-do/02-rls.sql` cho mỗi người chỉ đọc
+// được phần của mình ở hai bảng (`user_settings`, `branch_access`), nên một
+// tài khoản thường sẽ chép thiếu **trong im lặng**. Lý lẽ ấy đúng, nhưng cách
+// giải thì sai, và ngày 03/09/2026 nó đâm vào tường:
+//
+//   • Supabase chặn khoá `sb_secret_…` khi `User-Agent` giống trình duyệt;
+//     Apps Script thì luôn gửi `Mozilla/5.0 (compatible; Google-Apps-Script;
+//     …)` và Google không cho đổi. Hai luật đụng nhau, không bên nào nhường.
+//   • Đường vòng duy nhất là khoá `service_role` đời cũ (`eyJ…`) — mà
+//     Supabase khai tử loại ấy cuối 2026. Đi đường ấy là hẹn ngày hỏng.
+//
+// Bản 0.2.0 giải đúng chỗ: thay vì tìm một cái chìa vượt được RLS, thì **mở
+// RLS cho đúng ba chỗ nó từng chặn** (`luoc-do/05-sao-luu.sql`) rồi đăng nhập
+// như một người thường mang vai `sao_luu`.
+//
+// Vai `sao_luu` đọc được mọi dòng nhưng **không ghi được dòng nào**: cửa ghi
+// duy nhất là `luu_cay()`, hàm ấy hỏi `co_the_sua()` = `role in ('chu','sua')`
+// → false. Nên mật khẩu này lọt ra ngoài cũng không ai sửa được gia phả, khác
+// hẳn khoá bí mật — thứ cầm được là ghi được mọi thứ ở mọi cây, mãi mãi.
+// Tức bản mới vừa **chặt hơn** vừa không có hạn dùng.
 
 // ------------------------------------------------------------
 // Danh sách bảng và cột dùng để sắp thứ tự khi đọc theo trang
@@ -254,26 +271,27 @@ function demDong_(cauHinh, ten) {
  * chẳng ai vào được app.
  */
 function docNguoiDung_(cauHinh) {
-  var tatCa = [];
-  var trang = 1;
-  for (;;) {
-    var url = cauHinh.url + '/auth/v1/admin/users?page=' + trang +
-              '&per_page=' + SO_DONG_MOI_TRANG;
-    var duLieu = goi_(cauHinh, url, 'đọc danh sách tài khoản');
-    var ds = Array.isArray(duLieu) ? duLieu : (duLieu.users || []);
-    ds.forEach(function (u) {
-      tatCa.push({
-        id: u.id,
-        email: u.email,
-        created_at: u.created_at,
-        last_sign_in_at: u.last_sign_in_at,
-        email_confirmed_at: u.email_confirmed_at
-      });
-    });
-    if (ds.length < SO_DONG_MOI_TRANG) break;
-    trang++;
-  }
-  return tatCa;
+  // ⚠ Bản 0.1.0 đi cửa `/auth/v1/admin/users`, mà cửa ấy **bắt buộc khoá bí
+  //   mật** — thứ bản này đã bỏ. Nay hỏi hàm `ds_tai_khoan()` dựng ở
+  //   `luoc-do/05-sao-luu.sql`: hàm `security definer` nên với tới
+  //   `auth.users`, còn ai gọi được thì chính thân hàm quyết.
+  //
+  //   Khác một điểm có chủ ý: hàm chỉ trả về người có chân trong những cây mà
+  //   tài khoản sao lưu đang giữ vai, chứ không trả về TOÀN BỘ `auth.users`
+  //   như bản cũ. Bản cũ làm thế chỉ vì khoá bí mật cho phép, không phải vì
+  //   sao lưu cần thế.
+  var url = cauHinh.url + '/rest/v1/rpc/ds_tai_khoan';
+  var duLieu = goi_(cauHinh, url, 'đọc danh sách tài khoản', {});
+  var ds = Array.isArray(duLieu) ? duLieu : [];
+  return ds.map(function (u) {
+    return {
+      id: u.id,
+      email: u.email,
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at,
+      email_confirmed_at: u.email_confirmed_at
+    };
+  });
 }
 
 /**
@@ -331,10 +349,60 @@ function goi_(cauHinh, url, viec, than) {
   }
 }
 
+/**
+ * Đăng nhập bằng email + mật khẩu, lấy phiếu (`access_token`) để đọc dữ liệu.
+ *
+ * ⚠ ĐÂY LÀ THAY ĐỔI GỐC CỦA BẢN 0.2.0, và lý do nằm ở `luoc-do/05-sao-luu.sql`
+ *   phần đầu: khoá bí mật đời mới bị Supabase chặn khi gọi từ Apps Script
+ *   (nó thấy `User-Agent` giống trình duyệt), còn khoá đời cũ thì bị khai tử
+ *   cuối 2026. Nên sao lưu bỏ hẳn khoá bí mật và đăng nhập như một người
+ *   thường mang vai `sao_luu` — vai chỉ đọc, không ghi được một dòng nào.
+ *
+ * Phiếu sống khoảng một giờ; một lần sao lưu chỉ mất vài phút nên xin một
+ * lần cho cả lượt là đủ, không cần gia hạn giữa chừng.
+ */
+function dangNhap_(cauHinh) {
+  if (cauHinh.phieu) return cauHinh.phieu;
+
+  var res = UrlFetchApp.fetch(
+    cauHinh.url + '/auth/v1/token?grant_type=password',
+    {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { apikey: cauHinh.khoaCongKhai },
+      payload: JSON.stringify({ email: cauHinh.email, password: cauHinh.matKhau }),
+      muteHttpExceptions: true
+    });
+
+  var ma = res.getResponseCode();
+  var chu = res.getContentText();
+  if (ma < 200 || ma >= 300) {
+    // ⚠ Không chép `chu` nguyên văn vào câu lỗi: thân phản hồi của cửa đăng
+    //   nhập có thể vọng lại email vừa gửi lên.
+    throw new Error('Không đăng nhập được tài khoản sao lưu (mã ' + ma + '). ' +
+      'Kiểm EMAIL_SAO_LUU và MAT_KHAU_SAO_LUU trong Script Properties. ' +
+      'Tài khoản này tạo ở Supabase → Authentication → Users, và phải được ' +
+      'thêm vào bảng tree_members với role = sao_luu — xem luoc-do/05-sao-luu.sql.');
+  }
+
+  var duLieu;
+  try { duLieu = JSON.parse(chu); } catch (e) { duLieu = null; }
+  if (!duLieu || !duLieu.access_token) {
+    throw new Error('Cửa đăng nhập trả về thứ không có access_token. ' +
+                    'Kiểm KHOA_CONG_KHAI có đúng project không.');
+  }
+
+  cauHinh.phieu = duLieu.access_token;
+  return cauHinh.phieu;
+}
+
 function goiTho_(cauHinh, url, viec, themDau, than) {
+  // `apikey` nói *"tôi là khách của project này"*; `Authorization` nói
+  // *"và tôi đã đăng nhập, đây là phiếu"*. RLS đọc phiếu để biết `auth.uid()`
+  // là ai, rồi mới quyết cho thấy dòng nào.
   var dau = {
-    apikey: cauHinh.khoa,
-    Authorization: 'Bearer ' + cauHinh.khoa
+    apikey: cauHinh.khoaCongKhai,
+    Authorization: 'Bearer ' + dangNhap_(cauHinh)
   };
   if (themDau) Object.keys(themDau).forEach(function (k) { dau[k] = themDau[k]; });
 
@@ -351,13 +419,32 @@ function goiTho_(cauHinh, url, viec, themDau, than) {
 
   // ⚠ Câu lỗi KHÔNG được chép lại `url` nguyên văn, và tuyệt đối không chép
   //   khoá — thư báo lỗi đi qua Gmail và nằm lại trong sổ lỗi của Apps Script.
-  var giaiThich = ma === 401 || ma === 403
-    ? 'Khoá bị từ chối. Mở Project Settings → Script Properties, kiểm ' +
-      'KHOA_BI_MAT có đúng là chuỗi bắt đầu bằng "sb_secret_" không.'
-    : ma === 404
-      ? 'Không tìm thấy. Có thể bảng chưa dựng — bốn file trong luoc-do/ đã ' +
-        'chạy đủ chưa?'
-      : 'Máy chủ trả mã ' + ma + '.';
+  //   Thân phản hồi của Supabase thì chép được: nó không bao giờ chứa khoá.
+  var than = '';
+  try { than = String(res.getContentText() || '').slice(0, 300); } catch (e) { than = ''; }
+
+  var giaiThich;
+  if (ma === 401 || ma === 403) {
+    // ⚠ VẾT SẸO 03/09/2026 — để lại đây làm biển báo. Bản 0.1.0 dùng khoá bí
+    //   mật, và Supabase chặn khoá `sb_secret_…` khi thấy `User-Agent` giống
+    //   trình duyệt; Apps Script thì luôn gửi "Mozilla/5.0 (compatible;
+    //   Google-Apps-Script; …)" và Google không cho đổi. Ai đó thấy cách đăng
+    //   nhập bên dưới rườm rà mà định "cho gọn" bằng cách quay lại khoá bí
+    //   mật thì sẽ đâm vào đúng bức tường ấy — nên phép thử này giữ nguyên.
+    giaiThich = /in browser|secret API key/i.test(than)
+      ? 'Đang dùng khoá BÍ MẬT, mà Supabase chặn loại khoá ấy khi gọi từ Apps ' +
+        'Script. Sao lưu bản này KHÔNG dùng khoá bí mật nữa: điền ' +
+        'KHOA_CONG_KHAI (sb_publishable_…) cùng EMAIL_SAO_LUU và ' +
+        'MAT_KHAU_SAO_LUU, rồi xoá hẳn KHOA_BI_MAT. Xem luoc-do/05-sao-luu.sql.'
+      : 'Bị từ chối dù đã đăng nhập. Nhiều khả năng tài khoản sao lưu chưa ' +
+        'được thêm vào bảng tree_members với role = sao_luu, hoặc file ' +
+        'luoc-do/05-sao-luu.sql chưa chạy. Máy chủ nói: ' + than;
+  } else if (ma === 404) {
+    giaiThich = 'Không tìm thấy. Có thể bảng chưa dựng — bốn file trong ' +
+                'luoc-do/ đã chạy đủ chưa?';
+  } else {
+    giaiThich = 'Máy chủ trả mã ' + ma + '. Máy chủ nói: ' + than;
+  }
   throw new Error('Hỏng khi ' + viec + '. ' + giaiThich);
 }
 
@@ -465,36 +552,57 @@ function guiThu_(tieuDe, than) {
 function docCauHinh_() {
   var kho = PropertiesService.getScriptProperties();
   var url = (kho.getProperty('SUPABASE_URL') || '').trim().replace(/\/+$/, '');
-  var khoa = (kho.getProperty('KHOA_BI_MAT') || '').trim();
+  var khoaCongKhai = (kho.getProperty('KHOA_CONG_KHAI') || '').trim();
+  var email = (kho.getProperty('EMAIL_SAO_LUU') || '').trim();
+  var matKhau = kho.getProperty('MAT_KHAU_SAO_LUU') || '';
 
-  if (!url || !khoa) {
-    throw new Error('Chưa điền cấu hình. Mở Project Settings → Script ' +
-      'Properties và thêm hai dòng: SUPABASE_URL và KHOA_BI_MAT. ' +
+  // ⚠ Mật khẩu KHÔNG `.trim()`. Khoảng trắng đầu/cuối là ký tự hợp lệ trong
+  //   mật khẩu, và cắt lén đi thì lỗi hiện ra là "sai mật khẩu" — câu lỗi dẫn
+  //   người ta đi tìm sai chỗ đúng một lần nữa.
+
+  if (!url || !khoaCongKhai || !email || !matKhau) {
+    throw new Error('Chưa điền đủ cấu hình. Mở Project Settings → Script ' +
+      'Properties và thêm BỐN dòng: SUPABASE_URL · KHOA_CONG_KHAI · ' +
+      'EMAIL_SAO_LUU · MAT_KHAU_SAO_LUU. ' +
       'Hướng dẫn từng bước ở sao-luu/HUONG-DAN-SAO-LUU.md.');
   }
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)) {
     throw new Error('SUPABASE_URL trông không đúng khuôn. Phải có dạng ' +
       'https://xxxxxxxx.supabase.co — không có dấu / ở cuối.');
   }
-  // ⚠ Phép kiểm ngược với phép kiểm trong `js/cau-hinh.js`, và ngược có chủ ý.
-  //   Ở đó khoá bí mật là thứ TUYỆT ĐỐI không được có; ở đây nó là thứ bắt
-  //   buộc phải có. Dán nhầm khoá công khai vào đây thì RLS sẽ lọc bớt dòng và
-  //   bản sao lưu thiếu dữ liệu MÀ VẪN CHẠY XANH — kiểu hỏng tệ nhất. Nên bắt
-  //   ngay từ hình dạng chuỗi.
-  if (/^sb_publishable_/.test(khoa)) {
-    throw new Error('KHOA_BI_MAT đang là khoá CÔNG KHAI (sb_publishable_…). ' +
-      'Sao lưu bằng khoá ấy sẽ thiếu dòng mà không báo lỗi. Lấy đúng dòng ' +
-      '"Secret key" ở Project Settings → API Keys.');
+
+  // ⚠ PHÉP KIỂM NÀY ĐÃ ĐẢO CHIỀU Ở BẢN 0.2.0 — đọc kỹ trước khi "sửa lại cho
+  //   giống cũ". Bản 0.1.0 BẮT BUỘC khoá bí mật và cấm khoá công khai. Nay
+  //   ngược hẳn: khoá bí mật là thứ không được có.
+  //
+  //   Vì sao đảo: khoá bí mật vượt RLS, nên chỉ cần nó là đọc được mọi thứ —
+  //   nhưng Supabase chặn nó khi gọi từ Apps Script (xem `goiTho_`), và loại
+  //   đời cũ thì bị khai tử cuối 2026. Bản này đọc bằng phiếu đăng nhập của
+  //   một tài khoản mang vai `sao_luu`, nên khoá bí mật vừa vô dụng vừa nguy
+  //   hiểm: để nó ở đây là cất một chìa vạn năng trong một dự án Apps Script.
+  //
+  //   Và không còn nỗi lo cũ *"khoá công khai thì RLS lọc bớt dòng mà vẫn
+  //   chạy xanh"*: `05-sao-luu.sql` mở đúng ba chỗ RLS từng chặn, còn phép
+  //   đối chiếu số bản ghi ở `soVoiLanTruoc_()` bắt được nếu vẫn thiếu.
+  if (/^sb_secret_|service_role/.test(khoaCongKhai)) {
+    throw new Error('KHOA_CONG_KHAI đang là khoá BÍ MẬT. Bản sao lưu này ' +
+      'không dùng khoá bí mật nữa — Supabase chặn nó khi gọi từ Apps Script, ' +
+      'và loại đời cũ sắp bị khai tử. Chép đúng dòng "Publishable key" ' +
+      '(sb_publishable_…) ở Project Settings → API Keys.');
   }
-  if (!/^sb_secret_|^eyJ/.test(khoa)) {
-    throw new Error('KHOA_BI_MAT không đúng khuôn. Khoá bí mật của Supabase ' +
-      'bắt đầu bằng "sb_secret_" (bản mới) hoặc "eyJ" (khoá service_role đời cũ).');
+  if (!/^(sb_publishable_|eyJ)/.test(khoaCongKhai)) {
+    throw new Error('KHOA_CONG_KHAI không đúng khuôn. Khoá công khai của ' +
+      'Supabase bắt đầu bằng "sb_publishable_" (bản mới) hoặc "eyJ" ' +
+      '(khoá anon đời cũ).');
   }
 
   var bay = new Date();
   return {
     url: url,
-    khoa: khoa,
+    khoaCongKhai: khoaCongKhai,
+    email: email,
+    matKhau: matKhau,
+    phieu: null,
     khoAnh: (kho.getProperty('KHO_ANH') || 'anh').trim(),
     thuMucId: (kho.getProperty('THU_MUC_DRIVE') || '').trim(),
     soBanGiu: Number(kho.getProperty('SO_BAN_GIU')) || SO_BAN_GIU_MAC_DINH,
