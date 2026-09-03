@@ -32,9 +32,10 @@ nó chính là thứ nó sinh ra để tránh.
 1. **`domains/` không được sửa.** Cả mười file chép nguyên từ bản Apps Script.
    Thấy mình đang sửa `domains/` là dừng lại hỏi vì sao — `BAT-DAU.md` mục 1.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
-3. **Chưa chạy thật lần nào.** Bốn file SQL chưa ai chạy, chưa ai đăng nhập
-   được. Đừng mô tả bất cứ thứ gì ở đây như đã hoạt động —
-   `KIEN-TRUC.md` mục 6 kể đúng những gì còn dở.
+3. **Đã chạy thật 03/09/2026** — SQL chạy, đăng nhập được, thêm được người
+   mới. Nhưng **chưa có sao lưu, chưa có dữ liệu thật, phân quyền RLS chưa ai
+   kiểm chứng**. `KIEN-TRUC.md` mục 6 kể đúng những gì còn dở; đừng mô tả
+   phần chưa kiểm như đã hoạt động.
 
 ## Quy ước khung tài liệu này
 

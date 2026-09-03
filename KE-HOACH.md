@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 03/09/2026 08:35 · Bước gần nhất: **b88***
+*Cập nhật 03/09/2026 14:40 · Bước gần nhất: **b89***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -13,11 +13,13 @@
 
 ## Đang ở đâu
 
-**Khung đã dựng xong và ĐÃ LÊN MẠNG. Nhưng chưa nối được với cơ sở dữ liệu —
-bốn file SQL chưa ai chạy.**
+**CẢ CHUỖI ĐÃ THÔNG.** 03/09/2026: bốn file SQL đã chạy thật, tài khoản tạo
+được, đăng nhập được, **và thêm được người mới** — tức trình duyệt ghi xuống
+Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
+điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
-**Tám việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng chép lại
-con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
+**Mười việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng chép
+lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
 | Việc | Bước | Chốt |
@@ -30,73 +32,71 @@ mươi"* trong khi bảng cứ dài thêm).
 | Chuyển sang repo `giapha-supabase`, dựng khung tài liệu | b87 | ✓ |
 | **Đẩy lên GitHub, Pages phục vụ thật** | **b88** | ✓ **03/09/2026** |
 | `/kiem-tra` thêm phép 2b và 9; `/ket-thuc` tách hai nhánh | b88 | ✓ |
+| **Bốn file SQL chạy thật · đăng nhập · thêm người mới** | **b89** | ✓ **03/09/2026** |
+| Máy chủ thử tại chỗ (`kiem-thu/may-chu-tai-cho.mjs`, ngoài repo) | b89 | ✓ |
 
 Đã đo trên địa chỉ thật `https://trongdung1982.github.io/giapha-supabase/`:
 trang gốc và `js/app.js` · `js/vendor/supabase.js` đều trả **HTTP 200**, đúng
 kiểu MIME `application/javascript` — điều kiện để trình duyệt nạp được ES
 Module. `robots.txt` có mặt. Không lộ khoá bí mật nào.
 
-⚠ **Lên mạng không phải chạy được.** Mở địa chỉ ấy bây giờ sẽ thấy ô đăng
-nhập, nhưng đăng nhập xong không có gì phía sau — chưa có bảng nào trong cơ sở
-dữ liệu.
+**Lỗi đầu tiên của lần chạy thật, và nó đáng ghi lại.** Thêm người mới báo
+`null value in column "vn" … violates not-null`. Nguyên nhân không nằm ở chỗ
+ai cũng đoán: lược đồ CÓ `default '{}'` cho cột ấy, nhưng `default` không áp
+khi giá trị `null` được gửi tường minh, và `luu_cay()` đi qua
+`jsonb_populate_recordset` — nơi khoá thiếu trong JSON cũng cho ra `null` chứ
+không cho ra `default`. Tức **`default` trong SQL là hàng rào, không phải chỗ
+điền hộ**; chỗ điền hộ phải là `services/hinh-dang.js`. Đã sửa, và bộ kiểm
+nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt lại (19/19).
 
 ---
 
 ## Việc kế tiếp — ĐÚNG THỨ TỰ NÀY
 
-Hai việc đầu **phải xong trước** khi làm bất cứ việc nào từ 3 trở đi. Cả bộ
-khung đang đứng trên một giả định chưa ai kiểm: **rằng bốn file SQL chạy được.**
-
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. ⛔ CHẶN — chạy bốn file SQL *(chủ dự án làm)*
+### 1. ⭐ Gắn tên miền `nguyentrongbac.io.vn` (H6) — ĐANG LÀM
 
-`luoc-do/01` → `02` → `03` → `04`, **đúng thứ tự**. Từng bước, tên nút chính
-xác, ở `HUONG-DAN-DUNG-BANG.md` bước 1.
+Chủ dự án nói thẳng 03/09/2026: **đây là mục đích chính**. Nên nó lên đầu
+danh sách, không còn nằm ở cuối như bản trước.
 
-Chạy sai thứ tự thì báo `relation does not exist` — nghĩa là nhảy cóc, quay
-lại chạy file trước, đừng cố sửa.
+Đo được 03/09/2026: tên miền **đã đăng ký**, DNS quản ở **BKNS**
+(`ns1/ns2/ns3.bkdns.vn`), apex và `www` đều trỏ `103.121.88.249` — trang giới
+thiệu của BKNS. **Không có bản ghi MX**, nên đổi DNS không làm mất thư nào.
 
-### 2. Phép thử 20 phút — cả chuỗi có thông không
+Chia việc: chủ dự án sửa DNS ở BKNS (bốn bản ghi `A` → GitHub Pages); Claude
+Code đo thấy DNS xong thì tự thêm file `CNAME` vào repo và đẩy. Từng bước ở
+`HUONG-DAN-DUNG-BANG.md` bước 6.
 
-Tạo tài khoản + một cây thử, mở app, đi qua **ba mốc**:
+⚠ **Thứ tự không đảo được.** Đặt tên miền cho Pages trước khi DNS trỏ đúng thì
+Pages chuyển hướng `trongdung1982.github.io` sang một tên miền còn chỉ về
+BKNS — app tắt ở cả hai chỗ cho tới khi DNS xong.
 
-1. hiện ô đăng nhập *(không phải trang trắng, không phải chữ đỏ)*
-2. gõ email + mật khẩu → vào được
-3. sơ đồ mở ra **trống** — đúng, vì cây còn rỗng
-
-Dừng ở mốc nào thì báo đúng mốc ấy: ba mốc hỏng vì ba nguyên nhân khác hẳn
-nhau. Đây đúng tinh thần `CLAUDE.md` mục 8 — *"việc nào chưa chắc thì làm phép
-thử nhỏ trước khi xây lên trên"*.
-
-### 3. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
+### 2. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
 
 Trigger Apps Script chạy nền: đọc REST API Supabase, ghi JSON ra Drive. Cũng
 là trigger giữ cho gói miễn phí khỏi tự tạm dừng sau 7 ngày.
 
-⚠ Làm **trước bước 4** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
+⚠ Làm **trước bước 3** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
 một hệ thống chưa có sao lưu là việc không sửa lại được.
 
-### 4. Script di dời dữ liệu (H5)
+### 3. Script di dời dữ liệu (H5)
 
 `hinh-dang.boCay()` đã làm sẵn phần khó — script chỉ còn đọc file JSON, gọi
 nó, đổ vào bảng, kèm bước đối chiếu số bản ghi trước/sau. Nhớ điền `uid` cho
 mọi bản ghi ngay tại đây *(xem `repo.canhBaoThieuUid()` để biết vì sao không
 để app tự điền)*.
 
-### 5. Phép thử H9 — phân quyền THẬT
+### 4. Phép thử H9 — phân quyền THẬT
 
 Hai tài khoản email khác nhau, mỗi tài khoản một nhánh, xác nhận **bằng mắt**
-là không sửa được nhánh kia. Bắt buộc đứng **sau bước 1** (có bảng và RLS) và
-**sau bước 4** (có dữ liệu thật để thử), và **trước** khi viết bất cứ tài liệu
-nào mô tả phân quyền như đã chạy.
+là không sửa được nhánh kia. Bắt buộc đứng **sau bước 3** (có dữ liệu thật để
+thử), và **trước** khi viết bất cứ tài liệu nào mô tả phân quyền như đã chạy.
 
 ⚠ `PHAN-QUYEN_V03` ghi ba vòng kiểm chứng của bản Drive. **Chúng không áp dụng
 được cho RLS** — cơ chế khác hẳn, chưa kiểm chứng lần nào trong dự án này. Bắt
 đầu lại từ số 0.
-
-### 6. Gắn tên miền `nguyentrongbac.io.vn` (H6)
 
 ---
 

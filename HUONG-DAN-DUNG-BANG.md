@@ -153,6 +153,94 @@ nhau, và biết dừng ở đâu là đã đi được nửa đường tìm ra 
 
 ---
 
+## Bước 6 — Gắn tên miền `nguyentrongbac.io.vn`
+
+**Bạn chỉ phải làm ĐÚNG MỘT VIỆC ở bước này: sửa DNS.** Phần còn lại (file
+`CNAME` trong repo) Claude Code làm, sau khi đo thấy DNS đã trỏ đúng.
+
+### Hiện trạng, đo ngày 03/09/2026
+
+| Thứ | Giá trị đang có |
+|---|---|
+| Tên miền | **đã đăng ký rồi**, đang chạy |
+| Nơi quản lý DNS | **BKNS** — máy chủ tên `ns1/ns2/ns3.bkdns.vn` |
+| `nguyentrongbac.io.vn` trỏ về | `103.121.88.249` — trang giới thiệu của BKNS |
+| `www.nguyentrongbac.io.vn` trỏ về | cùng địa chỉ ấy |
+| Thư điện tử theo tên miền | **không có** (không có bản ghi MX) |
+
+Dòng cuối là dòng đáng mừng: đổi DNS **không làm mất hòm thư nào**, vì tên
+miền này chưa từng nhận thư.
+
+### 6.1 Sửa DNS ở BKNS *(việc của bạn)*
+
+Đăng nhập trang quản lý tên miền của **BKNS** (`bkns.vn`), tìm mục **Quản lý
+DNS** / **Bản ghi DNS** của `nguyentrongbac.io.vn`, rồi:
+
+**a) Xoá bản ghi `A` đang trỏ về `103.121.88.249`** (bản ghi tên `@` hoặc để
+trống). Đây là trang quảng cáo của BKNS, không phải của bạn.
+
+**b) Thêm BỐN bản ghi `A` mới**, tất cả cùng tên `@`:
+
+| Loại | Tên | Trỏ về |
+|---|---|---|
+| A | `@` | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+
+Bốn địa chỉ này là máy chủ GitHub Pages. **Phải đủ cả bốn** — GitHub dùng
+chúng để đỡ tải và để chịu được khi một máy hỏng.
+
+**c) Sửa bản ghi của `www`** thành loại `CNAME` trỏ về
+`trongdung1982.github.io` *(có dấu chấm cuối hay không là tuỳ trang BKNS,
+làm theo mẫu sẵn có của họ)*. Nếu BKNS không cho `www` là `CNAME` thì bỏ hẳn
+`www` đi cũng được — không bắt buộc.
+
+**Tự kiểm:** mở `https://dnschecker.org`, gõ `nguyentrongbac.io.vn`, chọn
+loại **A**, bấm Search. Khi phần lớn các dấu đã xanh và hiện `185.199.…` là
+xong. **Chờ khoảng 2 giờ** — bản ghi cũ có hạn nhớ 2 giờ (TTL 7200), nên
+trước đó vẫn thấy địa chỉ cũ là bình thường, không phải làm sai.
+
+### 6.2 Sau đó nhắn cho Claude Code *(việc của máy)*
+
+Nhắn một câu: *"DNS đã đổi rồi"*. Claude Code sẽ tự đo, rồi tự thêm file
+`CNAME` vào repo và đẩy lên.
+
+⚠ **Vì sao KHÔNG làm ngược thứ tự.** Đặt tên miền cho GitHub Pages trước khi
+DNS trỏ đúng thì Pages lập tức chuyển hướng địa chỉ `trongdung1982.github.io`
+sang tên miền mới — mà tên miền mới lúc ấy còn chỉ về BKNS. Kết quả là app
+**không mở được ở cả hai chỗ**, cho tới khi DNS xong. Làm đúng thứ tự thì
+không có khoảng trống nào.
+
+### 6.3 Bật khoá bảo mật *(việc của bạn, làm sau cùng)*
+
+Sau khi Claude Code báo đã đẩy file `CNAME`, đợi thêm chừng **15 phút đến 1
+giờ** để GitHub tự xin chứng chỉ bảo mật, rồi:
+
+GitHub → repo `giapha-supabase` → **Settings** → **Pages** → tích ô
+**Enforce HTTPS**.
+
+Ô ấy còn mờ chưa bấm được nghĩa là chứng chỉ chưa cấp xong — đợi thêm, đừng
+làm gì khác.
+
+**Tự kiểm cuối cùng:** mở `https://nguyentrongbac.io.vn` — phải thấy ô đăng
+nhập của app, và trên thanh địa chỉ có **hình ổ khoá**.
+
+### 6.4 Một việc nữa trong Supabase, nếu dùng nút "Quên mật khẩu?"
+
+Supabase gửi thư đổi mật khẩu kèm một đường dẫn quay lại app, và nó chỉ chấp
+nhận những địa chỉ đã khai trước. Vào Supabase → **Authentication** → **URL
+Configuration**:
+
+- **Site URL**: `https://nguyentrongbac.io.vn`
+- **Redirect URLs**: thêm cả `https://trongdung1982.github.io/giapha-supabase/**`
+  *(giữ lại địa chỉ cũ để còn thử được)*
+
+Không làm bước này thì đăng nhập bằng mật khẩu **vẫn chạy bình thường** — chỉ
+riêng nút *Quên mật khẩu?* là gửi người dùng về sai chỗ.
+
+---
+
 ## Thêm một người trong họ, sau này
 
 Không có nút "Đăng ký" trên app — **cố ý**. Gia phả là dữ liệu riêng; ai được
