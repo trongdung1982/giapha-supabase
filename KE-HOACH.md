@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 03/09/2026 · Bước gần nhất: **b87***
+*Cập nhật 03/09/2026 08:35 · Bước gần nhất: **b88***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -13,11 +13,12 @@
 
 ## Đang ở đâu
 
-**Bộ khung đã dựng xong (b87, 03/09/2026). Chưa chạy thật một lần nào.**
+**Khung đã dựng xong và ĐÃ LÊN MẠNG. Nhưng chưa nối được với cơ sở dữ liệu —
+bốn file SQL chưa ai chạy.**
 
-Đếm theo đúng số dòng của bảng dưới, đừng chép lại con số của lần trước —
-`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai mươi"* trong khi bảng cứ
-dài thêm.
+**Tám việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng chép lại
+con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
+mươi"* trong khi bảng cứ dài thêm).
 
 | Việc | Bước | Chốt |
 |---|---|---|
@@ -27,26 +28,37 @@ dài thêm.
 | Thư viện supabase-js chép vào `vendor/` | b87 | ✓ |
 | Bộ kiểm `kiem-hinh-dang.mjs` — 14/14 đạt | b87 | ✓ |
 | Chuyển sang repo `giapha-supabase`, dựng khung tài liệu | b87 | ✓ |
+| **Đẩy lên GitHub, Pages phục vụ thật** | **b88** | ✓ **03/09/2026** |
+| `/kiem-tra` thêm phép 2b và 9; `/ket-thuc` tách hai nhánh | b88 | ✓ |
+
+Đã đo trên địa chỉ thật `https://trongdung1982.github.io/giapha-supabase/`:
+trang gốc và `js/app.js` · `js/vendor/supabase.js` đều trả **HTTP 200**, đúng
+kiểu MIME `application/javascript` — điều kiện để trình duyệt nạp được ES
+Module. `robots.txt` có mặt. Không lộ khoá bí mật nào.
+
+⚠ **Lên mạng không phải chạy được.** Mở địa chỉ ấy bây giờ sẽ thấy ô đăng
+nhập, nhưng đăng nhập xong không có gì phía sau — chưa có bảng nào trong cơ sở
+dữ liệu.
 
 ---
 
 ## Việc kế tiếp — ĐÚNG THỨ TỰ NÀY
 
-Ba việc đầu **phải xong trước** khi làm bất cứ việc nào từ 4 trở đi. Cả bộ
+Hai việc đầu **phải xong trước** khi làm bất cứ việc nào từ 3 trở đi. Cả bộ
 khung đang đứng trên một giả định chưa ai kiểm: **rằng bốn file SQL chạy được.**
 
-### 1. ⛔ CHẶN — mời `ntdungsnotion` vào repo *(chủ dự án làm)*
+*(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
+chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-Máy này giữ đăng nhập GitHub của `ntdungsnotion`; repo mới thuộc
-`trongdung1982`. Đẩy lên báo `403`. Ba bước ở `HUONG-DAN-DUNG-BANG.md`.
-Ba commit đang nằm trên máy, chưa lên mạng.
+### 1. ⛔ CHẶN — chạy bốn file SQL *(chủ dự án làm)*
 
-### 2. Chạy bốn file SQL *(chủ dự án làm)*
+`luoc-do/01` → `02` → `03` → `04`, **đúng thứ tự**. Từng bước, tên nút chính
+xác, ở `HUONG-DAN-DUNG-BANG.md` bước 1.
 
-`luoc-do/01` → `02` → `03` → `04`, đúng thứ tự. Từng bước ở
-`HUONG-DAN-DUNG-BANG.md` bước 1.
+Chạy sai thứ tự thì báo `relation does not exist` — nghĩa là nhảy cóc, quay
+lại chạy file trước, đừng cố sửa.
 
-### 3. Phép thử 20 phút — cả chuỗi có thông không
+### 2. Phép thử 20 phút — cả chuỗi có thông không
 
 Tạo tài khoản + một cây thử, mở app, đi qua **ba mốc**:
 
@@ -58,32 +70,33 @@ Dừng ở mốc nào thì báo đúng mốc ấy: ba mốc hỏng vì ba nguyê
 nhau. Đây đúng tinh thần `CLAUDE.md` mục 8 — *"việc nào chưa chắc thì làm phép
 thử nhỏ trước khi xây lên trên"*.
 
-### 4. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
+### 3. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
 
 Trigger Apps Script chạy nền: đọc REST API Supabase, ghi JSON ra Drive. Cũng
 là trigger giữ cho gói miễn phí khỏi tự tạm dừng sau 7 ngày.
 
-⚠ Làm **trước** bước 5, không phải sau. Nhập dữ liệu thật vào một hệ thống
-chưa có sao lưu là việc không sửa lại được.
+⚠ Làm **trước bước 4** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
+một hệ thống chưa có sao lưu là việc không sửa lại được.
 
-### 5. Script di dời dữ liệu (H5)
+### 4. Script di dời dữ liệu (H5)
 
 `hinh-dang.boCay()` đã làm sẵn phần khó — script chỉ còn đọc file JSON, gọi
 nó, đổ vào bảng, kèm bước đối chiếu số bản ghi trước/sau. Nhớ điền `uid` cho
 mọi bản ghi ngay tại đây *(xem `repo.canhBaoThieuUid()` để biết vì sao không
 để app tự điền)*.
 
-### 6. Phép thử H9 — phân quyền THẬT
+### 5. Phép thử H9 — phân quyền THẬT
 
 Hai tài khoản email khác nhau, mỗi tài khoản một nhánh, xác nhận **bằng mắt**
-là không sửa được nhánh kia. Bắt buộc đứng **sau** bước 2 và 5, và **trước**
-khi viết bất cứ tài liệu nào mô tả phân quyền như đã chạy.
+là không sửa được nhánh kia. Bắt buộc đứng **sau bước 1** (có bảng và RLS) và
+**sau bước 4** (có dữ liệu thật để thử), và **trước** khi viết bất cứ tài liệu
+nào mô tả phân quyền như đã chạy.
 
 ⚠ `PHAN-QUYEN_V03` ghi ba vòng kiểm chứng của bản Drive. **Chúng không áp dụng
 được cho RLS** — cơ chế khác hẳn, chưa kiểm chứng lần nào trong dự án này. Bắt
 đầu lại từ số 0.
 
-### 7. Gắn tên miền `nguyentrongbac.io.vn` (H6)
+### 6. Gắn tên miền `nguyentrongbac.io.vn` (H6)
 
 ---
 
