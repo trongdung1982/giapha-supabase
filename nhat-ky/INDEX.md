@@ -1,6 +1,6 @@
 # NHẬT KÝ — nhánh Supabase
 
-*Bắt đầu từ bước 87 · Cập nhật 03/09/2026 06:42*
+*Bắt đầu từ bước 87 · Cập nhật 03/09/2026 17:04*
 
 > ⚠ **FILE NÀY CHỈ ĐƯỢC THÊM DÒNG. Không bao giờ sinh lại cả file.**
 >
@@ -36,6 +36,7 @@ thường, không phải thiếu sót.
 |---|---|---|---|
 | 87 | 03/09/2026 | Dựng bộ khung app trên Supabase: 12 bảng, một cửa ghi, tầng services viết lại; `domains/` không sửa dòng nào | `b87-bo-khung-supabase.md` |
 | 88 | 03/09/2026 | App lên mạng thật ở GitHub Pages; thêm phép kiểm bắt bộ bất biến bố cục đang gác nhầm nhánh | `b88-len-mang-va-bit-lo-hong-bo-kiem.md` |
+| 89 | 03/09/2026 | Chạy thật lần đầu: thêm được người mới; tên miền riêng có HTTPS; bộ kiểm lên 19 phép | `b89-chay-that-va-ten-mien.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước

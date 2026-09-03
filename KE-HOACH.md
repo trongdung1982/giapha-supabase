@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 03/09/2026 14:40 · Bước gần nhất: **b89***
+*Cập nhật 03/09/2026 17:10 · Bước gần nhất: **b89***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -18,7 +18,7 @@
 Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
-**Mười một việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Mười ba việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -35,11 +35,13 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Bốn file SQL chạy thật · đăng nhập · thêm người mới** | **b89** | ✓ **03/09/2026** |
 | Máy chủ thử tại chỗ (`kiem-thu/may-chu-tai-cho.mjs`, ngoài repo) | b89 | ✓ |
 | **Tên miền `nguyentrongbac.io.vn` chạy, có HTTPS (H6)** | **b89** | ✓ **03/09/2026 15:57** |
+| Sửa lỗi cột `not null` nhận `null`; bộ kiểm 14 → 19 phép | b89 | ✓ |
+| `gh` CLI trên máy `LapASUS` + `MAY-THU-HAI.md` | b89 | ✓ |
 
-Đã đo trên địa chỉ thật `https://trongdung1982.github.io/giapha-supabase/`:
-trang gốc và `js/app.js` · `js/vendor/supabase.js` đều trả **HTTP 200**, đúng
-kiểu MIME `application/javascript` — điều kiện để trình duyệt nạp được ES
-Module. `robots.txt` có mặt. Không lộ khoá bí mật nào.
+**Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
+chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
+sang `https://`. Địa chỉ cũ `trongdung1982.github.io/giapha-supabase/` và
+`www.` đều `301` về đây, nên link cũ không ai bị lạc.
 
 **Lỗi đầu tiên của lần chạy thật, và nó đáng ghi lại.** Thêm người mới báo
 `null value in column "vn" … violates not-null`. Nguyên nhân không nằm ở chỗ
@@ -57,35 +59,25 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. ⚠ Tích ô *Enforce HTTPS* *(chủ dự án làm, việc 30 giây)*
-
-GitHub → repo `giapha-supabase` → **Settings** → **Pages** → tích
-**Enforce HTTPS**.
-
-Đo 03/09/2026 15:57: `http://nguyentrongbac.io.vn` trả thẳng `200`, **không**
-đẩy sang `https`. Nghĩa là ai gõ thiếu chữ `s` thì mật khẩu đăng nhập đi qua
-đường không mã hoá. Đây là việc duy nhất còn lại của H6, và là việc phải bấm
-tay — máy này không có `gh` CLI để làm hộ.
-
-### 2. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
+### 1. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
 
 Trigger Apps Script chạy nền: đọc REST API Supabase, ghi JSON ra Drive. Cũng
 là trigger giữ cho gói miễn phí khỏi tự tạm dừng sau 7 ngày.
 
-⚠ Làm **trước bước 3** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
+⚠ Làm **trước bước 2** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
 một hệ thống chưa có sao lưu là việc không sửa lại được.
 
-### 3. Script di dời dữ liệu (H5)
+### 2. Script di dời dữ liệu (H5)
 
 `hinh-dang.boCay()` đã làm sẵn phần khó — script chỉ còn đọc file JSON, gọi
 nó, đổ vào bảng, kèm bước đối chiếu số bản ghi trước/sau. Nhớ điền `uid` cho
 mọi bản ghi ngay tại đây *(xem `repo.canhBaoThieuUid()` để biết vì sao không
 để app tự điền)*.
 
-### 4. Phép thử H9 — phân quyền THẬT
+### 3. Phép thử H9 — phân quyền THẬT
 
 Hai tài khoản email khác nhau, mỗi tài khoản một nhánh, xác nhận **bằng mắt**
-là không sửa được nhánh kia. Bắt buộc đứng **sau bước 3** (có dữ liệu thật để
+là không sửa được nhánh kia. Bắt buộc đứng **sau bước 2** (có dữ liệu thật để
 thử), và **trước** khi viết bất cứ tài liệu nào mô tả phân quyền như đã chạy.
 
 ⚠ `PHAN-QUYEN_V03` ghi ba vòng kiểm chứng của bản Drive. **Chúng không áp dụng
@@ -114,6 +106,7 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 | Việc | Ghi ở đâu |
 |---|---|
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
+| ⚠ **Chưa bấm thử app trên cây 681 người** — bộ kiểm chạy trên cây 59 người, và lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
 | Bốn màn hình chưa mở được (sao lưu · dựng gia phả mới · bỏ chọn · quyền ảnh) | `KIEN-TRUC.md` mục 6 |
 | Giấu chi tiết người còn sống với người chỉ có quyền xem | `KIEN-TRUC.md` mục 6 |
 | Lỗi điện thoại: chọn số đời không tự vẽ lại | `BAT-DAU.md` mục 5 |

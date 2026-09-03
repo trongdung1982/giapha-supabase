@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 03/09/2026*
+*Nhánh Supabase · cập nhật 03/09/2026 17:10*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -21,6 +21,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Thêm/nâng cấp thư viện | `js/vendor/DOC-VENDOR.md` — và **hỏi chủ dự án trước** |
 | Xuất/nhập GEDCOM, Excel | `../tai-lieu/CAU-TRUC-DU-LIEU_V06.md` mục *Ánh xạ GEDCOM* |
 | Hướng dẫn chủ dự án bấm gì | `HUONG-DAN-DUNG-BANG.md` |
+| Mở app tại chỗ, cài máy thứ hai, dùng `gh` | `../MAY-THU-HAI.md` *(ngoài repo)* |
 | Muốn biết vì sao chuyển nhà | `BAT-DAU.md` (chứng cứ gốc, không sửa) |
 
 **Đừng đọc cả thư mục.** Đọc theo bảng trên. Đặc biệt: đừng mở mọi file trong
