@@ -191,7 +191,16 @@ nguyên trong mã nhưng **luôn `false`**.
 tự vẽ lại sơ đồ trên điện thoại. `pages/tree-view.js` chép nguyên sang, nên lỗi
 ấy chép nguyên theo. Chưa đo, chưa biết gốc.
 
-**Chưa gắn tên miền `nguyentrongbac.io.vn`.**
+**Tên miền `nguyentrongbac.io.vn` đã gắn 03/09/2026** — DNS ở BKNS trỏ bốn bản
+ghi `A` về GitHub Pages, `www` là `CNAME`, file `CNAME` nằm ở gốc repo. Cả
+`www` lẫn địa chỉ cũ `trongdung1982.github.io/giapha-supabase/` đều `301` về
+tên miền mới. Chứng chỉ Let's Encrypt cấp cho `CN=nguyentrongbac.io.vn`, hạn
+tới 02/12/2026, GitHub tự gia hạn.
+
+⚠ **Còn một ô chưa tích: Settings → Pages → *Enforce HTTPS*.** Đo 03/09/2026:
+`http://nguyentrongbac.io.vn` vẫn trả thẳng `200` chứ không đẩy sang `https`,
+tức ai gõ thiếu chữ `s` thì mật khẩu đăng nhập đi qua đường không mã hoá.
+Việc này phải bấm tay trong giao diện GitHub — máy này không có `gh` CLI.
 
 ---
 

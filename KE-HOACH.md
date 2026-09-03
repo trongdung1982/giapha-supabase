@@ -18,8 +18,8 @@
 Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
-**Mười việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng chép
-lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
+**Mười một việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
 | Việc | Bước | Chốt |
@@ -34,6 +34,7 @@ mươi"* trong khi bảng cứ dài thêm).
 | `/kiem-tra` thêm phép 2b và 9; `/ket-thuc` tách hai nhánh | b88 | ✓ |
 | **Bốn file SQL chạy thật · đăng nhập · thêm người mới** | **b89** | ✓ **03/09/2026** |
 | Máy chủ thử tại chỗ (`kiem-thu/may-chu-tai-cho.mjs`, ngoài repo) | b89 | ✓ |
+| **Tên miền `nguyentrongbac.io.vn` chạy, có HTTPS (H6)** | **b89** | ✓ **03/09/2026 15:57** |
 
 Đã đo trên địa chỉ thật `https://trongdung1982.github.io/giapha-supabase/`:
 trang gốc và `js/app.js` · `js/vendor/supabase.js` đều trả **HTTP 200**, đúng
@@ -56,22 +57,15 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. ⭐ Gắn tên miền `nguyentrongbac.io.vn` (H6) — ĐANG LÀM
+### 1. ⚠ Tích ô *Enforce HTTPS* *(chủ dự án làm, việc 30 giây)*
 
-Chủ dự án nói thẳng 03/09/2026: **đây là mục đích chính**. Nên nó lên đầu
-danh sách, không còn nằm ở cuối như bản trước.
+GitHub → repo `giapha-supabase` → **Settings** → **Pages** → tích
+**Enforce HTTPS**.
 
-Đo được 03/09/2026: tên miền **đã đăng ký**, DNS quản ở **BKNS**
-(`ns1/ns2/ns3.bkdns.vn`), apex và `www` đều trỏ `103.121.88.249` — trang giới
-thiệu của BKNS. **Không có bản ghi MX**, nên đổi DNS không làm mất thư nào.
-
-Chia việc: chủ dự án sửa DNS ở BKNS (bốn bản ghi `A` → GitHub Pages); Claude
-Code đo thấy DNS xong thì tự thêm file `CNAME` vào repo và đẩy. Từng bước ở
-`HUONG-DAN-DUNG-BANG.md` bước 6.
-
-⚠ **Thứ tự không đảo được.** Đặt tên miền cho Pages trước khi DNS trỏ đúng thì
-Pages chuyển hướng `trongdung1982.github.io` sang một tên miền còn chỉ về
-BKNS — app tắt ở cả hai chỗ cho tới khi DNS xong.
+Đo 03/09/2026 15:57: `http://nguyentrongbac.io.vn` trả thẳng `200`, **không**
+đẩy sang `https`. Nghĩa là ai gõ thiếu chữ `s` thì mật khẩu đăng nhập đi qua
+đường không mã hoá. Đây là việc duy nhất còn lại của H6, và là việc phải bấm
+tay — máy này không có `gh` CLI để làm hộ.
 
 ### 2. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
 
