@@ -18,6 +18,10 @@
 Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
+**Còn thiếu đúng một thứ trước khi được phép nhập dữ liệu thật: sao lưu phải
+CHẠY.** Mã đã viết và đã kiểm (b90), nhưng chưa ai dựng nó lên Apps Script —
+xem việc 1 ngay dưới.
+
 **Mười bốn việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).

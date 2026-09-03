@@ -37,6 +37,7 @@ thường, không phải thiếu sót.
 | 87 | 03/09/2026 | Dựng bộ khung app trên Supabase: 12 bảng, một cửa ghi, tầng services viết lại; `domains/` không sửa dòng nào | `b87-bo-khung-supabase.md` |
 | 88 | 03/09/2026 | App lên mạng thật ở GitHub Pages; thêm phép kiểm bắt bộ bất biến bố cục đang gác nhầm nhánh | `b88-len-mang-va-bit-lo-hong-bo-kiem.md` |
 | 89 | 03/09/2026 | Chạy thật lần đầu: thêm được người mới; tên miền riêng có HTTPS; bộ kiểm lên 19 phép | `b89-chay-that-va-ten-mien.md` |
+| 90 | 03/09/2026 | Mã sao lưu (H8): trigger Apps Script chép 12 bảng ra Drive mỗi đêm, kiêm giữ sống. Chưa ai dựng | `b90-sao-luu-ra-drive.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -51,7 +52,9 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 
 | Câu đã nói sai | Ở bước | Sửa ở bước | Sự thật |
 |---|---|---|---|
-| *(chưa có)* | | | |
+| `KIEN-TRUC.md` mục 6 mở đầu bằng *"Chưa chạy thật một lần nào"* | b87 | b90 | Đúng cho tới b88. Từ 03/09/2026 (b89) SQL đã chạy, đăng nhập được, thêm được người mới. Thứ **thật sự** chưa kiểm chứng lần nào là **phân quyền RLS** (H9) |
+| `KIEN-TRUC.md` mục 6 ghi *"Còn một ô chưa tích: Enforce HTTPS"* | b88 | b90 | Đã tích cuối ngày 03/09/2026; đo lại `http://` trả `301` sang `https://` |
+| `KE-HOACH-HA-TANG-Supabase_V01.md` bước H8: *"gỡ deploy dạng web app"* | *(24/08/2026, trước b87)* | b90 | Giả định nền của câu ấy chết ngày 02/09 khi chốt **giữ bản Apps Script chạy tiếp** cho người trong họ. Gỡ deploy là tắt app của cả họ — H8 làm bằng một dự án Apps Script **mới, riêng** |
 
 ---
 
