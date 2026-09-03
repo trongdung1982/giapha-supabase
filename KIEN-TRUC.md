@@ -58,6 +58,7 @@ supabase/  (= gốc repo giapha-supabase)
 │   └── bXX-*.md            ← mỗi bước một file, không bao giờ sửa lại
 │
 ├── luoc-do/                ← SQL, dán tay vào Supabase, chạy theo số thứ tự
+├── sao-luu/                ← mã Apps Script chạy nền + hướng dẫn dựng
 ├── kiem-thu/               ← bài kiểm chạy bằng Node, không cần mạng
 └── js/
     ├── cau-hinh.js         ← ⚠ file DUY NHẤT chủ dự án sửa tay
@@ -147,19 +148,19 @@ Chi tiết và cách nâng cấp: `js/vendor/DOC-VENDOR.md`.
 
 ## 6. ⚠ CÒN DỞ — đừng mô tả như đã có
 
-**Chưa chạy thật một lần nào.** Chưa có project Supabase nào nhận bốn file SQL,
-chưa ai đăng nhập được, chưa có cây nào mở ra.
+**Đã chạy thật 03/09/2026** — bốn file SQL đã chạy, đăng nhập được, thêm được
+người mới. *(Dòng cũ ở đây nói "chưa chạy thật lần nào"; đúng cho tới b89.)*
 
-Thứ **đã** kiểm được, và chỉ thế:
+Nhưng **phân quyền RLS thì chưa ai kiểm chứng lần nào** — đó là phép thử H9,
+và nó vẫn còn nguyên. Các bộ kiểm dưới đây chạy trong Node, **không đụng
+mạng**, nên chúng **không** chứng minh RLS chặn đúng:
 
 | Bộ kiểm | Kết quả | Chứng minh được gì |
 |---|---|---|
-| `kiem-thu/kiem-hinh-dang.mjs` | **14/14 đạt** trên gia phả 59 người | Logic thuần đổi hình dữ liệu |
+| `kiem-thu/kiem-hinh-dang.mjs` | **19/19 đạt** trên gia phả 59 người | Logic thuần đổi hình dữ liệu |
+| `kiem-thu/kiem-sao-luu.mjs` | **29/29 đạt** | Mã trigger sao lưu, với Supabase và Drive giả |
 | Đồ thị `import` | **47/47** nối được | App nạp được, không thiếu module |
-| `/kiem-tra` | đạt cả 8 phép | Không vi phạm phân lớp |
-
-Cả ba chạy trong Node, **không đụng mạng** — nên chúng **không** chứng minh SQL
-chạy được hay RLS chặn đúng.
+| `/kiem-tra` | đạt cả 9 phép | Không vi phạm phân lớp |
 
 **Giới hạn theo nhánh chưa có hiệu lực.** Bảng `branches` và `branch_access` đã
 dựng, hai hàng rào trong `luu_cay()` đã đứng đúng chỗ, nhưng hàm
@@ -168,17 +169,31 @@ Chưa viết đủ được vì **chưa ai định nghĩa "chi/nhánh"**. Đoán
 rồi để RLS thi hành là cách tệ nhất: sai thì không ai thấy, người ta chỉ thấy
 *"không sửa được ông nội mình"* mà không hiểu vì sao.
 
-**Chưa có bản sao lưu nào.** Trên Drive, mỗi lần ghi thành công app tự cất một
-bản. Ở đây cơ chế ấy chưa dựng lại — đây là bước **H8**, một trigger Apps Script
-chạy nền đọc REST API rồi ghi JSON ra Drive. **Việc gấp nhất trong danh sách**,
-không phải việc để dành.
+**Sao lưu: mã đã viết và đã kiểm, nhưng CHƯA AI DỰNG.** Bước **H8** viết xong
+03/09/2026 — `sao-luu/SaoLuu.gs` chép cả 12 bảng cộng danh sách tài khoản ra
+một file JSON trên Drive, mỗi đêm một lần, và mỗi lần chạy cũng là một lần giữ
+cho gói miễn phí Supabase khỏi tự tạm dừng sau 7 ngày.
+
+Ba điều phải nói rõ, đừng mô tả hơn thế:
+
+1. **Chưa chạy lần nào trên Apps Script thật.** Chủ dự án phải dựng dự án Apps
+   Script mới và dán khoá bí mật vào — `sao-luu/HUONG-DAN-SAO-LUU.md`. Cho tới
+   lúc ấy vẫn là **không có bản sao lưu nào**.
+2. **Chưa ai thử KHÔI PHỤC.** Có file sao lưu không đồng nghĩa khôi phục được;
+   chuyện thứ hai chỉ chứng minh được bằng cách đổ ngược vào một project trống.
+3. **Ảnh không được chép**, chỉ được liệt kê. Xem mục 7.
+
+⚠ Đây là dự án Apps Script **RIÊNG**, không phải `giapha/gas/`. Bước H8 của
+`KE-HOACH-HA-TANG-Supabase_V01.md` viết *"gỡ deploy dạng web app"* — câu ấy viết
+24/08/2026, trước khi có quyết định giữ bản Apps Script chạy tiếp cho người
+trong họ. **Gỡ deploy hôm nay là tắt app của cả họ.** Không làm.
 
 **Bốn màn hình chưa mở được** — mọi hàm chúng gọi đều ném lỗi có câu chữ đàng
 hoàng, **không giả vờ thành công**:
 
 | Màn hình | Vì sao |
 |---|---|
-| Sao lưu | Xem trên |
+| Sao lưu *(nút trong app)* | Sao lưu nay chạy nền ngoài app; nút này chưa nối lại vào đâu |
 | Dựng gia phả mới | Cần một hàm `security definer` nữa, chưa viết |
 | Bỏ chọn gia phả | Nền này **không có** "gia phả mặc định" để quay về |
 | Mở quyền xem ảnh | Không còn nỗi khổ ấy — kho Supabase một luật cho cả kho |
@@ -197,10 +212,8 @@ ghi `A` về GitHub Pages, `www` là `CNAME`, file `CNAME` nằm ở gốc repo.
 tên miền mới. Chứng chỉ Let's Encrypt cấp cho `CN=nguyentrongbac.io.vn`, hạn
 tới 02/12/2026, GitHub tự gia hạn.
 
-⚠ **Còn một ô chưa tích: Settings → Pages → *Enforce HTTPS*.** Đo 03/09/2026:
-`http://nguyentrongbac.io.vn` vẫn trả thẳng `200` chứ không đẩy sang `https`,
-tức ai gõ thiếu chữ `s` thì mật khẩu đăng nhập đi qua đường không mã hoá.
-Việc này phải bấm tay trong giao diện GitHub — máy này không có `gh` CLI.
+✓ **Ô *Enforce HTTPS* đã tích** cuối ngày 03/09/2026; đo lại: `http://` trả
+`301` sang `https://`. *(Dòng cũ ở đây từng ghi việc này còn treo.)*
 
 ---
 
@@ -223,3 +236,14 @@ còn ảnh thì không.
 
 Câu hỏi cho chủ dự án: *ảnh chân dung trong họ có cần kín bằng dữ liệu không,
 hay để công khai theo đường dẫn khó đoán là chấp nhận được?*
+
+### ⚠ Và ảnh còn một chỗ hở thứ hai: sao lưu không chép ảnh
+
+`sao-luu/SaoLuu.gs` **chỉ liệt kê** tệp trong kho (tên, dung lượng) chứ không
+tải về. Nghĩa là ảnh vẫn nằm đúng **một chỗ duy nhất**, và mất chỗ ấy là mất
+hẳn — trong khi dữ liệu chữ thì đêm nào cũng có một bản trên Drive.
+
+Hôm nay chưa có tấm ảnh thật nào nên chưa mất gì. Danh sách trong bản sao lưu
+tồn tại đúng để lỗ hổng này **đo được**: mở file, đọc `dem.anh`, đó là số tấm
+chưa được chép đi đâu. Chép ảnh về Drive là việc riêng — chép từng phần, mỗi
+lần chạy một ít, vì trigger Apps Script chỉ có 6 phút.

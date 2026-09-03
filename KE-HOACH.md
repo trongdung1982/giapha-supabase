@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 03/09/2026 17:10 · Bước gần nhất: **b89***
+*Cập nhật 03/09/2026 17:50 · Bước gần nhất: **b90***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -18,7 +18,7 @@
 Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
-**Mười ba việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Mười bốn việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -37,6 +37,7 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Tên miền `nguyentrongbac.io.vn` chạy, có HTTPS (H6)** | **b89** | ✓ **03/09/2026 15:57** |
 | Sửa lỗi cột `not null` nhận `null`; bộ kiểm 14 → 19 phép | b89 | ✓ |
 | `gh` CLI trên máy `LapASUS` + `MAY-THU-HAI.md` | b89 | ✓ |
+| **Mã sao lưu (H8) viết xong, bộ kiểm 29 phép** | **b90** | ✓ **03/09/2026** — ⚠ chủ dự án chưa dựng |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -59,13 +60,26 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. Sao lưu (H8) — TRƯỚC khi có dữ liệu thật
+### 1. Sao lưu (H8) — ⚠ CÒN MỘT VIỆC CHỦ DỰ ÁN PHẢI BẤM TAY
 
-Trigger Apps Script chạy nền: đọc REST API Supabase, ghi JSON ra Drive. Cũng
-là trigger giữ cho gói miễn phí khỏi tự tạm dừng sau 7 ngày.
+**Mã đã viết và đã kiểm** (b90, 03/09/2026): `sao-luu/SaoLuu.gs` chép 12 bảng
++ danh sách tài khoản ra một file JSON trên Drive mỗi đêm, giữ 30 bản gần nhất
+cộng một bản mỗi tháng, gửi thư khi hỏng và khi dữ liệu tụt hơn một nửa. Bộ
+kiểm `kiem-thu/kiem-sao-luu.mjs` chạy chính file `.gs` ấy trong Node với
+Supabase giả và Drive giả: **29/29 đạt**, và sáu phép phá hoại có chủ ý đều
+làm nó đỏ.
 
-⚠ Làm **trước bước 2** (di dời dữ liệu), không phải sau. Nhập dữ liệu thật vào
-một hệ thống chưa có sao lưu là việc không sửa lại được.
+**Nhưng chưa ai dựng nó lên, nên vẫn CHƯA CÓ bản sao lưu nào.** Việc còn lại
+là của chủ dự án, khoảng 20 phút, từng bước ở `sao-luu/HUONG-DAN-SAO-LUU.md`:
+tạo dự án Apps Script mới → dán mã → dán khoá bí mật vào Script Properties →
+chạy `kiemTraKetNoi` → `saoLuuNgay` → `datLichSaoLuu`.
+
+⚠ **Bước 2 (di dời dữ liệu) không được bắt đầu trước khi việc ấy chạy xong** —
+nhập dữ liệu thật vào một hệ thống chưa có sao lưu là việc không sửa lại được.
+
+⚠ Đây là dự án Apps Script **MỚI, RIÊNG**. `KE-HOACH-HA-TANG_V01` bước H8 viết
+*"gỡ deploy dạng web app"* — câu ấy có từ 24/08, trước khi chốt giữ bản Apps
+Script chạy tiếp cho người trong họ. Gỡ deploy hôm nay là tắt app của cả họ.
 
 ### 2. Script di dời dữ liệu (H5)
 
@@ -106,6 +120,8 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 | Việc | Ghi ở đâu |
 |---|---|
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
+| ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
+| ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
 | ⚠ **Chưa bấm thử app trên cây 681 người** — bộ kiểm chạy trên cây 59 người, và lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
 | Bốn màn hình chưa mở được (sao lưu · dựng gia phả mới · bỏ chọn · quyền ảnh) | `KIEN-TRUC.md` mục 6 |
 | Giấu chi tiết người còn sống với người chỉ có quyền xem | `KIEN-TRUC.md` mục 6 |
