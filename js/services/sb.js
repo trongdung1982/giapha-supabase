@@ -5,7 +5,7 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 15:55
+// Phiên bản: 0.2.1 · Cập nhật: 04/09/2026 22:45
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -202,8 +202,8 @@ export async function layPhien() {
     vaiTro,
     docDuoc: true,
     // ⚠ HỎI MÁY CHỦ, không tự suy từ `vaiTro`. Bản cũ viết
-    //   `vaiTro === 'chu' || vaiTro === 'sua'` và câu ấy nay sai hai đường:
-    //   bỏ sót vai `admin` (b93), và cho `sua` chưa được duyệt tưởng mình sửa
+    //   `vaiTro === 'quan_tri_he_thong' || vaiTro === 'sua'` và câu ấy nay sai hai đường:
+    //   bỏ sót vai `quan_tri` (b93), và cho `sua` chưa được duyệt tưởng mình sửa
     //   được — giao diện mở nút Sửa rồi máy chủ mới chặn ở lúc bấm Lưu.
     //   `co_the_sua()` là chỗ DUY NHẤT trả lời câu này; hỏi nó thì không bao
     //   giờ có hai câu trả lời khác nhau cho cùng một người.
@@ -405,7 +405,7 @@ export async function layDanhSachGiaPha() {
     ds.push({
       fileId: t.id, ten: t.name, tenFile: t.tree_code,
       soNguoi: sn, soCap: sc, revision: t.revision,
-      suaDuoc: m.role === 'chu' || m.role === 'sua',
+      suaDuoc: m.role === 'quan_tri_he_thong' || m.role === 'sua',
       doiLuc: t.updated_at,
     });
   }
@@ -526,7 +526,7 @@ export async function trangThaiCuaToi() {
   return data;
 }
 
-/** Đơn đang xếp hàng. Không phải `chu`/`admin` thì máy chủ trả mảng rỗng. */
+/** Đơn đang xếp hàng. Không phải `quan_tri_he_thong`/`quan_tri` thì máy chủ trả mảng rỗng. */
 export async function dsChoDuyet(treeId) {
   const k = layKhach();
   if (!k) return [];

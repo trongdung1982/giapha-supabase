@@ -44,7 +44,7 @@ lại từng cột.
 | Bảng | Vai | Ghi chú |
 |---|---|---|
 | `trees` | Một dòng một gia phả. Chứa `revision` — số chống ghi đè | Thay khối `"tree": {…}` đầu file JSON |
-| `tree_members` | **Ai được vào cây nào** — vai `chu`/`admin`/`sua`/`xem`/`sao_luu`, cộng `person_id` + `approved` | Thay danh sách chia sẻ Drive · xem mục 2b |
+| `tree_members` | **Ai được vào cây nào** — vai `quan_tri_he_thong`/`quan_tri`/`sua`/`xem`/`sao_luu`, cộng `person_id` + `approved` + `tin_cay` | Thay danh sách chia sẻ Drive · xem mục 2b |
 | `branches` | Chi/nhánh | ⚠ **TỪ NAY KHÔNG DÙNG** — luật trực hệ thay chỗ, xem mục 2b |
 | `branch_access` | Ai được sửa nhánh nào | ⚠ **TỪ NAY KHÔNG DÙNG** — xem mục 2b |
 | `persons` | Một dòng một người | Khoá chính `(tree_id, id)` |
@@ -52,14 +52,24 @@ lại từng cột.
 | `union_children` | Quan hệ cha mẹ–con | Bảng THẬT, không phải jsonb |
 | `media` | Ảnh | `drive_file_id` nay là đường dẫn kho Supabase |
 | `sources` | Nguồn tư liệu | |
-| `change_log` | Nhật ký thay đổi | Không ai ghi thẳng được, chỉ `luu_cay()` |
+| `change_log` | Nhật ký thay đổi — **và hàng chờ kiểm duyệt** | Không ai ghi thẳng được, chỉ `luu_cay()` · xem mục 2c |
 | `imports` | Sổ nhập GEDCOM / Excel | Chỉ mọc thêm |
 | `user_settings` | Cài đặt riêng từng người | Bảng DUY NHẤT trình duyệt ghi thẳng |
 
 ### 2b. Phân quyền sửa: luật TRỰC HỆ *(chốt 04/09/2026)*
 
+**Bốn hạng người, và mã của chúng trong bảng** *(cách gọi chốt 04/09/2026)*:
+**Quản trị hệ thống** = `quan_tri_he_thong` · **Quản trị viên** = `quan_tri` ·
+**Thành viên** = `sua` · **Khách** = `xem`. Chỗ dịch mã sang tên hiển thị là
+`js/pages/settings.js` hàm `vaiTroBangChu()`, và chỉ có một chỗ ấy.
+
+⚠ Mã `quan_tri_he_thong` **đổi từ `chu`** ngày 04/09/2026 (`09-doi-ma-vai.sql`).
+Mã cũ nằm rải ở 11 hàm, 2 luật RLS, 1 ràng buộc và chính dữ liệu — đó là lý do
+việc đổi phải dán lại năm file chứ không phải một. Gặp `chu` ở đâu trong lịch
+sử git thì đọc là `quan_tri_he_thong`.
+
 Tài khoản muốn sửa phải **gắn với một mã người** (`tree_members.person_id`) và
-**được admin duyệt** (`approved`). Duyệt rồi thì sửa được **trực hệ** của người
+**được duyệt** (`approved`). Duyệt rồi thì sửa được **trực hệ** của người
 ấy: lên chỉ đường thẳng — bố mẹ, ông bà, cụ, **không** rẽ ngang sang bác/chú;
 xuống toàn bộ con cháu; cộng vợ/chồng của những người ấy. Chưa gắn → chỉ xem.
 
@@ -73,21 +83,49 @@ như người. Khai một người ngoài phạm vi làm bố mình là tự c�
 ấy — hàng rào 4 chặn ở sáu chỗ, và bỏ sót chỗ nào cũng mở lại đúng đường ấy.
 
 ⚠ **Không ai sửa được anh chị em ruột của mình** (0/514 người trên cây 681).
-Đã biết và đã chấp nhận; đường ra là nhờ bố hoặc nhờ admin.
+Đã biết và đã chấp nhận; đường ra là nhờ bố hoặc nhờ quản trị viên.
 
 ⚠ **Từ `07-duyet-dang-ky.sql` (04/09/2026), `approved` gác CẢ QUYỀN ĐỌC.**
 Trước đó nó chỉ gác quyền sửa, nên ai có tên trong `tree_members` là xem được
 cả gia phả. Nay người vừa nộp đơn có dòng trong bảng nhưng **không đọc được
 một chữ nào** — nếu không thì "xếp hàng chờ" chẳng chặn được gì.
 
-Ba vai đi tắt, không bao giờ phải chờ: `chu` (khoá chủ ra ngoài nhà mình là
-hỏng kiểu không ai cứu được), `admin` (chủ dự án cấp tay), và `sao_luu` — vai
-máy chạy hằng đêm, không có người ngồi sau để bấm nút, nên rơi vào trạng thái
-chờ là **sao lưu thất bại im lặng**.
+Ba vai đi tắt, không bao giờ phải chờ: quản trị hệ thống `quan_tri_he_thong` (khoá người ấy
+ra ngoài nhà mình là hỏng kiểu không ai cứu được), quản trị viên `quan_tri` (chủ
+dự án cấp tay), và `sao_luu` — vai máy chạy hằng đêm, không có người ngồi sau
+để bấm nút, nên rơi vào trạng thái chờ là **sao lưu thất bại im lặng**.
 
 Hai cột đi kèm: `xin_luc` (null = được thêm tay, không qua hàng chờ) và
-`loi_nhan` (người nộp tự giới thiệu — admin nhìn hàng chờ chỉ thấy email, mà
-email không nói được `hoangnam92@` là cháu ông nào).
+`loi_nhan` (người nộp tự giới thiệu — người duyệt nhìn hàng chờ chỉ thấy
+email, mà email không nói được `hoangnam92@` là cháu ông nào).
+
+### 2c. Kiểm duyệt nội dung *(chốt 04/09/2026, `luoc-do/08-kiem-duyet.sql`)*
+
+Mọi lần Lưu **ghi thẳng vào bảng**, rồi mới treo cờ chờ duyệt. Không có kho
+chờ riêng — app chạy bình thường, dữ liệu sai hiện ra cho cả họ cho tới khi
+người kiểm duyệt dọn. Đó là một lựa chọn: bảo vệ gia phả bằng cách **sửa sau**, đổi
+lại người đóng góp thấy ngay việc mình làm.
+
+Đơn vị duyệt là **một lần bấm Lưu**, nên nó gắn vào `change_log`:
+
+| Cột thêm vào `change_log` | Để làm gì |
+|---|---|
+| `trang_thai` `'cho'`/`'duyet'`/`'tu_choi'` | hàng đợi |
+| **`truoc` jsonb** | ảnh chụp các dòng bị đụng, **do máy chủ tự lấy** trước khi ghi |
+| `duyet_boi` · `duyet_luc` · `ly_do_tu_choi` | vết duyệt |
+
+⚠ **KHÔNG dùng `change_log.diff` để hoàn tác.** Nó do trình duyệt gửi lên và
+mặc định rỗng `{}` — người muốn phá chỉ cần gửi `diff` rỗng là bản cũ biến mất
+vĩnh viễn. Cùng lý lẽ với việc `ts`/`by` bị bỏ qua và lấy lại từ JWT.
+
+⚠ **Luật hoàn tác:** chỉ hoàn tác được khi bản ghi **chưa bị lần Lưu nào sau
+đó đụng vào**. Máy chủ từ chối và chỉ ra ai đã sửa tiếp, chứ không âm thầm ghi
+đè — cùng đúng lý lẽ của `revision` ở mục 5.
+
+`tree_members.tin_cay` (mặc định `false`) cho một thành viên ghi thẳng không
+qua hàng chờ. Và từ file này **quản trị viên (`quan_tri`) bị thu hẹp**: đó là hạng *kiểm
+duyệt nội dung*, không đổi được vai hay gắn được mã người — hai việc ấy chỉ
+quản trị hệ thống (`quan_tri_he_thong`) làm. Bảng đầy đủ ở `HUONG-DAN-PHAN-QUYEN.md` mục 3.
 
 ### Ba quyết định về lược đồ, và cái giá
 
@@ -235,7 +273,7 @@ Ràng buộc `check` đã viết trong `luoc-do/01-bang.sql`; đây là bản tr
 | `persons.sex` | `M` · `F` · `U` |
 | `unions.status` | `married` · `divorced` · `widowed` · `unknown` |
 | `union_children.relation` | `birth` · `adopted` · `step` · `foster` · `thua_tu` |
-| `tree_members.role` | `chu` · `sua` · `xem` · `sao_luu` ⁽¹⁾ |
+| `tree_members.role` | `quan_tri_he_thong` · `sua` · `xem` · `sao_luu` ⁽¹⁾ |
 | `imports.source` | `GEDCOM` · `EXCEL` |
 | `trees.tree_code` | chữ HOA, chữ số, gạch dưới. Gạch nối `-` thì GEDCOM 7.0 không nhận |
 | `names[].type` | `chinh` · `huy` · `tu` · `thuy` · `phap_danh` · `thuong_goi` · `khac` |
@@ -243,7 +281,7 @@ Ràng buộc `check` đã viết trong `luoc-do/01-bang.sql`; đây là bản tr
 ⁽¹⁾ **`sao_luu` không phải một người** — nó là vai của tài khoản máy dùng khi đi
 chép dữ liệu hằng đêm, thêm vào `luoc-do/05-sao-luu.sql` (04/09/2026). Vai này
 **đọc được mọi dòng nhưng không ghi được dòng nào**: `co_the_sua()` chỉ nhận
-`chu` và `sua`, mà cửa ghi duy nhất `luu_cay()` hỏi đúng hàm ấy. Đừng gán vai
+`quan_tri_he_thong` và `sua`, mà cửa ghi duy nhất `luu_cay()` hỏi đúng hàm ấy. Đừng gán vai
 này cho người thật, và đừng đưa nó vào màn hình chọn quyền của app.
 
 ⚠ Sáu trường thông dụng (`title`, `occupation`, `education`, `religion`,

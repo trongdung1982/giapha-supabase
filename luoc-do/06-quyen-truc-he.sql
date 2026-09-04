@@ -3,7 +3,7 @@
 -- Vai trò  : Luật SỬA theo TRỰC HỆ. Thay hẳn ý tưởng "chia chi/nhánh".
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 05-sao-luu.sql.
 -- ⚠ Chạy xong PHẢI dán lại 03-ham-luu-cay.sql — xem mục 0 ngay dưới.
--- Phiên bản: 0.1.2 · Cập nhật: 04/09/2026 14:05
+-- Phiên bản: 0.1.3 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
 --
 -- ═══ 0. HAI FILE, KHÔNG PHẢI MỘT — ĐỌC TRƯỚC KHI DÁN ═══
@@ -29,7 +29,7 @@
 --     • đi XUỐNG — toàn bộ con cháu, không giới hạn đời.
 --     • cộng    — vợ/chồng của những người trong hai tập trên (sửa và thêm).
 --   Chưa gắn mã, hoặc chưa được duyệt → CHỈ XEM.
---   Vai admin gắn được cho NHIỀU tài khoản.
+--   Vai quản trị viên gắn được cho NHIỀU tài khoản.
 --
 -- Trước khi chốt đã đo trên cây thật Nguyễn Phúc 681 người. Ba con số giải
 -- thích vì sao KHÔNG chọn mấy phương án nghe hợp lý hơn:
@@ -45,7 +45,7 @@
 -- ⚠ HỆ QUẢ ĐÃ BIẾT VÀ ĐÃ CHẤP NHẬN: **không ai sửa được anh chị em ruột của
 --   mình** (0/514 người trên cây 681). Em ruột không phải tổ tiên, cũng không
 --   phải con cháu. Chủ dự án biết điều này và vẫn chọn trực hệ nghiêm ngặt
---   04/09/2026; đường ra là nhờ bố (bố là trực hệ của cả hai) hoặc nhờ admin.
+--   04/09/2026; đường ra là nhờ bố (bố là trực hệ của cả hai) hoặc nhờ quản trị viên.
 --   Ngày nào muốn đổi thì mở đúng một chỗ: `pham_vi_sua()` bên dưới.
 --
 -- ⚠ TRỰC HỆ CHẠY HAI CHIỀU, đừng đọc nhầm thành một chiều. Tôi sửa được tổ
@@ -68,7 +68,7 @@
 -- 3. HAI CỘT MỚI TRÊN `tree_members`
 -- ============================================================
 -- `person_id` — tài khoản này là AI trong gia phả. `null` = chưa gắn.
--- `approved`  — admin đã duyệt chưa. Mặc định `false`: thêm dòng thôi thì
+-- `approved`  — quản trị viên đã duyệt chưa. Mặc định `false`: thêm dòng thôi thì
 --               chưa có quyền sửa, đúng như chủ dự án yêu cầu.
 --
 -- Khoá ngoại tới `persons` để không gắn được vào một mã người không tồn tại.
@@ -101,7 +101,7 @@ create unique index if not exists tree_members_person_uniq
   where person_id is not null;
 
 -- ============================================================
--- 4. THÊM VAI `admin`
+-- 4. THÊM VAI `quan_tri`
 -- ============================================================
 -- ⚠ Lặp lại đúng cái bẫy `05-sao-luu.sql` đã gặp và đã ghi: ràng buộc kiểm
 --   trên cột `role` KHÔNG được đặt tên ở `01-bang.sql`, nên Postgres tự đặt.
@@ -109,8 +109,8 @@ create unique index if not exists tree_members_person_uniq
 --   Nên: quét MỌI ràng buộc kiểm có nhắc `role`, gỡ hết, rồi đặt lại một cái
 --   có tên đàng hoàng.
 --
--- `chu` khác `admin` thế nào? `chu` là người dựng cây, đúng một người, và là
--- người duy nhất không ai gỡ được. `admin` là quyền chủ dự án cấp thêm cho
+-- `quan_tri_he_thong` khác `quan_tri` thế nào? `quan_tri_he_thong` là người dựng cây, đúng một người, và là
+-- người duy nhất không ai gỡ được. `quan_tri` là quyền chủ dự án cấp thêm cho
 -- người khác, gỡ được. Hai vai làm được y hệt nhau về sửa dữ liệu.
 
 do $$
@@ -128,7 +128,7 @@ end $$;
 
 alter table public.tree_members
   add constraint tree_members_role_check
-  check (role in ('chu', 'admin', 'sua', 'xem', 'sao_luu'));
+  check (role in ('quan_tri_he_thong', 'quan_tri', 'sua', 'xem', 'sao_luu'));
 
 -- ============================================================
 -- 5. PHẠM VI SỬA — trái tim của cả file
@@ -245,7 +245,7 @@ security definer
 set search_path = public, pg_temp
 as $$
   select case
-    when public.vai_tro(p_tree) in ('chu', 'admin') then true
+    when public.vai_tro(p_tree) in ('quan_tri_he_thong', 'quan_tri') then true
     when public.vai_tro(p_tree) = 'sua' then public.nguoi_gan(p_tree) is not null
     else false
   end;
@@ -275,7 +275,7 @@ as $$
     --   mà `null <> 'sua'` ra `null` chứ không ra `true`, nên nhánh sau
     --   không bắt được họ và họ rơi xuống `else`.
     when public.vai_tro(p_tree) is null then false
-    when public.vai_tro(p_tree) in ('chu', 'admin') then true
+    when public.vai_tro(p_tree) in ('quan_tri_he_thong', 'quan_tri') then true
     when public.vai_tro(p_tree) <> 'sua' then false
     when public.nguoi_gan(p_tree) is null then false
     else exists (
@@ -323,7 +323,7 @@ declare
   n integer;
 begin
   -- ⚠ `coalesce(…, '')` KHÔNG phải để cho đẹp. Bản 0.1.1 viết thẳng
-  --   `vai_tro(p_tree) not in ('chu','admin')`, và phép thử H9 ngày 04/09/2026
+  --   `vai_tro(p_tree) not in ('quan_tri_he_thong','quan_tri')`, và phép thử H9 ngày 04/09/2026
   --   bắt được lỗ hổng: với người NGOÀI cây `vai_tro()` trả `null`, mà
   --   `null not in (…)` ra `null` chứ không ra `true` — nên `if` không nhận,
   --   cửa không đóng, và hàm chạy thẳng xuống lệnh `update` bên dưới. Người ấy
@@ -337,9 +337,9 @@ begin
   --   `null` rơi về `else false` và chặn đúng. Một chữ `not` là đủ lật ngược.
   --   Đã soát lại toàn bộ `luoc-do/`: đây là chỗ DUY NHẤT dùng `not in` với
   --   `vai_tro()`; mọi cửa khác viết dạng dương và an toàn.
-  if coalesce(public.vai_tro(p_tree), '') not in ('chu', 'admin') then
+  if coalesce(public.vai_tro(p_tree), '') not in ('quan_tri_he_thong', 'quan_tri') then
     return jsonb_build_object('ok', false, 'loi',
-      'Chỉ chủ gia phả hoặc quản trị viên mới duyệt được thành viên.');
+      'Chỉ quản trị hệ thống hoặc quản trị viên mới duyệt được thành viên.');
   end if;
 
   select id into v_user from auth.users where lower(email) = lower(p_email);
@@ -378,7 +378,7 @@ grant execute on function public.duyet_thanh_vien(uuid, text, text, boolean) to 
 -- ============================================================
 -- 9. TỰ KIỂM — chạy xong nhìn bảng này
 -- ============================================================
--- Hai cột mới có mặt chưa, vai `admin` nhận chưa, và ai đang gắn với ai.
+-- Hai cột mới có mặt chưa, vai `quan_tri` nhận chưa, và ai đang gắn với ai.
 
 select 'cot moi' as muc,
        (select count(*) from information_schema.columns
@@ -386,8 +386,8 @@ select 'cot moi' as muc,
            and column_name in ('person_id', 'approved'))::text as gia_tri,
        '2' as mong_doi
 union all
-select 'vai admin nhan duoc',
-       (select case when pg_get_constraintdef(oid) ilike '%admin%'
+select 'vai quan tri nhan duoc',
+       (select case when pg_get_constraintdef(oid) ilike '%''quan_tri''%'
                     then 'co' else 'KHONG' end
           from pg_constraint
          where conrelid = 'public.tree_members'::regclass

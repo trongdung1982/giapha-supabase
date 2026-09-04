@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.25.0 · Cập nhật: 04/09/2026 16:20
+// Phiên bản: 1.27.0 · Cập nhật: 04/09/2026 22:45
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -1020,7 +1020,7 @@ function veKhoiQuanLy(vao) {
 }
 
 // ============================================================
-// Khối "Đơn chờ duyệt" — chỉ chu/admin thấy
+// Khối "Đơn chờ duyệt" — chỉ quản trị thấy
 // ============================================================
 
 /**
@@ -1029,7 +1029,7 @@ function veKhoiQuanLy(vao) {
  * ⚠ **Không tự quyết ai được thấy khối này.** Điều kiện `vaiTro` bên dưới chỉ
  *   để khỏi vẽ một khối trống cho người thường — nó KHÔNG phải phép kiểm
  *   quyền. Phép kiểm thật nằm trong `ds_cho_duyet()` ở máy chủ: ai không phải
- *   `chu`/`admin` gọi nó cũng chỉ nhận về mảng rỗng. Hai lớp ấy đứng ở hai
+ *   `quan_tri_he_thong`/`quan_tri` gọi nó cũng chỉ nhận về mảng rỗng. Hai lớp ấy đứng ở hai
  *   nơi và chỉ lớp dưới mới đáng tin — `KIEN-TRUC.md` gọi đó là luật "app
  *   không tự lọc, và vì thế app không thể lọc sai".
  *
@@ -1040,7 +1040,7 @@ function veKhoiQuanLy(vao) {
  */
 function veKhoiChoDuyet(vao) {
   const phien = state.phien;
-  if (!phien || (phien.vaiTro !== 'chu' && phien.vaiTro !== 'admin')) return;
+  if (!phien || (phien.vaiTro !== 'quan_tri_he_thong' && phien.vaiTro !== 'quan_tri')) return;
 
   const khoi = document.createElement('div');
   khoi.style.cssText = 'margin-top:20px';
@@ -1183,7 +1183,7 @@ function veKhoiPhien(vao) {
   bang.style.cssText = 'display:flex;flex-direction:column;gap:1px';
   hang(bang, 'Đăng nhập', phien.email);
   hang(bang, 'Dòng họ', phien.tenHo);
-  hang(bang, 'Vai trò', phien.vaiTro);
+  hang(bang, 'Vai trò', vaiTroBangChu(phien.vaiTro));
   hang(bang, 'Quyền', quyenBangChu(phien));
   hang(bang, 'Người quản lý', phien.nguoiQuanLy);
   // File dữ liệu đang mở. Chỉ có một dòng này nói ra được nó: hai gia phả
@@ -1268,6 +1268,34 @@ function quyenBangChu(phien) {
   if (phien.suaDuoc) return 'Xem và sửa';
   if (phien.docDuoc) return 'Chỉ xem';
   return '';
+}
+
+/**
+ * Tên vai trò cho người đọc.
+ *
+ * ⚠ Dòng "Vai trò" TỪNG in thẳng mã trong cơ sở dữ liệu ra màn hình Cài đặt.
+ * Chủ dự án bảo bỏ 04/09/2026: người trong họ không có lý do gì phải học mã
+ * của bảng.
+ *
+ * Bốn tên, đúng như chủ dự án chốt:
+ *
+ *   Quản trị hệ thống  `quan_tri_he_thong`   dựng cây, đổi được quyền của người khác
+ *   Quản trị viên      `quan_tri`               kiểm duyệt nội dung
+ *   Thành viên         `sua`                 sửa được trực hệ của mình
+ *   Khách              `xem`                 chỉ xem
+ *
+ * ⚠ **Thành viên và Khách là hai tên khác nhau**, dù dòng **Quyền** ngay dưới
+ *   cũng nói *"Xem và sửa"* / *"Chỉ xem"*. Không gộp: một bên là *người ấy
+ *   ĐỨNG Ở ĐÂU trong họ*, một bên là *hôm nay làm được gì* — và hai điều ấy
+ *   lệch nhau thật, vì một thành viên chưa được duyệt vẫn chỉ xem được.
+ */
+function vaiTroBangChu(vaiTro) {
+  if (vaiTro === 'quan_tri_he_thong') return 'Quản trị hệ thống';
+  if (vaiTro === 'quan_tri') return 'Quản trị viên';
+  if (vaiTro === 'sua') return 'Thành viên';
+  if (vaiTro === 'xem') return 'Khách';
+  if (vaiTro === 'sao_luu') return 'Tài khoản sao lưu';
+  return vaiTro || '';
 }
 
 // ============================================================

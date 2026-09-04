@@ -106,7 +106,7 @@ export function closeChonGiaPha() {
 /**
  * Người đang đăng nhập có phải chủ dự án không.
  *
- * So email với `NGUOI_QUAN_LY` của `Config.gs`, KHÔNG dùng `vaiTro === 'chu'`:
+ * So email với `NGUOI_QUAN_LY` của `Config.gs`, KHÔNG dùng `vaiTro === 'quan_tri_he_thong'`:
  * `vaiTro` nói về quyền trên *cây đang mở*, nên chủ dự án mở một cây người
  * khác chia sẻ cho mình thì tụt xuống 'sua' và cái nút biến mất — mà đó đúng
  * là lúc họ hay cần nó nhất.

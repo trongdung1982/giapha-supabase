@@ -5,7 +5,9 @@
 -- ⚠ TỪ 04/09/2026 phải chạy lại file này SAU 06-quyen-truc-he.sql. Hàng rào 4
 --   đổi từ "giới hạn theo nhánh" sang "giới hạn theo TRỰC HỆ"; bản cũ truyền
 --   `branch_id` (luôn null) vào hàm quyết quyền mới nên KHÔNG AI LƯU ĐƯỢC GÌ.
--- Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 12:20
+-- ⚠ VÀ phải chạy lại SAU 08-kiem-duyet.sql. Bản 0.3.0 chụp ảnh dữ liệu cũ vào
+--   `change_log.truoc` và treo cờ `trang_thai`; hai cột ấy do 08 dựng ra.
+-- Phiên bản: 0.3.1 · Cập nhật: 04/09/2026 22:45
 -- ============================================================
 --
 -- ═══ ĐỌC BA ĐOẠN NÀY TRƯỚC KHI SỬA MỘT DÒNG NÀO ═══
@@ -94,8 +96,11 @@ declare
   v_media      jsonb;
   v_sources    jsonb;
   v_ngoai      text;
-  v_pham_vi    text[];      -- null = KHÔNG giới hạn (chu/admin). Xem hàng rào 4.
+  v_pham_vi    text[];      -- null = KHÔNG giới hạn (hai hạng quản trị). Xem hàng rào 4.
   v_tree       jsonb;
+  v_truoc      jsonb;       -- ảnh chụp dữ liệu CŨ. Xem khối "CHỤP ẢNH" dưới.
+  v_imports    jsonb;       -- mã những dòng sổ nhập lần Lưu này đẻ ra
+  v_trang_thai text;        -- 'duyet' hay 'cho'. Xem 08-kiem-duyet.sql mục 4.
 begin
   -- ══ HÀNG RÀO 1 — có đăng nhập không ══
   if auth.uid() is null then
@@ -108,7 +113,7 @@ begin
   -- phân biệt "không thấy cây" với "thấy nhưng không sửa được" bằng lời lẽ
   -- kỹ thuật; `services/repo.js` mới là chỗ viết câu cho người đọc.
   if not public.co_the_sua(p_tree_id) then
-    -- Vai `sua` mà vẫn trượt nghĩa là chưa gắn mã người, hoặc admin chưa
+    -- Vai `sua` mà vẫn trượt nghĩa là chưa gắn mã người, hoặc quản trị viên chưa
     -- duyệt. Đó là hai tình cảnh khác hẳn "người chỉ có quyền xem", và người
     -- gặp nó cần biết phải làm gì tiếp — nói chung một câu là họ đi hỏi vòng.
     if public.vai_tro(p_tree_id) = 'sua' then
@@ -164,9 +169,9 @@ begin
   -- cả cây.
   --
   -- ⚠ `null` ở đây nghĩa là KHÔNG GIỚI HẠN, không phải "phạm vi rỗng". Lẫn
-  --   hai thứ ấy thì chủ cây thành người không sửa được gì — hoặc tệ hơn,
+  --   hai thứ ấy thì quản trị hệ thống thành người không sửa được gì — hoặc tệ hơn,
   --   ngược lại.
-  if public.vai_tro(p_tree_id) in ('chu', 'admin') then
+  if public.vai_tro(p_tree_id) in ('quan_tri_he_thong', 'quan_tri') then
     v_pham_vi := null;
   else
     v_pham_vi := array(
@@ -301,6 +306,128 @@ begin
     end if;
   end if;
 
+  -- ══ CHỤP ẢNH DỮ LIỆU CŨ — phải đứng TRƯỚC mọi lệnh ghi ══
+  --
+  -- Đây là thứ duy nhất hoàn tác được một lần Lưu bị từ chối
+  -- (`08-kiem-duyet.sql` mục 7). Ba điều phải đúng:
+  --
+  -- ⚠ 1. **Máy chủ tự chụp.** Không đọc `p_mo_ta->'diff'` — cột ấy do trình
+  --      duyệt gửi lên và mặc định rỗng. Dựa vào nó để hoàn tác là để chính
+  --      người sửa tự khai mình đã sửa gì. Cùng lý lẽ với `ts`/`by`.
+  --
+  -- ⚠ 2. **`cu` là `null` nghĩa là DÒNG ẤY CHƯA TỪNG TỒN TẠI**, tức hoàn tác
+  --      là xoá nó đi. Nên `left join` không tìm thấy PHẢI cho ra `null` chứ
+  --      không phải một object toàn khoá rỗng — mà `to_jsonb(cu.*)` trên một
+  --      dòng không khớp lại cho ra đúng cái object toàn `null` ấy. Cái `case`
+  --      dưới đây là chỗ chặn, và bỏ nó đi thì hoàn tác sẽ chèn vào bảng một
+  --      người không tên, không giới tính, thay vì bỏ người ấy đi.
+  --
+  -- ⚠ 3. **Xoá một người hay một hôn nhân là CASCADE cắt luôn `union_children`**
+  --      (`01-bang.sql` dòng 217-218). Những cạnh bị cắt kiểu ấy không nằm
+  --      trong `p_ops` nên phải tự đi tìm — nhánh thứ ba của khối `children`.
+  --      Thiếu nó thì hoàn tác một lần Dọn thùng rác sẽ trả người về mà không
+  --      trả lại chỗ đứng của họ trong gia đình.
+
+  select jsonb_build_object(
+
+    'persons', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', k.id, 'cu',
+               case when cu.tree_id is null then 'null'::jsonb
+                    else to_jsonb(cu.*) end)), '[]'::jsonb)
+        from (
+          select p.id
+            from jsonb_populate_recordset(null::public.persons, v_persons) p
+          union
+          select jsonb_array_elements_text(
+                   coalesce(p_ops->'persons'->'xoa', '[]'::jsonb))
+        ) k
+        left join public.persons cu
+          on cu.tree_id = p_tree_id and cu.id = k.id),
+
+    'unions', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', k.id, 'cu',
+               case when cu.tree_id is null then 'null'::jsonb
+                    else to_jsonb(cu.*) end)), '[]'::jsonb)
+        from (
+          select u.id
+            from jsonb_populate_recordset(null::public.unions, v_unions) u
+          union
+          select jsonb_array_elements_text(
+                   coalesce(p_ops->'unions'->'xoa', '[]'::jsonb))
+        ) k
+        left join public.unions cu
+          on cu.tree_id = p_tree_id and cu.id = k.id),
+
+    'children', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+               'union_id', k.union_id, 'person_id', k.person_id, 'cu',
+               case when cu.tree_id is null then 'null'::jsonb
+                    else to_jsonb(cu.*) end)), '[]'::jsonb)
+        from (
+          select uc.union_id, uc.person_id
+            from jsonb_populate_recordset(null::public.union_children, v_children) uc
+          union
+          select x.union_id, x.person_id
+            from jsonb_to_recordset(coalesce(p_ops->'children'->'xoa','[]'::jsonb))
+                 as x(union_id text, person_id text)
+          union
+          -- Cạnh sắp bị CASCADE cắt theo người / hôn nhân bị xoá cứng.
+          select c2.union_id, c2.person_id
+            from public.union_children c2
+           where c2.tree_id = p_tree_id
+             and (c2.union_id in (select jsonb_array_elements_text(
+                    coalesce(p_ops->'unions'->'xoa', '[]'::jsonb)))
+               or c2.person_id in (select jsonb_array_elements_text(
+                    coalesce(p_ops->'persons'->'xoa', '[]'::jsonb))))
+        ) k
+        left join public.union_children cu
+          on cu.tree_id = p_tree_id
+         and cu.union_id = k.union_id and cu.person_id = k.person_id),
+
+    'media', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', k.id, 'cu',
+               case when cu.tree_id is null then 'null'::jsonb
+                    else to_jsonb(cu.*) end)), '[]'::jsonb)
+        from (
+          select m.id
+            from jsonb_populate_recordset(null::public.media, v_media) m
+          union
+          select jsonb_array_elements_text(
+                   coalesce(p_ops->'media'->'xoa', '[]'::jsonb))
+        ) k
+        left join public.media cu
+          on cu.tree_id = p_tree_id and cu.id = k.id),
+
+    'sources', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', k.id, 'cu',
+               case when cu.tree_id is null then 'null'::jsonb
+                    else to_jsonb(cu.*) end)), '[]'::jsonb)
+        from (
+          select s.id
+            from jsonb_populate_recordset(null::public.sources, v_sources) s
+          union
+          select jsonb_array_elements_text(
+                   coalesce(p_ops->'sources'->'xoa', '[]'::jsonb))
+        ) k
+        left join public.sources cu
+          on cu.tree_id = p_tree_id and cu.id = k.id),
+
+    -- Ba trường của khối cây. Chỉ chụp khi lần Lưu này thật sự đụng tới —
+    -- có `tree` trong `p_ops` — để hoàn tác không đụng vào thứ nó không sửa.
+    --
+    -- ⚠ `luu_cay()` dùng `coalesce` khi ghi ba trường này, nên nó KHÔNG bao
+    --   giờ xoá trắng được một trường. Đường hoàn tác dưới đây dùng đúng
+    --   `coalesce` ấy, nên hai chiều cân nhau — cố ý, đừng "sửa" một bên.
+    'tree', case
+      when jsonb_typeof(coalesce(p_ops->'tree', 'null'::jsonb)) = 'object'
+      then (select jsonb_build_object('name', t.name,
+                                      'root_person_id', t.root_person_id,
+                                      'note', t.note)
+              from public.trees t where t.id = p_tree_id)
+      else 'null'::jsonb end
+
+  ) into v_truoc;
+
   -- ══════════════════════════════════════════════════════════
   -- TỪ ĐÂY TRỞ XUỐNG MỚI ĐƯỢC GHI
   -- ══════════════════════════════════════════════════════════
@@ -381,13 +508,23 @@ begin
     title = excluded.title, author = excluded.author, note = excluded.note;
 
   -- --- SỔ NHẬP ---
-  insert into public.imports (tree_id, by_email, file, source, source_name,
-                              exporter, counts, map)
-  select p_tree_id, v_email,
-         coalesce(e->>'file',''), coalesce(e->>'source',''),
-         coalesce(e->>'source_name',''), coalesce(e->>'exporter',''),
-         coalesce(e->'counts','{}'::jsonb), coalesce(e->'map','[]'::jsonb)
-    from jsonb_array_elements(coalesce(p_ops->'imports','[]'::jsonb)) e;
+  -- ⚠ Sổ nhập chỉ mọc thêm nên nó không có bản "cũ" để chụp. Thứ hoàn tác cần
+  --   là MÃ những dòng vừa đẻ ra — giữ riêng vào `truoc.imports_moi`. Để lại
+  --   một dòng nhập của lần Lưu bị gạt là nói dối: lần nhập lại cùng file sau
+  --   này sẽ tra bảng ánh xạ ấy và tưởng đã nhập rồi.
+  with them as (
+    insert into public.imports (tree_id, by_email, file, source, source_name,
+                                exporter, counts, map)
+    select p_tree_id, v_email,
+           coalesce(e->>'file',''), coalesce(e->>'source',''),
+           coalesce(e->>'source_name',''), coalesce(e->>'exporter',''),
+           coalesce(e->'counts','{}'::jsonb), coalesce(e->'map','[]'::jsonb)
+      from jsonb_array_elements(coalesce(p_ops->'imports','[]'::jsonb)) e
+    returning id
+  )
+  select coalesce(jsonb_agg(them.id), '[]'::jsonb) into v_imports from them;
+
+  v_truoc := v_truoc || jsonb_build_object('imports_moi', v_imports);
 
   -- --- KHỐI THÔNG TIN CHUNG CỦA CÂY + TĂNG SỐ BẢN GHI ---
   v_rev_moi := v_rev_thuc + 1;
@@ -403,18 +540,31 @@ begin
 
   -- --- NHẬT KÝ ---
   -- ⚠ `ts` và `by` lấy ở ĐÂY, không lấy của trình duyệt. Trình duyệt gửi kèm
-  --   thì hai trường ấy nằm trong `p_mo_ta` và không được đọc tới.
+  --   thì hai trường ấy nằm trong `p_mo_ta` và không được đọc tới. Từ 0.3.0
+  --   `truoc` và `trang_thai` cũng vậy — cả ba đều là những thứ người gửi
+  --   không được phép tự khai.
+  --
+  -- ⚠ `ghi_thang()` trả lời "lần Lưu này thành chính thức ngay hay phải chờ
+  --   duyệt" (`08-kiem-duyet.sql` mục 4). Dữ liệu ĐÃ nằm trong bảng dù trả
+  --   lời thế nào — chủ dự án chọn "ghi thẳng rồi duyệt sau", nên cái cờ này
+  --   không chặn gì cả, nó chỉ xếp hàng cho admin xem.
+  v_trang_thai := case when public.ghi_thang(p_tree_id) then 'duyet' else 'cho' end;
+
   insert into public.change_log (tree_id, by_email, user_id, action, target,
-                                 note, diff, revision)
+                                 note, diff, revision, truoc, trang_thai,
+                                 duyet_boi, duyet_luc)
   values (p_tree_id, v_email, auth.uid(),
           coalesce(p_mo_ta->>'action', 'update'),
           coalesce(p_mo_ta->>'target', ''),
           coalesce(p_mo_ta->>'note', ''),
           coalesce(p_mo_ta->'diff', '{}'::jsonb),
-          v_rev_moi);
+          v_rev_moi, v_truoc, v_trang_thai,
+          case when v_trang_thai = 'duyet' then v_email end,
+          case when v_trang_thai = 'duyet' then now()   end);
 
   return jsonb_build_object('ok', true, 'lyDo', null, 'loi', null,
-                            'revision', v_rev_moi, 'tree', v_tree);
+                            'revision', v_rev_moi, 'tree', v_tree,
+                            'trangThai', v_trang_thai);
 end;
 $$;
 

@@ -110,13 +110,13 @@ with cay_moi as (
   returning id
 )
 insert into public.tree_members (tree_id, user_id, role, email)
-select cay_moi.id, 'DÁN-USER-UID-VÀO-ĐÂY'::uuid, 'chu',
+select cay_moi.id, 'DÁN-USER-UID-VÀO-ĐÂY'::uuid, 'quan_tri_he_thong',
        'trongdung1982@gmail.com'
   from cay_moi;
 ```
 
 **Tự kiểm:** Table Editor → bảng `trees` có đúng một dòng; bảng `tree_members`
-có đúng một dòng với `role` = `chu`.
+có đúng một dòng với `role` = `quan_tri_he_thong`.
 
 ⚠ Cây này còn **rỗng, chưa có người nào**. Đưa dữ liệu thật vào là việc của
 script di dời (bước H5), làm sau.

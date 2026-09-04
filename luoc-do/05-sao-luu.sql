@@ -3,7 +3,7 @@
 -- Vai trò  : Mở đường cho SAO LƯU chạy bằng một TÀI KHOẢN THƯỜNG,
 --            bỏ hẳn nhu cầu dùng khoá bí mật.
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 04-view-ma-da-dung.sql.
--- Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 00:04
+-- Phiên bản: 0.1.1 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
 --
 -- ═══ VÌ SAO CÓ FILE NÀY ═══
@@ -43,7 +43,7 @@
 -- Khoá bí mật **vượt qua toàn bộ RLS**: cầm nó là đọc được và GHI được mọi
 -- thứ, ở mọi cây, mãi mãi. Vai `sao_luu` dựng ở đây thì:
 --
---   • `co_the_sua()` = `role in ('chu','sua')` → **false**. Cửa ghi duy nhất
+--   • `co_the_sua()` = `role in ('quan_tri_he_thong','sua')` → **false**. Cửa ghi duy nhất
 --     là `luu_cay()`, và nó hỏi đúng hàm ấy. Nên tài khoản sao lưu
 --     **không ghi được một dòng nào**, kể cả khi mật khẩu lọt ra ngoài.
 --   • `co_the_sua_nguoi()` rơi vào nhánh `when vai_tro <> 'sua' then false`
@@ -56,7 +56,7 @@
 -- ============================================================
 -- 1. THÊM VAI `sao_luu` VÀO DANH SÁCH VAI HỢP LỆ
 -- ============================================================
--- `01-bang.sql` khai `check (role in ('chu','sua','xem'))`. Ràng buộc ấy
+-- `01-bang.sql` khai `check (role in ('quan_tri_he_thong','sua','xem'))`. Ràng buộc ấy
 -- không được đặt tên, nên Postgres tự đặt là `tree_members_role_check` —
 -- nhưng "tự đặt" thì không có gì bảo đảm, và thêm nhầm một ràng buộc thứ hai
 -- sẽ khiến vai mới bị chính ràng buộc cũ chặn lại mà không ai hiểu vì sao.
@@ -78,19 +78,19 @@ end $$;
 
 alter table public.tree_members
   add constraint tree_members_role_check
-  check (role in ('chu', 'sua', 'xem', 'sao_luu'));
+  check (role in ('quan_tri_he_thong', 'sua', 'xem', 'sao_luu'));
 
 -- ============================================================
 -- 2. `branch_access` — cho vai sao lưu đọc đủ
 -- ============================================================
--- Giữ nguyên tinh thần cũ: ai cũng chỉ thấy phần của mình, chủ cây thấy tất.
+-- Giữ nguyên tinh thần cũ: ai cũng chỉ thấy phần của mình, quản trị hệ thống thấy tất.
 -- Chỉ thêm đúng vai `sao_luu` vào vế sau.
 drop policy if exists doc_branch_access on public.branch_access;
 create policy doc_branch_access on public.branch_access
   for select to authenticated
   using (
     user_id = auth.uid()
-    or public.vai_tro(tree_id) in ('chu', 'sao_luu')
+    or public.vai_tro(tree_id) in ('quan_tri_he_thong', 'sao_luu')
   );
 
 -- ============================================================
@@ -121,7 +121,7 @@ create policy doc_user_settings_sao_luu on public.user_settings
 -- hàm quyết.
 --
 -- ⚠ Chỉ trả về người có chân trong đúng những cây mà người gọi đang giữ vai
---   `chu` hoặc `sao_luu`. Không bao giờ trả về toàn bộ `auth.users` — bản cũ
+--   `quan_tri_he_thong` hoặc `sao_luu`. Không bao giờ trả về toàn bộ `auth.users` — bản cũ
 --   làm thế chỉ vì khoá bí mật cho phép, không phải vì cần thế.
 --
 -- ⚠ `search_path` khoá cứng và `auth.users` viết đủ tên: thiếu hai thứ ấy thì
@@ -151,7 +151,7 @@ as $$
            select tree_id
              from public.tree_members
             where user_id = auth.uid()
-              and role in ('chu', 'sao_luu')
+              and role in ('quan_tri_he_thong', 'sao_luu')
          );
 $$;
 
@@ -182,7 +182,7 @@ create policy liet_ke_anh on storage.objects
   using (
     bucket_id = 'anh'
     and (storage.foldername(name))[1] ~ '^[0-9a-fA-F-]{36}$'
-    and public.vai_tro(((storage.foldername(name))[1])::uuid) in ('chu', 'sao_luu')
+    and public.vai_tro(((storage.foldername(name))[1])::uuid) in ('quan_tri_he_thong', 'sao_luu')
   );
 
 -- ============================================================

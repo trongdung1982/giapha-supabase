@@ -21,7 +21,7 @@
 //      ngoài chính gia phả của mình, và không còn ai mở khoá cho ai được nữa.
 //   3. **Vai đóng cứng trong thân hàm** — `xin_vao_cay()` là cửa duy nhất cho
 //      người lạ ghi vào `tree_members`. Nếu vai lấy từ tham số thay vì viết
-//      chết là ai cũng tự phong mình làm `chu`.
+//      chết là ai cũng tự phong mình làm `quan_tri_he_thong`.
 //
 // ⚠ Và một phép mang tính nguyên tắc, học từ b94: **đừng hỏi đúng chữ, hãy
 //   hỏi đúng điều.** Phép về `null` dưới đây hỏi "có `coalesce` không", không
@@ -109,7 +109,7 @@ console.log('\nPHẦN B — ba cái bẫy đã có tiền lệ');
   const than = thanHam(lenh, 'xin_vao_cay') || '';
   kiem("xin_vao_cay() đóng cứng vai 'xem' trong thân hàm",
        /'xem'/.test(than) && !/p_role|p_vai/i.test(than),
-       'vai lấy từ tham số → ai cũng tự phong mình làm chu');
+       'vai lấy từ tham số → ai cũng tự phong mình làm quản trị hệ thống');
   kiem('xin_vao_cay() đóng cứng approved = false',
        /,\s*false\s*,/.test(than) || /approved[^,]*false/i.test(than),
        'không thấy chỗ đặt approved = false');
@@ -133,7 +133,7 @@ console.log('\nPHẦN C — quyền đọc');
   // Ba vai không bao giờ được rơi vào trạng thái chờ. `sao_luu` là vai dễ
   // quên nhất và hỏng nặng nhất: nó là máy chạy hằng đêm, không có người ngồi
   // sau để bấm nút, nên quên nó là sao lưu thất bại IM LẶNG.
-  for (const vai of ['chu', 'admin', 'sao_luu']) {
+  for (const vai of ['quan_tri_he_thong', 'quan_tri', 'sao_luu']) {
     kiem("  vai '" + vai + "' đi tắt, không phải chờ duyệt",
          new RegExp("'" + vai + "'").test(than), 'thiếu vai ' + vai);
   }
@@ -146,7 +146,7 @@ console.log('\nPHẦN C — quyền đọc');
   kiem('tu_choi_thanh_vien() chỉ xoá đơn đang chờ (approved = false)',
        /delete[\s\S]{0,300}?approved\s*=\s*false/i.test(than),
        'xoá được cả thành viên thật');
-  kiem('tu_choi_thanh_vien() không đụng được chu/admin/sao_luu',
+  kiem('tu_choi_thanh_vien() không đụng được quản trị/sao_luu',
        /delete[\s\S]{0,400}?role\s+not\s+in/i.test(than),
        'thiếu chặn ba vai đi tắt');
 }
@@ -182,8 +182,8 @@ for (const [ten, ma] of [['khoi-dong.js', JS_KD], ['settings.js', JS_ST]]) {
        'gọi thẳng máy chủ, phá luật một cửa');
 }
 
-// `suaDuoc` phải HỎI máy chủ. Câu cũ `vaiTro === 'chu' || vaiTro === 'sua'`
-// sai hai đường: bỏ sót vai `admin`, và cho người `sua` chưa duyệt tưởng mình
+// `suaDuoc` phải HỎI máy chủ. Câu cũ `vaiTro === 'quan_tri_he_thong' || vaiTro === 'sua'`
+// sai hai đường: bỏ sót vai `quan_tri`, và cho người `sua` chưa duyệt tưởng mình
 // sửa được — giao diện mở nút Sửa rồi máy chủ mới chặn lúc bấm Lưu.
 kiem('layPhien() hỏi máy chủ về quyền sửa, không tự suy từ vai trò',
      /co_the_sua/.test(JS_SB) && !/suaDuoc:\s*vaiTro\s*===/.test(JS_SB),
@@ -197,13 +197,13 @@ kiem('layPhien() trả trangThai cho màn hình từ chối',
 kiem("khoi-dong.js phân biệt 'đang chờ' với 'chưa nộp đơn'",
      /trangThai\s*===\s*'cho'/.test(JS_KD), 'không phân biệt hai trạng thái');
 
-kiem('settings.js có khối hàng chờ cho chu/admin',
+kiem('settings.js có khối hàng chờ cho quản trị',
      /veKhoiChoDuyet/.test(JS_ST) && /dsChoDuyet/.test(JS_ST), 'thiếu khối');
 
 // Điều kiện vai trong settings.js chỉ để khỏi vẽ khối trống — nhưng nếu nó là
 // phép kiểm quyền DUY NHẤT thì hỏng. Máy chủ phải tự lọc.
 kiem('ds_cho_duyet() tự lọc quyền ở máy chủ, không tin phía trình duyệt',
-     /coalesce\s*\([\s\S]{0,120}vai_tro[\s\S]{0,200}in\s*\(\s*'chu'/i.test(lenh),
+     /coalesce\s*\([\s\S]{0,120}vai_tro[\s\S]{0,200}in\s*\(\s*'quan_tri_he_thong'/i.test(lenh),
      'không thấy phép lọc quyền trong hàm');
 
 // ------------------------------------------------------------

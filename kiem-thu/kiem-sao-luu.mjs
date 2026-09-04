@@ -235,7 +235,7 @@ function cayGia({ soNguoi = 5, soNhatKy = 3 } = {}) {
   const cay = '00000000-0000-4000-8000-000000000001';
   const d = {
     trees: [{ id: cay, tree_code: 'THU', name: 'Cây thử', revision: 7 }],
-    tree_members: [{ tree_id: cay, user_id: 'u1', role: 'chu' }],
+    tree_members: [{ tree_id: cay, user_id: 'u1', role: 'quan_tri_he_thong' }],
     branches: [],
     branch_access: [],
     persons: [],

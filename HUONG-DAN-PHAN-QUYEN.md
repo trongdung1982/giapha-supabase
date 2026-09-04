@@ -1,6 +1,6 @@
 # Hướng dẫn phân quyền — dành cho chủ dự án
 
-*Cập nhật 04/09/2026 16:50 · Luật trực hệ + hàng chờ duyệt*
+*Cập nhật 04/09/2026 22:20 · Luật trực hệ + hàng chờ duyệt + kiểm duyệt nội dung*
 
 > File này viết cho người **không lập trình**. Mỗi bước ghi rõ bấm gì, và
 > ghi rõ **nhìn thấy gì thì biết là xong**.
@@ -54,7 +54,7 @@ không hỏng đằng cho qua. Dán nốt file thứ hai là hết.)
 | muc | gia_tri | mong_doi |
 |---|---|---|
 | cot moi | 2 | 2 |
-| vai admin nhan duoc | co | co |
+| vai quan tri nhan duoc | co | co |
 | ham pham_vi_sua | 1 | 1 |
 
 **Bước 3.** Bấm **New query** lần nữa. Mở `supabase/luoc-do/03-ham-luu-cay.sql`
@@ -92,8 +92,9 @@ nó không đổi thay vì gắn bừa: email không có trong gia phả này, h
 gõ sai. Đối chiếu bằng mục 4 ngay dưới.
 
 ⚠ **Vì sao dùng `update` chứ không gọi hàm `duyet_thanh_vien()`.** Hàm ấy có
-thật và vẫn dùng được — nhưng chỉ khi người gọi **đang đăng nhập** bằng một
-tài khoản `chu`/`admin`, tức từ màn hình duyệt của app sau này. Cửa sổ SQL
+thật và vẫn dùng được — nhưng chỉ khi người gọi **đang đăng nhập** bằng tài
+khoản `quan_tri_he_thong`, tức từ màn hình duyệt trong app. *(Tới 04/09/2026 nó nhận cả
+`quan_tri`; `08-kiem-duyet.sql` mục 4 thu hẹp lại — xem cuối mục 3 này.)* Cửa sổ SQL
 Editor không mang danh nghĩa tài khoản nào cả, nên với hàm ấy nó là *"người
 ngoài"* và bị từ chối.
 
@@ -111,12 +112,40 @@ gì bất thường hiện lên màn hình.
 
 ```sql
 update public.tree_members
-   set role = 'admin'
+   set role = 'quan_tri'
  where tree_id = (select id from public.trees where tree_code = 'NTB')
    and user_id = (select id from auth.users where email = 'nguoi-do@gmail.com');
 ```
 
 Quản trị viên **không cần gắn mã người** — họ sửa được cả cây.
+
+⚠ **`quan_tri` KHÔNG phải "chủ thứ hai" nữa** *(đổi 04/09/2026,
+`08-kiem-duyet.sql` mục 4)*. Chủ dự án chốt tách hai hạng:
+
+| Hạng | Mã trong bảng | Sửa dữ liệu | Duyệt nội dung | Nhận người vào cây · gắn mã người |
+|---|---|---|---|---|
+| **Quản trị hệ thống** | `quan_tri_he_thong` | ghi thẳng | ✓ | ✓ |
+| **Quản trị viên** | `quan_tri` | ghi thẳng | ✓ | ✗ |
+| **Thành viên** | `sua` | theo trực hệ, chờ duyệt | ✗ | ✗ |
+| **Khách** | `xem` | ✗ | ✗ | ✗ |
+
+Nghĩa là **quản trị viên** là người kiểm duyệt nội dung, không phải người
+quản trị hệ thống.
+
+⚠ **Bốn tên trên là cách gọi chốt 04/09/2026**, và mã `chu` đã được đổi thành
+`quan_tri_he_thong` cùng ngày — bạn sẽ không còn gặp chữ `chu` ở đâu nữa. Việc
+đổi ấy làm bằng `luoc-do/09-doi-ma-vai.sql`; xem mục 8.
+
+Chỗ dịch mã sang tên hiển thị nằm ở `js/pages/settings.js` hàm
+`vaiTroBangChu()`, và chỉ có một chỗ ấy.
+
+**Cụ thể quản trị viên mất gì:** ba hàm `duyet_thanh_vien()`,
+`tu_choi_thanh_vien()`, `ds_cho_duyet()` từ nay chỉ quản trị hệ thống gọi được
+— khối *"Đơn chờ duyệt"* trong màn Cài đặt cũng vậy, máy chủ trả về rỗng cho
+quản trị viên.
+
+Lý do: hai hàm đầu **đổi được ai có quyền gì**. Một người kiểm duyệt nội dung
+không cần tới chúng, mà có chúng thì họ tự cấp được quyền sửa cho bất kỳ ai.
 
 ---
 
@@ -190,13 +219,50 @@ lệnh đổi luật ngay dưới. Chạy lệch thứ tự là chính bạn b�
 
 ---
 
-## 8. Điều chưa làm, đừng mô tả như đã có
+## 8. Đổi mã vai — dán SÁU file, đúng thứ tự
+
+*(Làm một lần, 04/09/2026. Xong rồi thì bỏ qua mục này.)*
+
+Mã `chu` đã đổi thành `quan_tri_he_thong`. Mã ấy nằm rải ở **11 hàm, 2 luật
+phân quyền, 1 ràng buộc và chính dữ liệu**, nên phải dán lại gần hết —
+không có cách nào một file làm xong.
+
+Vẫn ở **SQL Editor**. Mỗi bước: bấm **New query** → mở file bằng Notepad →
+`Ctrl+A` → `Ctrl+C` → dán → **Run**.
+
+| Bước | File |
+|---|---|
+| 1 | `luoc-do/09-doi-ma-vai.sql` |
+| 2 | `luoc-do/05-sao-luu.sql` |
+| 3 | `luoc-do/06-quyen-truc-he.sql` |
+| 4 | `luoc-do/07-duyet-dang-ky.sql` |
+| 5 | `luoc-do/08-kiem-duyet.sql` |
+| 6 | `luoc-do/03-ham-luu-cay.sql` |
+
+⚠ **Đừng đảo bước 2 và 3.** File `05` đặt lại danh sách vai hợp lệ mà **thiếu
+`quan_tri`** — nó ra đời trước vai ấy; `06` mới thêm vào. Làm 06 trước rồi 05 là
+tự tay bỏ mất vai quản trị viên.
+
+⚠ **Giữa chừng app sẽ từ chối bạn.** Sau bước 1, dữ liệu đã mang mã mới còn
+các hàm vẫn hỏi mã cũ. Đó là quãng bình thường, không phải hỏng — dán nốt là
+hết. Và bạn **không bao giờ bị khoá thật**: SQL Editor không đi qua phân
+quyền, câu quay về bản cũ nằm ngay đầu file `09`.
+
+*Xong đúng khi:* làm hết bước 6, quay lại tab của bước 1, bôi đen khối `select`
+cuối file `09` rồi Run. Năm dòng hiện ra phải khớp cột `mong_doi`, và
+**hai dòng cuối phải là `0`** — chúng đếm xem còn chỗ nào trên máy chủ đang
+nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
+
+---
+
+## 9. Điều chưa làm, đừng mô tả như đã có
 
 - **Chưa có trang duyệt NỘI DUNG.** Khối "Đơn chờ duyệt" ở mục 6 duyệt
-  *người*, không duyệt *nội dung sửa*. Việc kia là b95, chưa viết.
-- **Chưa ai chạy `07-duyet-dang-ky.sql` trên Supabase thật.** Bộ kiểm
-  `kiem-thu/kiem-duyet-dang-ky.mjs` (40 phép) soi cấu trúc file — nhưng nó
-  **không chạy SQL**. Lần bạn bấm Run là lần chạy đầu tiên.
-  *(Luật trực hệ thì đã kiểm chứng thật rồi: phép thử H9, 5/5 hàng rào.)*
+  *người*, không duyệt *nội dung sửa*. Máy chủ đã làm xong phần của nó
+  (`08-kiem-duyet.sql`); trang `duyet.html` là việc b98, chưa viết. Trong lúc
+  chờ, nội dung sửa của thành viên vẫn hiện ra bình thường cho cả họ —
+  **đó là chủ ý**, không phải chỗ hỏng.
+- **Chưa ai thử HOÀN TÁC thật.** Đường từ chối một lần Lưu mới chỉ được bộ
+  kiểm soi bằng văn bản, chưa chạy trên Postgres lần nào.
 - **Người chỉ có quyền xem vẫn xem được mọi thứ**, kể cả chi tiết người còn
   sống. Việc giấu bớt còn nằm ở `KIEN-TRUC.md` mục 6.

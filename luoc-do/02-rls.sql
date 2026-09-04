@@ -2,7 +2,7 @@
 -- giapha-supabase · luoc-do/02-rls.sql
 -- Vai trò  : Bật Row Level Security và viết luật ĐỌC.
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 01-bang.sql, TRƯỚC 03-…sql.
--- Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+-- Phiên bản: 0.1.1 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
 --
 -- ═══ QUYẾT ĐỊNH GỐC CỦA CẢ FILE NÀY ═══
@@ -70,7 +70,7 @@ stable
 security definer
 set search_path = public, pg_temp
 as $$
-  select public.vai_tro(p_tree) in ('chu', 'sua');
+  select public.vai_tro(p_tree) in ('quan_tri_he_thong', 'sua');
 $$;
 
 -- ⚠⚠ HÀM NÀY CHƯA LÀM ĐÚNG VIỆC CỦA NÓ — và đó là chỗ dối duy nhất còn lại
@@ -108,7 +108,7 @@ as $$
       when public.vai_tro(p_tree) is null then false
 
       -- Chủ cây sửa mọi nhánh. Điều này đúng dù quy tắc chia nhánh là gì.
-      when public.vai_tro(p_tree) = 'chu' then true
+      when public.vai_tro(p_tree) = 'quan_tri_he_thong' then true
       when public.vai_tro(p_tree) <> 'sua' then false
 
       -- KHI CHỐT XONG QUY TẮC NHÁNH, bỏ chú thích bốn dòng dưới đây:
@@ -212,11 +212,11 @@ create policy doc_tree_members on public.tree_members
   using (public.la_thanh_vien(tree_id));
 
 -- Quyền theo nhánh thì CHỈ thấy phần của chính mình. Biết ai được sửa nhánh
--- nào là chuyện riêng giữa người ấy và chủ cây.
+-- nào là chuyện riêng giữa người ấy và quản trị hệ thống.
 drop policy if exists doc_branch_access on public.branch_access;
 create policy doc_branch_access on public.branch_access
   for select to authenticated
-  using (user_id = auth.uid() or public.vai_tro(tree_id) = 'chu');
+  using (user_id = auth.uid() or public.vai_tro(tree_id) = 'quan_tri_he_thong');
 
 -- ============================================================
 -- 4. CÀI ĐẶT RIÊNG — bảng DUY NHẤT trình duyệt ghi thẳng

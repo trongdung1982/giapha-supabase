@@ -2,7 +2,7 @@
 -- giapha-supabase · luoc-do/07-duyet-dang-ky.sql
 -- Vai trò  : Đăng ký tài khoản phải XẾP HÀNG CHỜ, admin duyệt mới vào được.
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 06-quyen-truc-he.sql.
--- Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 15:40
+-- Phiên bản: 0.1.1 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
 --
 -- ═══ 0. FILE NÀY ĐỔI MỘT ĐIỀU LỚN — ĐỌC TRƯỚC KHI DÁN ═══
@@ -74,9 +74,9 @@ update public.tree_members
 -- một hàm thay vì chép điều kiện ra chín policy.
 --
 -- ⚠ Ba vai đi tắt, và phải đi tắt:
---   • `chu`     — người dựng cây. Khoá chủ ra ngoài nhà mình là hỏng kiểu tệ
+--   • `quan_tri_he_thong`     — người dựng cây. Khoá chủ ra ngoài nhà mình là hỏng kiểu tệ
 --                 nhất: không ai còn quyền mở khoá cho ai nữa.
---   • `admin`   — chủ dự án cấp tay, không qua hàng chờ bao giờ.
+--   • `quan_tri`   — chủ dự án cấp tay, không qua hàng chờ bao giờ.
 --   • `sao_luu` — tài khoản máy chạy hằng đêm (`05-sao-luu.sql`). Nó không có
 --                 người ngồi sau để bấm nút, nên không bao giờ được rơi vào
 --                 trạng thái chờ. Quên vai này là sao lưu **thất bại im lặng**
@@ -93,7 +93,7 @@ as $$
     select 1 from public.tree_members
      where tree_id = p_tree
        and user_id = auth.uid()
-       and (approved or role in ('chu', 'admin', 'sao_luu'))
+       and (approved or role in ('quan_tri_he_thong', 'quan_tri', 'sao_luu'))
   );
 $$;
 
@@ -161,7 +161,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'trangThai', case when v_dong.approved
-                        or v_dong.role in ('chu', 'admin', 'sao_luu')
+                        or v_dong.role in ('quan_tri_he_thong', 'quan_tri', 'sao_luu')
                       then 'daduyet' else 'cho' end,
     'xinLuc', v_dong.xin_luc,
     'email',  v_dong.email);
@@ -205,7 +205,7 @@ begin
 
   return jsonb_build_object(
     'trangThai', case when v_dong.approved
-                        or v_dong.role in ('chu', 'admin', 'sao_luu')
+                        or v_dong.role in ('quan_tri_he_thong', 'quan_tri', 'sao_luu')
                       then 'daduyet' else 'cho' end,
     'treeId', v_tree,
     'vaiTro', v_dong.role,
@@ -238,10 +238,10 @@ as $$
     from public.tree_members tm
    where tm.tree_id = coalesce(p_tree, (select id from public.trees limit 1))
      and tm.approved = false
-     and tm.role not in ('chu', 'admin', 'sao_luu')
+     and tm.role not in ('quan_tri_he_thong', 'quan_tri', 'sao_luu')
      and coalesce(
            public.vai_tro(coalesce(p_tree, (select id from public.trees limit 1))),
-           '') in ('chu', 'admin')
+           '') in ('quan_tri_he_thong', 'quan_tri')
    order by tm.xin_luc nulls last, tm.email;
 $$;
 
@@ -263,16 +263,16 @@ set search_path = public, pg_temp
 as $$
 declare n integer;
 begin
-  if coalesce(public.vai_tro(p_tree), '') not in ('chu', 'admin') then
+  if coalesce(public.vai_tro(p_tree), '') not in ('quan_tri_he_thong', 'quan_tri') then
     return jsonb_build_object('ok', false, 'loi',
-      'Chỉ chủ gia phả hoặc quản trị viên mới từ chối được đơn.');
+      'Chỉ quản trị hệ thống hoặc quản trị viên mới từ chối được đơn.');
   end if;
 
   delete from public.tree_members
    where tree_id = p_tree
      and lower(email) = lower(p_email)
      and approved = false
-     and role not in ('chu', 'admin', 'sao_luu');
+     and role not in ('quan_tri_he_thong', 'quan_tri', 'sao_luu');
   get diagnostics n = row_count;
 
   if n = 0 then
@@ -328,5 +328,5 @@ union all
 select 'thanh vien cu bi khoa ngoai oan',
        (select count(*)::text from public.tree_members
          where approved = false and xin_luc is null
-           and role not in ('chu', 'admin', 'sao_luu')),
+           and role not in ('quan_tri_he_thong', 'quan_tri', 'sao_luu')),
        '0';

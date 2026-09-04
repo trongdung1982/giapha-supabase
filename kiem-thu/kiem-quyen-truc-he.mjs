@@ -97,8 +97,8 @@ for (const ten of ['pham_vi_sua', 'nguoi_gan', 'co_the_sua', 'co_the_sua_nguoi',
   kiem('co_the_sua_nguoi() chặn người ngoài cây ở nhánh ĐẦU TIÊN',
        /vai_tro\(p_tree\)\s+is\s+null\s+then\s+false/i.test(than.replace(/\s+/g, ' ')),
        'nhánh `is null then false` không đứng đầu');
-  kiem('co_the_sua_nguoi() cho chu và admin qua',
-       /in\s*\(\s*'chu'\s*,\s*'admin'\s*\)/i.test(than), 'thiếu chu/admin');
+  kiem('co_the_sua_nguoi() cho cả hai hạng quản trị qua',
+       /in\s*\(\s*'quan_tri_he_thong'\s*,\s*'quan_tri'\s*\)/i.test(than), 'thiếu quản trị');
   kiem('co_the_sua_nguoi() tra pham_vi_sua',
        /pham_vi_sua/i.test(than), 'không tra phạm vi');
   // Tham số thứ hai nay là MÃ NGƯỜI. Còn chữ `branch` là còn bản cũ.
@@ -107,7 +107,7 @@ for (const ten of ['pham_vi_sua', 'nguoi_gan', 'co_the_sua', 'co_the_sua_nguoi',
 }
 
 kiem('06 thêm vai admin vào ràng buộc role',
-     /check\s*\(\s*role\s+in[^)]*'admin'/i.test(lenh06), 'không thấy vai admin');
+     /check\s*\(\s*role\s+in[^)]*'quan_tri'/i.test(lenh06), 'không thấy vai admin');
 kiem('06 thêm cột person_id và approved',
      /add\s+column\s+if\s+not\s+exists\s+person_id/i.test(lenh06) &&
      /add\s+column\s+if\s+not\s+exists\s+approved/i.test(lenh06),
@@ -117,13 +117,13 @@ kiem('06 thêm cột person_id và approved',
 kiem('06 chặn hai tài khoản gắn cùng một người',
      /unique\s+index[\s\S]*tree_members\s*\([\s\S]*person_id/i.test(lenh06),
      'thiếu unique index trên person_id');
-kiem('duyet_thanh_vien() tự kiểm người gọi là chu/admin',
-     /vai_tro\(p_tree\)[\s\S]{0,30}not\s+in\s*\(\s*'chu'\s*,\s*'admin'\s*\)/i.test(lenh06),
+kiem('duyet_thanh_vien() tự kiểm người gọi là quản trị',
+     /vai_tro\(p_tree\)[\s\S]{0,30}not\s+in\s*\(\s*'quan_tri_he_thong'\s*,\s*'quan_tri'\s*\)/i.test(lenh06),
      'ai đăng nhập cũng tự duyệt được');
 
 // ⚠ PHÉP NÀY SINH RA TỪ MỘT LẦN BỘ KIỂM NÀY BÁO XANH TRONG KHI MÃ THỦNG.
 //
-// Phép ngay trên chỉ đòi có chữ `not in ('chu','admin')`. Mã bản 0.1.1 viết đúng
+// Phép ngay trên chỉ đòi có chữ `not in ('quan_tri_he_thong','quan_tri')`. Mã bản 0.1.1 viết đúng
 // như thế và **vẫn hổng**: với người ngoài cây `vai_tro()` trả `null`, mà
 // `null not in (…)` ra `null` chứ không ra `true`, nên `if` không nhận và cửa
 // không đóng. Phép thử H9 ngày 04/09/2026 bắt được bằng cách gọi thật vào máy
@@ -161,7 +161,7 @@ kiem('duyet_thanh_vien() chặn được cả người NGOÀI cây (vai_tro tr�
        rao4.length > 0, 'không thấy hàng rào 4 trước phần ghi');
   kiem('hàng rào 4 tính phạm vi MỘT lần vào mảng',
        /v_pham_vi\s*:=\s*array\s*\(/i.test(rao4), 'không thấy gom vào mảng');
-  kiem('hàng rào 4 coi null là KHÔNG giới hạn (chu/admin)',
+  kiem('hàng rào 4 coi null là KHÔNG giới hạn (quản trị)',
        /v_pham_vi\s*:=\s*null/i.test(rao4) &&
        /v_pham_vi\s+is\s+not\s+null/i.test(rao4),
        'không phân biệt null với rỗng');

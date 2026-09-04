@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 18:45 · Bước gần nhất: **b96***
+*Cập nhật 04/09/2026 23:15 · Bước gần nhất: **b97***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -55,14 +55,50 @@ hàng rào "ghi thẳng cửa sau bị chặn". Và phép thử **bắt được
 quyền thật** mà 57 phép kiểm tự động không thấy; đã vá và đánh lại đúng đòn ấy
 để chứng minh vá kín. Số đo ở `nhat-ky/b94-phep-thu-h9.md`.
 
-**Việc kế tiếp: b94/b95 — kiểm duyệt nội dung** (việc 4), và **duyệt đăng ký
-tài khoản** (việc 5, chủ dự án chốt cuối buổi 04/09).
+**MÀN HÌNH DUYỆT ĐÃ DÙNG THẬT — 04/09/2026 tối.** Chủ dự án bấm Duyệt cho đơn
+của `thu-h9`, và mở app xem cây 59 người: vẽ ra đúng. Hai chỗ hở cuối cùng của
+b96 và của H5 khép lại ở đây, và cả hai đều là loại chỉ người bấm mới đóng
+được — không bộ kiểm nào thay thế.
+
+**KIỂM DUYỆT NỘI DUNG, TẦNG MÁY CHỦ — VIẾT XONG 04/09/2026 (b97).**
+`luoc-do/08-kiem-duyet.sql` mới, cộng `luu_cay()` viết lại lên 0.3.0. Bộ kiểm
+`kiem-thu/kiem-kiem-duyet.mjs` **111 phép, đạt 111**, có bốn phép kiểm chứng
+ngược.
+
+**BỐN HẠNG NGƯỜI, ĐẶT TÊN LẠI — 04/09/2026.** Chủ dự án chốt cách gọi:
+**Quản trị hệ thống** · **Quản trị viên** · **Thành viên** · **Khách**.
+Màn hình Cài đặt trước đây in thẳng mã trong bảng ra cho người trong họ đọc;
+nay đi qua `vaiTroBangChu()` trong `settings.js` 1.27.0.
+
+**VÀ MÃ `chu` ĐÃ ĐỔI THÀNH `quan_tri_he_thong`.** Ban đầu tôi chỉ đổi chữ trên
+màn hình và giữ nguyên mã trong bảng; chủ dự án trả lời *"mình nhìn chữ chu rất
+không thích"*, nên đổi nốt. Cái giá của việc đổi, đo được: mã cũ nằm ở **11 hàm,
+2 luật RLS, 1 ràng buộc và chính dữ liệu** — tức phải dán lại năm file chứ
+không phải một. Đó là hậu quả của việc tên vai nằm rải thành chữ viết thẳng ở
+mỗi nơi gọi, thay vì gọn vào một chỗ — ghi lại để lần sau biết.
+
+File di dời: `luoc-do/09-doi-ma-vai.sql`. Bộ kiểm nay có một phép **đọc cả thư
+mục** `luoc-do/` và `js/` để hỏi *"còn file nào sót mã cũ không"* — danh sách
+viết tay không trả lời được câu ấy, vì file bị quên cũng là file không có trong
+danh sách.
+
+**SÁU FILE SQL ĐÃ DÁN THẬT — 04/09/2026 23:00.** Chủ dự án chạy đúng thứ tự
+`09` → `05` → `06` → `07` → `08` → `03`. Bảng đối chiếu của `09` **khớp cả 5
+dòng**, và hai dòng đáng tiền nhất — *"còn bao nhiêu HÀM / LUẬT RLS nhắc mã
+cũ"* — đều bằng **0**. Đó là chứng cứ không sót file nào, và nó hỏi thẳng máy
+chủ chứ không hỏi trí nhớ của ai.
+
+⚠ **Nhưng chưa ai thử HOÀN TÁC thật.** Đường từ chối mới chỉ được bộ kiểm soi
+bằng văn bản. Có mã hoàn tác khác với hoàn tác được — cùng loại khoảng cách
+với *"có file sao lưu"* và *"khôi phục được"*.
+
+**Việc kế tiếp: b98 — `duyet.html`**, trang duyệt độc lập dạng bảng.
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
 đang có rủi ro nào treo trên đầu.*
 
-**Hai mươi tư việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Hai mươi tám việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -91,7 +127,11 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Phép thử H9 CHẠY THẬT — 5/5 hàng rào RLS, bắt và vá một lỗ hổng leo quyền** | **b94** | ✓ **04/09/2026** |
 | Nút Đăng xuất trong màn Cài đặt | b94 | ✓ 04/09/2026 |
 | **Hàng chờ duyệt: `approved` gác cả quyền đọc, màn hình xin vào, khối duyệt** | **b95** | ✓ **04/09/2026** |
-| **Hàng chờ CHẠY THẬT — người đang chờ đọc 0 dòng trên cả 6 bảng** | **b96** | ✓ **04/09/2026** — ⚠ chưa ai bấm Duyệt |
+| **Hàng chờ CHẠY THẬT — người đang chờ đọc 0 dòng trên cả 6 bảng** | **b96** | ✓ **04/09/2026** |
+| **Màn hình Duyệt dùng thật · cây 59 người vẽ đúng trong app** | **b96** | ✓ **04/09/2026 tối** |
+| **Kiểm duyệt nội dung, tầng máy chủ — `08` + `luu_cay()` 0.3.1, bộ kiểm 111 phép** | **b97** | ✓ **04/09/2026** — đã dán |
+| **Hai hạng quản trị tách ra — `quan_tri` chỉ kiểm duyệt, không đổi được quyền** | **b97** | ✓ **04/09/2026** — đã dán |
+| **Đổi MÃ VAI — `chu`→`quan_tri_he_thong`, `admin`→`quan_tri`; 4 hạng có tên tiếng Việt** | **b97** | ✓ **04/09/2026 23:00** — đã dán |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -147,9 +187,9 @@ phép kiểm, và cả khối nằm trong một giao dịch: lệch một con s�
 | `change_log` | 13 | 13 |
 | `media` · `sources` · `imports` | 0 | 0 |
 
-⚠ **Chưa ai MỞ APP xem cây 59 người ấy vẽ ra đúng chưa.** Bảng đối chiếu chứng
-minh dữ liệu vào đủ, không chứng minh app đọc ra và vẽ được. Đó là việc bấm
-tay, thuộc phép thử H9 ngay dưới.
+✓ **ĐÃ MỞ APP XEM — 04/09/2026, cây 59 người vẽ ra đúng.** Chủ dự án tự xác
+nhận. Đây là mảnh cuối của H5: bảng đối chiếu chứng minh dữ liệu vào đủ, còn
+việc này chứng minh app đọc ra và vẽ được.
 
 Phần dưới đây giữ lại vì nó ghi *vì sao* làm theo đường này — đọc `git log -p`
 thì không thấy lý do, chỉ thấy kết quả.
@@ -232,7 +272,7 @@ Năm hàng rào cần xác nhận, và ba cái đầu chưa ai thử lần nào:
 1. Người **ngoài cây** → không đọc được một dòng nào
 2. Vai `sua` **chưa gắn mã / chưa duyệt** → đọc đủ, `luu_cay()` từ chối
 3. Đã gắn và duyệt → sửa được trực hệ, **không** sửa được người ngoài trực hệ
-4. **Ghi thẳng vào REST bị chặn** — kể cả với vai `chu`. ⚠ Thử bằng trình
+4. **Ghi thẳng vào REST bị chặn** — kể cả với vai `quan_tri_he_thong`. ⚠ Thử bằng trình
    duyệt KHÔNG chứng minh được điều này, vì app luôn đi qua `luu_cay()`.
    Muốn biết cửa sau có khoá không thì phải thật sự đẩy thử cửa sau.
 5. `revision` chặn ghi đè khi hai người sửa cùng lúc
@@ -246,7 +286,42 @@ chạy.
 
 </details>
 
-### 4. Kiểm duyệt nội dung (b94 + b95) — ĐÃ CHỐT THIẾT KẾ, CHƯA VIẾT
+### 4. Kiểm duyệt nội dung — ✓ TẦNG MÁY CHỦ XONG VÀ ĐÃ CHẠY THẬT (b97)
+
+**Xong 04/09/2026.** `luoc-do/08-kiem-duyet.sql` (0.1.2) và `luu_cay()` lên
+0.3.1. Bộ kiểm `kiem-thu/kiem-kiem-duyet.mjs` **111 phép, đạt 111**, trong đó
+bốn phép kiểm chứng ngược — bẻ gãy mã có chủ ý rồi xác nhận bài kiểm bắt được.
+Còn lại: `duyet.html` (b98).
+
+⚠ **Chưa ai thử HOÀN TÁC thật.** Bộ kiểm soi văn bản, không chạy SQL.
+
+#### Sáu file đã dán, đúng thứ tự này — giữ lại phòng khi phải dựng lại
+
+Việc đổi mã vai (mục ngay dưới) làm danh sách dài ra, nên gần hết lược đồ phải
+chạy lại. Chủ dự án dán xong 04/09/2026 lúc 23:00:
+
+    1. luoc-do/09-doi-ma-vai.sql   ← đổi dữ liệu + ràng buộc
+    2. luoc-do/05-sao-luu.sql      ← 2 luật RLS + ds_tai_khoan()
+    3. luoc-do/06-quyen-truc-he.sql
+    4. luoc-do/07-duyet-dang-ky.sql
+    5. luoc-do/08-kiem-duyet.sql
+    6. luoc-do/03-ham-luu-cay.sql  ← bản 0.3.1
+
+⚠ **05 phải đứng trước 06.** `05` đặt lại ràng buộc vai **thiếu `quan_tri`**
+(nó có trước khi vai ấy ra đời), `06` mới thêm vào. Đảo hai file là tự tay bỏ
+vai quản trị viên khỏi danh sách hợp lệ.
+
+Dán lại `07` và `08` an toàn: cả hai có chốt chống chạy-lần-hai, nên không đơn
+nào đang xếp hàng bị duyệt bừa.
+
+**Cách biết đã dán đủ, và nó không dựa vào trí nhớ của ai:** hai dòng cuối bảng
+tự kiểm của `09` hỏi thẳng máy chủ *"còn bao nhiêu HÀM / LUẬT RLS nhắc mã cũ"*.
+Đo 23:00 ngày 04/09: cả hai bằng **0**. Bỏ sót một file thì con số ấy khác 0,
+chứ không phải chờ tới ngày ai đó bấm Lưu mới lộ.
+
+⚠ **Dán lại RIÊNG `06` hay `07` sau này sẽ âm thầm mở rộng `quan_tri` trở lại** —
+`08` mục 8 định nghĩa lại ba hàm của hai file ấy cho hẹp hơn. Dán lại chúng
+thì dán lại cả `08`.
 
 Chủ dự án chốt 04/09/2026, sau khi luật trực hệ đã xong: **mọi nội dung sửa
 đều gắn cờ tạm, admin duyệt rồi mới thành chính thức.**
@@ -258,7 +333,7 @@ Ba điều chủ dự án nói rõ, và cả ba đổi thiết kế so với b�
    nhận chính thức, không đạt thì xoá.
 2. **Trang duyệt là một trang HTML ĐỘC LẬP**, ngoài trang vẽ sơ đồ, duyệt
    dạng **bảng**.
-3. **Hai hạng admin**: một hạng can thiệp được hệ thống, một hạng chỉ kiểm duyệt.
+3. **Hai hạng quản trị**: một hạng can thiệp được hệ thống, một hạng chỉ kiểm duyệt.
 
 ⚠ **Hệ quả đã chấp nhận:** dữ liệu sai vẫn hiện ra cho cả họ cho tới khi admin
 dọn. Cách này bảo vệ gia phả bằng cách **sửa sau**, không phải **chặn trước**.
@@ -273,8 +348,8 @@ b94, **admin duyệt là hàng rào thật, trực hệ chỉ còn là bộ lọ
 
 | Vai | Sửa dữ liệu | Duyệt nội dung | Đổi vai · gắn thành viên |
 |---|---|---|---|
-| `chu` | ghi thẳng | ✓ | ✓ |
-| `admin` *(kiểm duyệt)* | ghi thẳng | ✓ | ✗ |
+| `quan_tri_he_thong` | ghi thẳng | ✓ | ✓ |
+| `quan_tri` *(kiểm duyệt)* | ghi thẳng | ✓ | ✗ |
 | `sua` + cờ `tin_cay` | ghi thẳng | ✗ | ✗ |
 | `sua` | **ghi, treo cờ chờ** | ✗ | ✗ |
 | `xem` | ✗ | ✗ | ✗ |
@@ -307,9 +382,16 @@ chủ phải từ chối và chỉ ra ai đã sửa tiếp, chứ không âm th�
 
 #### Chia việc
 
-- **b94** — tầng máy chủ: cột mới, `luu_cay()` chụp `truoc` và đặt cờ,
-  `duyet_thay_doi()` / `tu_choi_thay_doi()`. Admin duyệt tạm bằng SQL.
-- **b95** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
+⚠ Bản đầu của mục này đặt tên hai bước là *b94* và *b95*. Hai số ấy đã bị việc
+khác lấy mất trong cùng ngày 04/09 (phép thử H9 và hàng chờ đăng ký), nên việc
+này lùi xuống **b97 · b98**. Ghi lại để đọc nhật ký khỏi lạc.
+
+- **b97** — ✓ **XONG 04/09/2026**, tầng máy chủ: năm cột mới trên `change_log`
+  + `tin_cay`, `luu_cay()` 0.3.0 chụp `truoc` và đặt cờ, `duyet_thay_doi()` /
+  `tu_choi_thay_doi()`, `ds_kiem_duyet()`, và hai hạng quản trị tách ra.
+  Admin duyệt tạm bằng SQL cho tới khi có màn hình. **Chưa dán.**
+- **b98** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
+  Cửa máy chủ đã dựng sẵn: `ds_kiem_duyet()` và `dem_cho_kiem_duyet()`.
 
 ### 5. Đăng ký tài khoản phải QUA DUYỆT — ✓ XONG 04/09/2026 (b95 + b96)
 
@@ -324,7 +406,11 @@ mốc A→C của luồng xin vào bằng REST: người **đang xếp hàng** �
 trên cả sáu bảng** — không thấy cả tên gia phả, không thấy cả dòng của chính
 mình. Tự bật cờ duyệt cho mình: 0 dòng đổi. Tự mở hàng chờ: rỗng.
 
-⚠ **Còn nửa cuối chưa ai đi:** chủ dự án mở app (`Ctrl`+`F5`) → **⚙ Cài đặt**
+✓ **NỬA CUỐI ĐÃ ĐI — 04/09/2026.** Chủ dự án bấm Duyệt trên màn hình Cài đặt,
+đơn của `thu-h9` được nhận. Câu chữ cũ của mục này giữ lại ngay dưới vì nó tả
+đúng đường đi, phòng khi cần chỉ lại cho người khác.
+
+Chủ dự án mở app (`Ctrl`+`F5`) → **⚙ Cài đặt**
 → khối *"Đơn chờ duyệt (1)"* → điền `P0012` → **Duyệt**. Đơn của `thu-h9`
 đang nằm chờ, gửi lúc 04/09/2026 18:36. Đó cũng là lần đầu màn hình duyệt
 được dùng thật — nếu nó khó hiểu chỗ nào thì chỉ lúc ấy mới biết.
@@ -413,7 +499,8 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
 | ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng `update` trong SQL Editor | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt | `nhat-ky/b94-phep-thu-h9.md` |
-| ⚠ **Chưa ai bấm Duyệt trên màn hình** — đơn của `thu-h9` đang chờ trong hàng | `nhat-ky/b96-hang-cho-chay-that.md` |
+| ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor | `luoc-do/08-kiem-duyet.sql` mục 3 |
+| ⚠ **Chưa ai thử HOÀN TÁC thật** — đường từ chối mới chỉ được bộ kiểm soi văn bản, chưa chạy trên Postgres lần nào | `nhat-ky/b97-kiem-duyet-noi-dung-va-doi-ma-vai.md` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |

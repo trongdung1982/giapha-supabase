@@ -44,6 +44,7 @@ thường, không phải thiếu sót.
 | 94 | 04/09/2026 | Phép thử H9: cả 5 hàng rào RLS đạt trên máy chủ thật; bắt và vá một lỗ hổng leo quyền; nút Đăng xuất | `b94-phep-thu-h9.md` |
 | 95 | 04/09/2026 | Đăng ký xếp hàng chờ: approved gác cả quyền đọc, màn hình xin vào, khối duyệt trong Cài đặt; 40 phép | `b95-hang-cho-duyet.md` |
 | 96 | 04/09/2026 | Hàng chờ chạy thật: người đang chờ đọc được 0 dòng trên cả 6 bảng; 4 hàm mới đo trên máy chủ | `b96-hang-cho-chay-that.md` |
+| 97 | 04/09/2026 | Kiểm duyệt nội dung ở máy chủ: mỗi lần Lưu treo cờ, từ chối thì hoàn tác. Đổi mã vai. Đã chạy thật | `b97-kiem-duyet-noi-dung-va-doi-ma-vai.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -65,6 +66,8 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 | `KE-HOACH.md` việc H9: *"hai tài khoản, mỗi tài khoản một **nhánh**"* — và cả câu hỏi treo *"chi/nhánh định nghĩa thế nào"* | b87 → b92 | b93 | Luật chốt 04/09/2026 **không có nhánh nào cả**: quyền đi theo **trực hệ**, tính thẳng từ đồ thị quan hệ. Bảng `branches`/`branch_access` dựng từ `01-bang.sql` từ nay không dùng. Phép thử H9 đúng là *hai tài khoản gắn với hai người ở hai đầu cây* |
 | `06-quyen-truc-he.sql` mục 8: *"dùng được từ **SQL Editor** ngay"* | b93 | b94 | Chỉ chạy được vì lỗ hổng `null` trong chính hàm ấy. Vá xong thì SQL Editor là "người ngoài" và bị từ chối — duyệt tay bằng `update`, xem `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
 | `b95-hang-cho-duyet.md` mục *Còn treo*: *"`07-duyet-dang-ky.sql` chưa dán"* | b95 | b96 | Chủ dự án dán ngay trong cùng phiên, 04/09/2026 chiều, tự kiểm khớp 4/4. Đã đo hết mốc A→C của luồng xin vào; còn nửa cuối là chủ dự án bấm Duyệt trên màn hình Cài đặt |
+| Mọi bước gọi vai bằng mã **`chu`** và **`admin`** | b87 → b96 | b97 | Hai mã ấy **không còn tồn tại** từ 04/09/2026 tối: `chu` → `quan_tri_he_thong`, `admin` → `quan_tri` (`09-doi-ma-vai.sql`, đã chạy thật). Đọc nhật ký cũ thì thay ngầm hai chữ ấy. Tên cho người đọc: Quản trị hệ thống · Quản trị viên · Thành viên · Khách |
+| `08-kiem-duyet.sql` 0.1.1 mục *TÊN GỌI*: *"Mã trong bảng KHÔNG đổi theo… trả cái giá ấy để được mấy chữ trên màn hình là không đáng"* | b97 | b97 | Sai **trong cùng buổi**. Lý lẽ hụt một vế: mã vai không chỉ nằm trong bảng — nó hiện trên màn hình Cài đặt, trong câu báo lỗi máy chủ, và trong mọi đoạn SQL chủ dự án phải dán tay. *"Chỉ nằm trong cơ sở dữ liệu"* là mô tả của người đọc mã, không phải của người dùng app |
 
 ---
 

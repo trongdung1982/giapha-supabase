@@ -2,7 +2,7 @@
 -- giapha-supabase · luoc-do/01-bang.sql
 -- Vai trò  : Dựng toàn bộ bảng của gia phả trên Postgres (Supabase).
 -- Chạy ở   : Supabase → SQL Editor → dán → Run. Chạy TRƯỚC 02-rls.sql.
--- Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+-- Phiên bản: 0.1.1 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
 --
 -- BA ĐIỀU PHẢI BIẾT TRƯỚC KHI ĐỌC FILE NÀY
@@ -66,7 +66,7 @@ create table if not exists public.trees (
 create table if not exists public.tree_members (
   tree_id  uuid not null references public.trees(id) on delete cascade,
   user_id  uuid not null references auth.users(id)   on delete cascade,
-  role     text not null check (role in ('chu', 'sua', 'xem')),
+  role     text not null check (role in ('quan_tri_he_thong', 'sua', 'xem')),
   email    text not null default '',
   added_at timestamptz not null default now(),
   primary key (tree_id, user_id)
@@ -96,7 +96,7 @@ create table if not exists public.branches (
 );
 
 -- Ai được sửa nhánh nào. Vắng dòng = không được sửa nhánh ấy.
--- ⚠ Bảng này chỉ có nghĩa với người `role = 'sua'`. Người `'chu'` sửa cả cây,
+-- ⚠ Bảng này chỉ có nghĩa với người `role = 'sua'`. Người `'quan_tri_he_thong'` sửa cả cây,
 --   người `'xem'` không sửa gì — hai vai ấy không tra bảng này.
 create table if not exists public.branch_access (
   tree_id   uuid not null,
