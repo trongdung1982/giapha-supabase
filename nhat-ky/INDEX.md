@@ -1,6 +1,6 @@
 # NHẬT KÝ — nhánh Supabase
 
-*Bắt đầu từ bước 87 · Cập nhật 03/09/2026 17:04*
+*Bắt đầu từ bước 87 · Cập nhật 04/09/2026 10:25*
 
 > ⚠ **FILE NÀY CHỈ ĐƯỢC THÊM DÒNG. Không bao giờ sinh lại cả file.**
 >
@@ -39,6 +39,7 @@ thường, không phải thiếu sót.
 | 89 | 03/09/2026 | Chạy thật lần đầu: thêm được người mới; tên miền riêng có HTTPS; bộ kiểm lên 19 phép | `b89-chay-that-va-ten-mien.md` |
 | 90 | 03/09/2026 | Mã sao lưu (H8): trigger Apps Script chép 12 bảng ra Drive mỗi đêm, kiêm giữ sống. Chưa ai dựng | `b90-sao-luu-ra-drive.md` |
 | 91 | 04/09/2026 | Sao lưu bỏ hẳn khoá bí mật: vai `sao_luu` chỉ-đọc + đăng nhập thường; bộ kiểm 33 phép | `b91-sao-luu-bo-khoa-bi-mat.md` |
+| 92 | 04/09/2026 | Sinh một file SQL dán tay để di dời 59 người vào bảng, giữ nguyên nhật ký; bộ kiểm 46 phép | `b92-di-doi-du-lieu-bang-sql.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước

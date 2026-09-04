@@ -158,7 +158,8 @@ mạng**, nên chúng **không** chứng minh RLS chặn đúng:
 | Bộ kiểm | Kết quả | Chứng minh được gì |
 |---|---|---|
 | `kiem-thu/kiem-hinh-dang.mjs` | **19/19 đạt** trên gia phả 59 người | Logic thuần đổi hình dữ liệu |
-| `kiem-thu/kiem-sao-luu.mjs` | **29/29 đạt** | Mã trigger sao lưu, với Supabase và Drive giả |
+| `kiem-thu/kiem-sao-luu.mjs` | **33/33 đạt** | Mã trigger sao lưu, với Supabase và Drive giả |
+| `kiem-thu/kiem-di-doi.mjs` | **46/46 đạt** | Bộ sinh SQL di dời — bóc ngược dữ liệu ra khỏi file SQL rồi so lại với cây nguồn. **Không chạy SQL** |
 | Đồ thị `import` | **47/47** nối được | App nạp được, không thiếu module |
 | `/kiem-tra` | đạt cả 9 phép | Không vi phạm phân lớp |
 
@@ -169,19 +170,23 @@ Chưa viết đủ được vì **chưa ai định nghĩa "chi/nhánh"**. Đoán
 rồi để RLS thi hành là cách tệ nhất: sai thì không ai thấy, người ta chỉ thấy
 *"không sửa được ông nội mình"* mà không hiểu vì sao.
 
-**Sao lưu: mã đã viết và đã kiểm, nhưng CHƯA AI DỰNG.** Bước **H8** viết xong
-03/09/2026 — `sao-luu/SaoLuu.gs` chép cả 12 bảng cộng danh sách tài khoản ra
-một file JSON trên Drive, mỗi đêm một lần, và mỗi lần chạy cũng là một lần giữ
-cho gói miễn phí Supabase khỏi tự tạm dừng sau 7 ngày.
+**Sao lưu: ĐÃ CHẠY THẬT 04/09/2026 08:33.** Bước **H8** đóng trọn.
+`sao-luu/SaoLuu.gs` chép cả 12 bảng cộng danh sách tài khoản ra một file JSON
+trên Drive mỗi đêm, và mỗi lần chạy cũng là một lần giữ cho gói miễn phí
+Supabase khỏi tự tạm dừng sau 7 ngày. Bản đầu tiên:
+`tai-lieu/tailieu-Supabase/giapha-sao-luu-2026-09-04-0833.json`.
 
-Ba điều phải nói rõ, đừng mô tả hơn thế:
+Hai chỗ hở còn nguyên, đừng mô tả hơn thế:
 
-1. **Chưa chạy lần nào trên Apps Script thật.** Chủ dự án phải dựng dự án Apps
-   Script mới và dán khoá bí mật vào — `sao-luu/HUONG-DAN-SAO-LUU.md`. Cho tới
-   lúc ấy vẫn là **không có bản sao lưu nào**.
-2. **Chưa ai thử KHÔI PHỤC.** Có file sao lưu không đồng nghĩa khôi phục được;
+1. **Chưa ai thử KHÔI PHỤC.** Có file sao lưu không đồng nghĩa khôi phục được;
    chuyện thứ hai chỉ chứng minh được bằng cách đổ ngược vào một project trống.
-3. **Ảnh không được chép**, chỉ được liệt kê. Xem mục 7.
+2. **Ảnh không được chép**, chỉ được liệt kê. Xem mục 7.
+
+**Di dời dữ liệu (H5): mã xong, chưa ai dán.** `di-doi/sinh-sql-di-doi.mjs`
+sinh một file `.sql` để chủ dự án dán vào SQL Editor — không đi qua `luu_cay()`,
+và đó là **cố ý phá lệ cửa ghi duy nhất** cho đúng một việc làm một lần, ngoài
+app, do chính chủ dự án bấm. Lý do đầy đủ ở `KE-HOACH.md` việc 2. Ngày nào
+thấy app gọi tới `di-doi/` là ranh giới đã vỡ.
 
 ⚠ Đây là dự án Apps Script **RIÊNG**, không phải `giapha/gas/`. Bước H8 của
 `KE-HOACH-HA-TANG-Supabase_V01.md` viết *"gỡ deploy dạng web app"* — câu ấy viết

@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 · Bước gần nhất: **b91***
+*Cập nhật 04/09/2026 · Bước gần nhất: **b92***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -18,15 +18,22 @@
 Postgres qua `luu_cay()` và dữ liệu nằm lại trong bảng. Đây là lần đầu tiên
 điều đó xảy ra; mọi dòng trước ngày này chỉ là thiết kế chưa ai bấm thử.
 
-**Còn thiếu đúng một thứ trước khi được phép nhập dữ liệu thật: sao lưu phải
-CHẠY.** Mã đã viết và đã kiểm (b90, viết lại b91), nhưng chưa ai dựng nó lên
-Apps Script — xem việc 1 ngay dưới.
+**SAO LƯU ĐÃ CHẠY THẬT — 04/09/2026 08:33.** Chủ dự án dựng xong dự án Apps
+Script sao lưu, tạo tài khoản `sao-luu@nguyentrongbac.io.vn` mang vai `sao_luu`,
+và bản sao lưu đầu tiên nằm trên Drive:
+`tai-lieu/tailieu-Supabase/giapha-sao-luu-2026-09-04-0833.json`. Chính file ấy
+là chứng cứ `luoc-do/05-sao-luu.sql` đã chạy — trong đó có dòng
+`tree_members.role = 'sao_luu'` và danh sách tài khoản, hai thứ chỉ đọc được
+sau khi file SQL ấy mở đúng ba chỗ RLS.
+
+**Việc kế tiếp là DI DỜI DỮ LIỆU (H5), và mã đã xong** — b92. Còn lại đúng một
+thao tác của chủ dự án: dán một file SQL, xem `di-doi/HUONG-DAN-DI-DOI.md`.
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
-đây không phải việc khẩn — không có gì để mất. Nó chặn bước 2 vì thứ tự đúng là
-thế, không phải vì đang có rủi ro nào treo trên đầu.*
+không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
+đang có rủi ro nào treo trên đầu.*
 
-**Mười sáu việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Mười tám việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -46,8 +53,10 @@ mươi"* trong khi bảng cứ dài thêm).
 | Sửa lỗi cột `not null` nhận `null`; bộ kiểm 14 → 19 phép | b89 | ✓ |
 | `gh` CLI trên máy `LapASUS` + `MAY-THU-HAI.md` | b89 | ✓ |
 | **Mã sao lưu (H8) viết xong, bộ kiểm 29 phép** | **b90** | ✓ **03/09/2026** |
-| **Sao lưu bỏ hẳn khoá bí mật — vai `sao_luu`, bộ kiểm 33 phép** | **b91** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dựng |
+| **Sao lưu bỏ hẳn khoá bí mật — vai `sao_luu`, bộ kiểm 33 phép** | **b91** | ✓ **04/09/2026** |
 | `gh` CLI + tự kiểm trên máy thứ hai `LapAMD` | b91 | ✓ **04/09/2026** |
+| **Sao lưu CHẠY THẬT — `05-sao-luu.sql` chạy, tài khoản sao lưu tạo, có file trên Drive** | **b91** | ✓ **04/09/2026 08:33** |
+| **Bộ sinh SQL di dời (H5) + bộ kiểm 46 phép** | **b92** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dán |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -70,54 +79,73 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 *(Việc "mời `ntdungsnotion` vào repo" đã xong 03/09/2026 — đẩy được, Pages
 chạy. Cách gỡ ghi ở `CLAUDE.md` mục 4 phòng khi gặp lại `403`.)*
 
-### 1. Sao luưu (H8) — ⚠ CÒN MỘT VIỆC CHỦ DỰ ÁN PHẢI BẤM TAY
+### 1. Sao lưu (H8) — ✓ XONG 04/09/2026
 
-**Mã đã viết và đã kiểm** (b90 · viết lại b91): `sao-luu/SaoLuu.gs` chép 12 bảng
-+ danh sách tài khoản ra một file JSON trên Drive mỗi đêm, giữ 30 bản gần nhất
-cộng một bản mỗi tháng, gửi thư khi hỏng và khi dữ liệu tụt hơn một nửa. Bộ
-kiểm `kiem-thu/kiem-sao-luu.mjs` chạy chính file `.gs` ấy trong Node với
-Supabase giả và Drive giả: **33/33 đạt**, và ba phép phá hoại có chủ ý đều làm
-nó đỏ.
+Chủ dự án dựng xong và **bản sao lưu đầu tiên đã có thật**:
+`tai-lieu/tailieu-Supabase/giapha-sao-luu-2026-09-04-0833.json`.
 
-**Nhưng chưa ai dựng nó lên, nên vẫn CHƯA CÓ bản sao lưu nào.** Việc còn lại
-là của chủ dự án, khoảng 30 phút, từng bước ở `sao-luu/HUONG-DAN-SAO-LUU.md`:
-chạy `luoc-do/05-sao-luu.sql` → tạo tài khoản sao lưu → thêm nó vào cây với vai
-`sao_luu` → tạo dự án Apps Script → dán mã → điền bốn giá trị → chạy
-`kiemTraKetNoi` → `saoLuuNgay` → `datLichSaoLuu`.
+File ấy tự nó chứng minh ba điều cùng lúc, nên không cần kiểm lại:
+`luoc-do/05-sao-luu.sql` đã chạy (có dòng `role = 'sao_luu'`), tài khoản
+`sao-luu@nguyentrongbac.io.vn` đọc được mọi bảng, và hàm `ds_tai_khoan()`
+trả về danh sách tài khoản — thứ chỉ file SQL ấy mở đường.
 
-#### ⚠ BẢN 0.2.0 ĐÃ BỎ HẴN KHOÁ BÍ MẬT — đừng "sửa lại cho gọn"
+⚠ Còn nguyên hai chỗ hở, ghi ở bảng *Còn treo*: **chưa ai thử KHÔI PHỤC** từ
+file sao lưu, và **sao lưu không chép ảnh**, chỉ liệt kê.
 
-Bản đầu (03/09/2026) dùng khoá bí mật và **không chạy nổi**. Hai luật đụng nhau,
-không bên nào nhường:
+⚠ Đừng "sửa lại cho gọn" bản 0.2.0 bằng cách đưa khoá bí mật trở lại. Lý do
+đầy đủ ở `nhat-ky/b91` và đầu `luoc-do/05-sao-luu.sql`: Supabase chặn khoá
+`sb_secret_…` khi `User-Agent` giống trình duyệt, mà Apps Script luôn gửi đúng
+thứ ấy và Google không cho đổi. Ba phép trong `kiem-thu/kiem-sao-luu.mjs` canh
+điều này.
 
-* Supabase chặn khoá `sb_secret_…` khi `User-Agent` trông giống trình duyệt;
-* Apps Script **luôn** gửi `Mozilla/5.0 (compatible; Google-Apps-Script; …)`,
-  và Google **không cho đổi** dòng ấy — giới hạn nền tảng, không sửa được bằng mã.
+### 2. Di dời dữ liệu (H5) — ⚠ CÒN MỘT THAO TÁC CHỦ DỰ ÁN PHẢI DÁN
 
-Đường vòng duy nhất là khoá `service_role` đời cũ (`eyJ…`) — mà Supabase khai tử
-loại ấy **cuối 2026**. Nên 04/09/2026 đã giải đúng chỗ thay vì đi đường vòng:
-`luoc-do/05-sao-luu.sql` thêm vai **`sao_luu`** chỉ-đọc rồi mở đúng ba chỗ RLS
-từng chặn, và `SaoLuu.gs` **đăng nhập bằng email + mật khẩu** với khoá công khai.
+**Mã đã xong và đã kiểm** (b92). Từng bước cho chủ dự án:
+`di-doi/HUONG-DAN-DI-DOI.md` — mở file `.sql`, Ctrl+A, dán vào SQL Editor, Run.
 
-**Chặt hơn cách cũ, không phải đánh đổi.** Khoá bí mật vượt mọi RLS — cầm nó là
-đọc và **ghi** được mọi thứ, mọi cây, mãi mãi. Vai `sao_luu` thì `co_the_sua()` trả
-`false`, mà cửa ghi duy nhất `luu_cay()` hỏi đúng hàm ấy — nên **không ghi được một
-dòng nào**, kể cả khi mật khẩu lọt ra ngoài. Thu lại bằng một câu `delete`.
+File cần dán: `tai-lieu/di-doi-NTB-20260904.sql`
+— 59 người · 25 hôn nhân · 36 quan hệ con · 13 mục nhật ký.
 
-Ba phép kiểm mới canh điều này khỏi bị "sửa lại cho gọn": dán khoá bí mật vào là
-chặn ngay; còn sót lệnh gọi `/auth/v1/admin/` là đỏ; thiếu mật khẩu là chặn
-trước khi chạm mạng.
+#### Vì sao KHÔNG đi đường GEDCOM, và không viết script đăng nhập
 
-⚠ Đây là dự án Apps Script **MỚI, RIÊNG**. `KE-HOACH-HA-TANG_V01` bước H8 viết
-*"gỡ deploy dạng web app"* — câu ấy có từ 24/08, trước khi chốt giữ bản Apps
-Script chạy tiếp cho người trong họ. Gỡ deploy hôm nay là tắt app của cả họ.
+Chủ dự án hỏi đúng câu 04/09/2026: *"chỉ cần nhập file GEDCOM xuất từ app trên
+GAS thôi chứ?"*. Hai câu trả lời, cả hai đều đáng giữ lại:
 
-### 2. Script di dời dữ liệu (H5)
+**GEDCOM là khuôn HẸP HƠN dữ liệu của app.** Nó sinh ra để đi sang *phần mềm
+khác*; ở đây hai đầu là cùng một app, cùng một khuôn JSON. Đi vòng qua nó là
+tự nguyện làm mất sáu thứ: `changeLog` (tức **mã đã dùng** — `utils/id.js` sẽ
+cấp lại mã cũ cho người mới, không có gì báo lỗi) · bản ghi cờ `deleted` (luật
+2 đường xuất) · `meta` · sổ nhập `imports` · ảnh (luật 3 đường nhập, cố ý
+không nhập) · `rootPersonId`. Cộng một bẫy im lặng: mặc định xuất **ẩn chi
+tiết người còn sống**. Và trên nền này đường ấy còn chưa chạy được —
+nhập-để-tạo-cây-mới gọi `repo.taoGiaPhaMoi()`, hàm còn trả `lyDo: 'chualam'`.
 
-`hinh-dang.boCay()` đã làm sẵn phần khó — script chỉ còn đọc file JSON, gọi
-nó, đổ vào bảng, kèm bước đối chiếu số bản ghi trước/sau. Nhớ điền `uid` cho
-mọi bản ghi ngay tại đây *(xem `repo.canhBaoThieuUid()` để biết vì sao không
-để app tự điền)*.
+**Bản nháp đầu là một script Node tự đăng nhập rồi gọi `luu_cay()`. Bỏ.** Nó
+cần mật khẩu một tài khoản có quyền sửa, đổi lấy một việc chỉ làm một lần. Và
+đi qua `luu_cay()` thì `ts`/`by` của nhật ký **bị máy chủ ghi đè** thành người
+chạy script; ghi thẳng vào bảng giữ được nguyên văn ngày và người sửa của bản
+Apps Script — **trung thực hơn**, không phải tiện hơn.
+
+⚠ Ghi thẳng vào bảng là **cố ý phá lệ "cửa ghi duy nhất"**, chỉ được phép vì
+đây là việc một lần, do chính chủ dự án dán tay, ngoài app. Không có đường nào
+từ trình duyệt tới đó. Ngày nào thấy app gọi tới `di-doi/` là ranh giới đã vỡ.
+
+#### Ba điều bộ kiểm chứng minh được, và một điều nó không
+
+`kiem-thu/kiem-di-doi.mjs` — **46 phép**, và nó **bóc ngược dữ liệu ra khỏi
+chính file SQL sinh ra** rồi ráp lại bằng `rapCay()` để so với cây nguồn. Tức
+nó đo đúng những byte sẽ đi tới máy chủ, không đo giá trị trả về của một hàm ở
+giữa đường. Chứng minh được: không sót trường nào (`soSanh` hai chiều đều
+rỗng) · uid điền đủ và tính lại được · nhật ký giữ nguyên `ts` và `by` · mọi
+câu `delete`/`update` đều giới hạn bằng `v_tree`.
+
+⚠ **Nó KHÔNG chạy SQL** — máy không có Postgres, Supabase thật thì không đem
+ra thử. Lần chủ dự án bấm Run là lần chạy đầu tiên. Điều đó không rủi ro vì cả
+khối nằm trong một giao dịch có phần đếm lại ở cuối: sai một con số là huỷ
+sạch, cơ sở dữ liệu giữ nguyên như trước.
+
+⚠ **File `.sql` chứa TOÀN BỘ gia phả nên nằm ngoài repo** (`tai-lieu/`). Repo
+`giapha-supabase` để Public, và lịch sử git giữ lại cả bản đã xoá sau này.
 
 ### 3. Phép thử H9 — phân quyền THẬT
 
@@ -150,8 +178,7 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⚠ **`luoc-do/05-sao-luu.sql` CHƯA chạy trên Supabase thật** — bộ kiểm không chạm được SQL | `nhat-ky/b91` |
-| ⚠ **Dự án Apps Script đang mang mã 0.1.0** — phải dán lại mã và sửa 4 property | `sao-luu/HUONG-DAN-SAO-LUU.md` |
+| ⚠ **File `tai-lieu/di-doi-NTB-20260904.sql` chưa ai dán** — xem việc 2 | `di-doi/HUONG-DAN-DI-DOI.md` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
