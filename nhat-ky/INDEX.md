@@ -1,6 +1,6 @@
 # NHẬT KÝ — nhánh Supabase
 
-*Bắt đầu từ bước 87 · Cập nhật 04/09/2026 17:05*
+*Bắt đầu từ bước 87 · Cập nhật 04/09/2026 18:45*
 
 > ⚠ **FILE NÀY CHỈ ĐƯỢC THÊM DÒNG. Không bao giờ sinh lại cả file.**
 >
@@ -43,6 +43,7 @@ thường, không phải thiếu sót.
 | 93 | 04/09/2026 | Luật sửa theo TRỰC HỆ thay hẳn ý tưởng chia chi/nhánh; gắn ID + admin duyệt; bộ kiểm 57 phép | `b93-quyen-truc-he.md` |
 | 94 | 04/09/2026 | Phép thử H9: cả 5 hàng rào RLS đạt trên máy chủ thật; bắt và vá một lỗ hổng leo quyền; nút Đăng xuất | `b94-phep-thu-h9.md` |
 | 95 | 04/09/2026 | Đăng ký xếp hàng chờ: approved gác cả quyền đọc, màn hình xin vào, khối duyệt trong Cài đặt; 40 phép | `b95-hang-cho-duyet.md` |
+| 96 | 04/09/2026 | Hàng chờ chạy thật: người đang chờ đọc được 0 dòng trên cả 6 bảng; 4 hàm mới đo trên máy chủ | `b96-hang-cho-chay-that.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -63,6 +64,7 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 | `HUONG-DAN-SAO-LUU.md` bước 1: *"chép **Secret key** (`sb_secret_…`)"* | b90 | b91 | Khoá ấy **không bao giờ** dùng được từ Apps Script: Supabase chặn nó khi `User-Agent` giống trình duyệt, mà Apps Script luôn gửi `Mozilla/5.0 (compatible; Google-Apps-Script; …)` và Google không cho đổi. Bản 0.2.0 bỏ hẳn khoá bí mật, dùng vai `sao_luu` |
 | `KE-HOACH.md` việc H9: *"hai tài khoản, mỗi tài khoản một **nhánh**"* — và cả câu hỏi treo *"chi/nhánh định nghĩa thế nào"* | b87 → b92 | b93 | Luật chốt 04/09/2026 **không có nhánh nào cả**: quyền đi theo **trực hệ**, tính thẳng từ đồ thị quan hệ. Bảng `branches`/`branch_access` dựng từ `01-bang.sql` từ nay không dùng. Phép thử H9 đúng là *hai tài khoản gắn với hai người ở hai đầu cây* |
 | `06-quyen-truc-he.sql` mục 8: *"dùng được từ **SQL Editor** ngay"* | b93 | b94 | Chỉ chạy được vì lỗ hổng `null` trong chính hàm ấy. Vá xong thì SQL Editor là "người ngoài" và bị từ chối — duyệt tay bằng `update`, xem `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
+| `b95-hang-cho-duyet.md` mục *Còn treo*: *"`07-duyet-dang-ky.sql` chưa dán"* | b95 | b96 | Chủ dự án dán ngay trong cùng phiên, 04/09/2026 chiều, tự kiểm khớp 4/4. Đã đo hết mốc A→C của luồng xin vào; còn nửa cuối là chủ dự án bấm Duyệt trên màn hình Cài đặt |
 
 ---
 

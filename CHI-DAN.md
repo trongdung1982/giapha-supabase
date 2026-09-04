@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 04/09/2026 16:45*
+*Nhánh Supabase · cập nhật 04/09/2026 18:45*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -36,11 +36,11 @@ nó chính là thứ nó sinh ra để tránh.
 1. **`domains/` không được sửa.** Cả mười file chép nguyên từ bản Apps Script.
    Thấy mình đang sửa `domains/` là dừng lại hỏi vì sao — `BAT-DAU.md` mục 1.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
-3. **Đã chạy thật, và phân quyền đã kiểm chứng.** Sao lưu ra Drive 04/09
-   08:33; 59 người vào bảng 04/09 11:28; luật trực hệ dán 04/09 13:20; phép
-   thử H9 xong 04/09, **5/5 hàng rào đạt** (b94) — đo bằng cách gọi thẳng
-   REST, không qua trình duyệt. Thứ **chưa** dán: `07-duyet-dang-ky.sql`
-   (xếp hàng chờ duyệt, b95). `KIEN-TRUC.md` mục 6 kể những gì còn dở.
+3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09
+   11:28; luật trực hệ dán 13:20, phép thử H9 **5/5 hàng rào đạt** (b94);
+   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc được **0 dòng** (b96).
+   Cả hai đo bằng cách gọi thẳng REST, không qua trình duyệt. `KIEN-TRUC.md`
+   mục 6 kể những gì còn dở.
 
 ## Quy ước khung tài liệu này
 
