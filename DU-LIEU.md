@@ -44,9 +44,9 @@ lại từng cột.
 | Bảng | Vai | Ghi chú |
 |---|---|---|
 | `trees` | Một dòng một gia phả. Chứa `revision` — số chống ghi đè | Thay khối `"tree": {…}` đầu file JSON |
-| `tree_members` | **Ai được vào cây nào**, vai `chu`/`sua`/`xem` | Thay danh sách chia sẻ Drive |
-| `branches` | Chi/nhánh | ⚠ **Quy tắc chia chưa chốt** — bảng dựng sẵn, chưa ai điền |
-| `branch_access` | Ai được sửa nhánh nào | ⚠ Chỉ có nghĩa với vai `sua` |
+| `tree_members` | **Ai được vào cây nào** — vai `chu`/`admin`/`sua`/`xem`/`sao_luu`, cộng `person_id` + `approved` | Thay danh sách chia sẻ Drive · xem mục 2b |
+| `branches` | Chi/nhánh | ⚠ **TỪ NAY KHÔNG DÙNG** — luật trực hệ thay chỗ, xem mục 2b |
+| `branch_access` | Ai được sửa nhánh nào | ⚠ **TỪ NAY KHÔNG DÙNG** — xem mục 2b |
 | `persons` | Một dòng một người | Khoá chính `(tree_id, id)` |
 | `unions` | Một dòng một cuộc hôn nhân | `partners` là **mảng** |
 | `union_children` | Quan hệ cha mẹ–con | Bảng THẬT, không phải jsonb |
@@ -55,6 +55,25 @@ lại từng cột.
 | `change_log` | Nhật ký thay đổi | Không ai ghi thẳng được, chỉ `luu_cay()` |
 | `imports` | Sổ nhập GEDCOM / Excel | Chỉ mọc thêm |
 | `user_settings` | Cài đặt riêng từng người | Bảng DUY NHẤT trình duyệt ghi thẳng |
+
+### 2b. Phân quyền sửa: luật TRỰC HỆ *(chốt 04/09/2026)*
+
+Tài khoản muốn sửa phải **gắn với một mã người** (`tree_members.person_id`) và
+**được admin duyệt** (`approved`). Duyệt rồi thì sửa được **trực hệ** của người
+ấy: lên chỉ đường thẳng — bố mẹ, ông bà, cụ, **không** rẽ ngang sang bác/chú;
+xuống toàn bộ con cháu; cộng vợ/chồng của những người ấy. Chưa gắn → chỉ xem.
+
+Thi hành ở hai chỗ, và **chỉ** hai chỗ: `pham_vi_sua()` trong
+`luoc-do/06-quyen-truc-he.sql` tính tập người, hàng rào 4 của
+`03-ham-luu-cay.sql` thi hành nó. Lý do chọn luật này, kèm con số đo trên cây
+thật 681 người, nằm ở đầu file `06`.
+
+⚠ **Phạm vi mọc ra từ chính các CẠNH quan hệ**, nên cạnh phải được canh chặt
+như người. Khai một người ngoài phạm vi làm bố mình là tự cấp quyền sửa người
+ấy — hàng rào 4 chặn ở sáu chỗ, và bỏ sót chỗ nào cũng mở lại đúng đường ấy.
+
+⚠ **Không ai sửa được anh chị em ruột của mình** (0/514 người trên cây 681).
+Đã biết và đã chấp nhận; đường ra là nhờ bố hoặc nhờ admin.
 
 ### Ba quyết định về lược đồ, và cái giá
 

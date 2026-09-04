@@ -2,7 +2,10 @@
 -- giapha-supabase · luoc-do/03-ham-luu-cay.sql
 -- Vai trò  : CỬA GHI DUY NHẤT vào dữ liệu gia phả.
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 02-rls.sql.
--- Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+-- ⚠ TỪ 04/09/2026 phải chạy lại file này SAU 06-quyen-truc-he.sql. Hàng rào 4
+--   đổi từ "giới hạn theo nhánh" sang "giới hạn theo TRỰC HỆ"; bản cũ truyền
+--   `branch_id` (luôn null) vào hàm quyết quyền mới nên KHÔNG AI LƯU ĐƯỢC GÌ.
+-- Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 12:20
 -- ============================================================
 --
 -- ═══ ĐỌC BA ĐOẠN NÀY TRƯỚC KHI SỬA MỘT DÒNG NÀO ═══
@@ -90,7 +93,8 @@ declare
   v_children   jsonb;
   v_media      jsonb;
   v_sources    jsonb;
-  v_nhanh_hong text;
+  v_ngoai      text;
+  v_pham_vi    text[];      -- null = KHÔNG giới hạn (chu/admin). Xem hàng rào 4.
   v_tree       jsonb;
 begin
   -- ══ HÀNG RÀO 1 — có đăng nhập không ══
@@ -104,6 +108,15 @@ begin
   -- phân biệt "không thấy cây" với "thấy nhưng không sửa được" bằng lời lẽ
   -- kỹ thuật; `services/repo.js` mới là chỗ viết câu cho người đọc.
   if not public.co_the_sua(p_tree_id) then
+    -- Vai `sua` mà vẫn trượt nghĩa là chưa gắn mã người, hoặc admin chưa
+    -- duyệt. Đó là hai tình cảnh khác hẳn "người chỉ có quyền xem", và người
+    -- gặp nó cần biết phải làm gì tiếp — nói chung một câu là họ đi hỏi vòng.
+    if public.vai_tro(p_tree_id) = 'sua' then
+      return jsonb_build_object('ok', false, 'lyDo', 'chuaduyet',
+        'loi', 'Tài khoản của bạn chưa được gắn với một người trong gia phả, '
+            || 'hoặc quản trị viên chưa duyệt. Trong lúc chờ, bạn vẫn xem '
+            || 'được toàn bộ gia phả.');
+    end if;
     return jsonb_build_object('ok', false, 'lyDo', 'khongcoquyen',
       'loi', 'Bạn chỉ có quyền xem gia phả này, không sửa được.');
   end if;
@@ -142,36 +155,150 @@ begin
   v_media    := public.gan_ma_cay(p_ops->'media'->'luu',    p_tree_id);
   v_sources  := public.gan_ma_cay(p_ops->'sources'->'luu',  p_tree_id);
 
-  -- ══ HÀNG RÀO 4 — giới hạn theo NHÁNH ══
+  -- ══ HÀNG RÀO 4 — giới hạn theo TRỰC HỆ ══
   --
-  -- Kiểm CẢ HAI phía, và phía thứ hai mới là phía dễ quên: nhánh MỚI của bản
-  -- ghi gửi lên, và nhánh CŨ của bản ghi đang nằm trong bảng. Chỉ kiểm nhánh
-  -- mới thì người biên tập chi Giáp gắp được một người của chi Ất sang chi
-  -- mình rồi sửa thoải mái — sửa nhánh là một cách sửa người.
+  -- Luật và lý do chọn nó: `06-quyen-truc-he.sql` mục 1. Ở đây chỉ thi hành.
   --
-  -- ⚠ Hôm nay phép kiểm này chưa chặn ai cả, vì `co_the_sua_nguoi()` còn bỏ
-  --   qua tham số nhánh (`02-rls.sql` giải thích vì sao). Khung thì đã đúng
-  --   chỗ — chốt xong quy tắc chia nhánh là nó có hiệu lực ngay, không phải
-  --   sửa file này.
-  select p.id into v_nhanh_hong
-    from jsonb_populate_recordset(null::public.persons, v_persons) p
-   where not public.co_the_sua_nguoi(p_tree_id, p.branch_id)
-   limit 1;
-  if v_nhanh_hong is not null then
-    return jsonb_build_object('ok', false, 'lyDo', 'ngoainhanh',
-      'loi', 'Bạn không được cấp quyền sửa nhánh của người ' || v_nhanh_hong || '.');
+  -- Tính phạm vi MỘT lần rồi giữ vào mảng. Gọi `co_the_sua_nguoi()` cho từng
+  -- dòng cũng ra kết quả ấy, nhưng mỗi dòng chạy lại một truy vấn đệ quy trên
+  -- cả cây.
+  --
+  -- ⚠ `null` ở đây nghĩa là KHÔNG GIỚI HẠN, không phải "phạm vi rỗng". Lẫn
+  --   hai thứ ấy thì chủ cây thành người không sửa được gì — hoặc tệ hơn,
+  --   ngược lại.
+  if public.vai_tro(p_tree_id) in ('chu', 'admin') then
+    v_pham_vi := null;
+  else
+    v_pham_vi := array(
+      select pv.person_id
+        from public.pham_vi_sua(p_tree_id, public.nguoi_gan(p_tree_id)) pv);
   end if;
 
-  select cu.id into v_nhanh_hong
-    from public.persons cu
-   where cu.tree_id = p_tree_id
-     and (cu.id in (select p.id from jsonb_populate_recordset(null::public.persons, v_persons) p)
-       or cu.id in (select jsonb_array_elements_text(coalesce(p_ops->'persons'->'xoa','[]'::jsonb))))
-     and not public.co_the_sua_nguoi(p_tree_id, cu.branch_id)
-   limit 1;
-  if v_nhanh_hong is not null then
-    return jsonb_build_object('ok', false, 'lyDo', 'ngoainhanh',
-      'loi', 'Người ' || v_nhanh_hong || ' đang thuộc một nhánh bạn không được sửa.');
+  if v_pham_vi is not null then
+    -- ── 4a. NGƯỜI gửi lên ───────────────────────────────────────────────
+    -- Người MỚI cho qua: họ chưa tồn tại nên chưa thuộc phạm vi của ai, và
+    -- `luu_cay()` là đường duy nhất tạo ra họ. Người ĐÃ CÓ thì phải nằm
+    -- trong phạm vi.
+    select p.id into v_ngoai
+      from jsonb_populate_recordset(null::public.persons, v_persons) p
+     where not (p.id = any(v_pham_vi))
+       and exists (select 1 from public.persons cu
+                    where cu.tree_id = p_tree_id and cu.id = p.id)
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Người ' || v_ngoai || ' không thuộc trực hệ của bạn nên bạn '
+            || 'không sửa được. Nhờ quản trị viên nếu cần.');
+    end if;
+
+    -- ── 4b. NGƯỜI bị xoá ────────────────────────────────────────────────
+    select cu.id into v_ngoai
+      from public.persons cu
+     where cu.tree_id = p_tree_id
+       and cu.id in (select jsonb_array_elements_text(
+                              coalesce(p_ops->'persons'->'xoa','[]'::jsonb)))
+       and not (cu.id = any(v_pham_vi))
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Người ' || v_ngoai || ' không thuộc trực hệ của bạn nên bạn '
+            || 'không xoá được.');
+    end if;
+
+    -- ── 4c. QUAN HỆ — chỗ quên là chỗ thủng ─────────────────────────────
+    --
+    -- Bản cũ của hàng rào này chỉ xét NGƯỜI, và ghi lại lý do phải xét cả
+    -- hai phía: *"sửa nhánh là một cách sửa người"*. Với luật trực hệ câu ấy
+    -- còn đúng hơn nữa, vì phạm vi KHÔNG nằm trong một cột mà mọc ra từ
+    -- chính các cạnh quan hệ:
+    --
+    --   Tôi khai cụ tổ là bố tôi  →  cụ tổ thành tổ tiên trực hệ của tôi
+    --                             →  lần lưu sau tôi sửa được cụ tổ.
+    --
+    -- Không xét cạnh thì đó là đường leo quyền chỉ mất hai lần bấm Lưu, và
+    -- không sinh ra một dòng lỗi nào. Nên: mọi cạnh đụng tới đều phải có
+    -- MỌI người đang-tồn-tại của nó nằm trong phạm vi.
+    --
+    -- ⚠ Phạm vi tính trên dữ liệu CŨ, trước khi ghi. Tính trên dữ liệu mới
+    --   thì cạnh vừa khai ra đã tự cấp quyền cho chính nó.
+
+    -- Hôn nhân gửi lên: partner nào đã tồn tại đều phải trong phạm vi.
+    -- (Partner MỚI thì chưa tồn tại — đó là ca "thêm vợ/chồng", được phép.)
+    select u.id into v_ngoai
+      from jsonb_populate_recordset(null::public.unions, v_unions) u
+     where exists (select 1 from public.persons px
+                    where px.tree_id = p_tree_id
+                      and px.id = any(u.partners)
+                      and not (px.id = any(v_pham_vi)))
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Hôn nhân ' || v_ngoai || ' có người ngoài trực hệ của bạn.');
+    end if;
+
+    -- Hôn nhân ĐANG CÓ mà bị sửa hoặc xoá: xét partner CŨ của nó.
+    select cu.id into v_ngoai
+      from public.unions cu
+     where cu.tree_id = p_tree_id
+       and (cu.id in (select u.id
+                        from jsonb_populate_recordset(null::public.unions, v_unions) u)
+         or cu.id in (select jsonb_array_elements_text(
+                               coalesce(p_ops->'unions'->'xoa','[]'::jsonb))))
+       and exists (select 1 from public.persons px
+                    where px.tree_id = p_tree_id
+                      and px.id = any(cu.partners)
+                      and not (px.id = any(v_pham_vi)))
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Hôn nhân ' || v_ngoai || ' đang có người ngoài trực hệ của bạn.');
+    end if;
+
+    -- Quan hệ cha mẹ–con gửi lên: đứa con đã tồn tại thì phải trong phạm vi.
+    select uc.person_id into v_ngoai
+      from jsonb_populate_recordset(null::public.union_children, v_children) uc
+     where not (uc.person_id = any(v_pham_vi))
+       and exists (select 1 from public.persons cu
+                    where cu.tree_id = p_tree_id and cu.id = uc.person_id)
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Không gắn được người ' || v_ngoai || ' làm con: người ấy '
+            || 'không thuộc trực hệ của bạn.');
+    end if;
+
+    -- …và cái union mà nó gắn vào cũng vậy. ĐÂY là chỗ chặn "khai cụ tổ làm
+    -- bố tôi": union của cụ tổ đang có partner ngoài phạm vi của tôi.
+    select uc.union_id into v_ngoai
+      from jsonb_populate_recordset(null::public.union_children, v_children) uc
+     where exists (select 1 from public.unions un
+                    join public.persons px
+                      on px.tree_id = p_tree_id and px.id = any(un.partners)
+                   where un.tree_id = p_tree_id and un.id = uc.union_id
+                     and not (px.id = any(v_pham_vi)))
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Hôn nhân ' || v_ngoai || ' ngoài trực hệ của bạn nên bạn '
+            || 'không thêm bớt con của họ được.');
+    end if;
+
+    -- Gỡ một đứa con ra khỏi hôn nhân: xét cả hai đầu của cạnh bị gỡ.
+    select x.person_id into v_ngoai
+      from jsonb_to_recordset(coalesce(p_ops->'children'->'xoa','[]'::jsonb))
+           as x(union_id text, person_id text)
+     where not (x.person_id = any(v_pham_vi))
+        or exists (select 1 from public.unions un
+                    join public.persons px
+                      on px.tree_id = p_tree_id and px.id = any(un.partners)
+                   where un.tree_id = p_tree_id and un.id = x.union_id
+                     and not (px.id = any(v_pham_vi)))
+     limit 1;
+    if v_ngoai is not null then
+      return jsonb_build_object('ok', false, 'lyDo', 'ngoaiphamvi',
+        'loi', 'Quan hệ cha mẹ–con của người ' || v_ngoai || ' nằm ngoài '
+            || 'trực hệ của bạn.');
+    end if;
   end if;
 
   -- ══════════════════════════════════════════════════════════

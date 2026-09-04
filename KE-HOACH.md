@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 11:28 · Bước gần nhất: **b92***
+*Cập nhật 04/09/2026 12:50 · Bước gần nhất: **b93***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -33,14 +33,24 @@ khớp **cả 7/7 dòng**: `persons` 59 · `unions` 25 · `union_children` 36 ·
 nay nằm trong Postgres, giữ nguyên `uid`, giữ nguyên `ts`/`by` của nhật ký, và
 người trung tâm `P0012` có thật trong bảng.
 
+**CÂU HỎI TREO TỪ 24/08/2026 ĐÃ CÓ TRẢ LỜI — 04/09/2026.** Chủ dự án chốt
+luật phân quyền, và nó **không phải "chia chi/nhánh"**: tài khoản muốn sửa
+phải **gắn với một mã người** và **được admin duyệt**, rồi sửa được **trực hệ**
+của người ấy — lên chỉ đường thẳng (bố mẹ, ông bà, cụ), xuống toàn bộ con
+cháu, cộng vợ/chồng. Chưa gắn thì chỉ xem. Vai admin cấp cho nhiều tài khoản.
+
+Mã đã viết xong (b93): `luoc-do/06-quyen-truc-he.sql` + hàng rào 4 của
+`03-ham-luu-cay.sql` viết lại, bộ kiểm `kiem-quyen-truc-he.mjs` 57 phép đạt.
+**Còn lại thao tác của chủ dự án: dán HAI file SQL** — `HUONG-DAN-PHAN-QUYEN.md`.
+
 **Việc kế tiếp là PHÉP THỬ H9 — phân quyền RLS thật**, xem việc 3 ngay dưới.
-Giờ mới thử được, vì tới hôm nay mới có dữ liệu thật để thử trên.
+Giờ mới thử được: có dữ liệu thật, và có luật thật để thử.
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
 đang có rủi ro nào treo trên đầu.*
 
-**Mười chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Hai mươi việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -65,6 +75,7 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Sao lưu CHẠY THẬT — `05-sao-luu.sql` chạy, tài khoản sao lưu tạo, có file trên Drive** | **b91** | ✓ **04/09/2026 08:33** |
 | **Bộ sinh SQL di dời (H5) + bộ kiểm 46 phép** | **b92** | ✓ **04/09/2026** |
 | **Di dời dữ liệu CHẠY THẬT — bảng đối chiếu khớp 7/7 dòng** | **b92** | ✓ **04/09/2026 11:28** |
+| **Luật phân quyền TRỰC HỆ — chốt, cài, bộ kiểm 57 phép** | **b93** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dán |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -170,9 +181,23 @@ sạch, cơ sở dữ liệu giữ nguyên như trước.
 
 ### 3. Phép thử H9 — phân quyền THẬT
 
-Hai tài khoản email khác nhau, mỗi tài khoản một nhánh, xác nhận **bằng mắt**
-là không sửa được nhánh kia. Bắt buộc đứng **sau bước 2** (có dữ liệu thật để
-thử), và **trước** khi viết bất cứ tài liệu nào mô tả phân quyền như đã chạy.
+⚠ **Câu chữ cũ của mục này đã sai từ 04/09/2026** và giữ lại đây làm chứng:
+nó nói *"mỗi tài khoản một nhánh"*, mà luật chốt lại không có nhánh nào cả.
+Phép thử đúng là **hai tài khoản gắn với hai người ở hai đầu cây**, xác nhận
+**bằng mắt** rằng người này không sửa được người ngoài trực hệ của mình.
+
+Năm hàng rào cần xác nhận, và ba cái đầu chưa ai thử lần nào:
+
+1. Người **ngoài cây** → không đọc được một dòng nào
+2. Vai `sua` **chưa gắn mã / chưa duyệt** → đọc đủ, `luu_cay()` từ chối
+3. Đã gắn và duyệt → sửa được trực hệ, **không** sửa được người ngoài trực hệ
+4. **Ghi thẳng vào REST bị chặn** — kể cả với vai `chu`. ⚠ Thử bằng trình
+   duyệt KHÔNG chứng minh được điều này, vì app luôn đi qua `luu_cay()`.
+   Muốn biết cửa sau có khoá không thì phải thật sự đẩy thử cửa sau.
+5. `revision` chặn ghi đè khi hai người sửa cùng lúc
+
+Bắt buộc đứng **trước** khi viết bất cứ tài liệu nào mô tả phân quyền như đã
+chạy.
 
 ⚠ `PHAN-QUYEN_V03` ghi ba vòng kiểm chứng của bản Drive. **Chúng không áp dụng
 được cho RLS** — cơ chế khác hẳn, chưa kiểm chứng lần nào trong dự án này. Bắt
@@ -188,10 +213,16 @@ Cả hai đang chặn việc thật, không phải câu hỏi cho vui.
 `KIEN-TRUC.md` mục 7. Hiện để công khai — đường dẫn khó đoán, nhưng "khó đoán"
 không phải "được bảo vệ".
 
-**2. "Chi/nhánh" định nghĩa thế nào?** Theo tổ tiên chung ở đời nào? theo
-trưởng chi nào? `KE-HOACH-HA-TANG-Supabase_V01.md` hỏi câu này từ 24/08/2026.
-Chưa có câu trả lời thì **giới hạn người biên tập theo chi vẫn chưa chạy** —
-tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn treo.
+**2. ~~"Chi/nhánh" định nghĩa thế nào?~~ — ĐÃ TRẢ LỜI 04/09/2026.** Và câu
+trả lời là *không chia chi*: luật đi theo **trực hệ**, tính thẳng từ đồ thị
+quan hệ. Không ai phải liệt kê chi, không ai phải bảo trì danh sách ấy khi có
+người mới sinh. Bảng `branches`/`branch_access` dựng từ `01-bang.sql` **từ nay
+không dùng** — xem `06-quyen-truc-he.sql` mục 2.
+
+Trước khi chốt đã đo trên cây thật 681 người, và chính con số loại bỏ phương
+án nghe hợp lý hơn: hiểu *"cùng huyết thống"* theo nghĩa đầy đủ thì **552/681
+tài khoản sửa được trên 500 người** (cả họ chung một cụ tổ), và **131/133 cặp
+vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho trung vị **27 người**.
 
 ---
 
@@ -199,6 +230,8 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 
 | Việc | Ghi ở đâu |
 |---|---|
+| ⚠ **Hai file SQL phân quyền chưa ai dán** — `06-…` rồi `03-…`, đúng thứ tự | `HUONG-DAN-PHAN-QUYEN.md` |
+| ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng SQL, hàm đã viết sẵn | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
