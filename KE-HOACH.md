@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 · Bước gần nhất: **b92***
+*Cập nhật 04/09/2026 11:28 · Bước gần nhất: **b92***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -26,14 +26,21 @@ là chứng cứ `luoc-do/05-sao-luu.sql` đã chạy — trong đó có dòng
 `tree_members.role = 'sao_luu'` và danh sách tài khoản, hai thứ chỉ đọc được
 sau khi file SQL ấy mở đúng ba chỗ RLS.
 
-**Việc kế tiếp là DI DỜI DỮ LIỆU (H5), và mã đã xong** — b92. Còn lại đúng một
-thao tác của chủ dự án: dán một file SQL, xem `di-doi/HUONG-DAN-DI-DOI.md`.
+**DI DỜI DỮ LIỆU ĐÃ CHẠY THẬT — 04/09/2026 11:28.** Chủ dự án dán
+`tai-lieu/di-doi-NTB-20260904.sql` vào SQL Editor và bảng đối chiếu cuối file
+khớp **cả 7/7 dòng**: `persons` 59 · `unions` 25 · `union_children` 36 ·
+`change_log` 13 · `media`/`sources`/`imports` 0. Tức gia phả của bản Apps Script
+nay nằm trong Postgres, giữ nguyên `uid`, giữ nguyên `ts`/`by` của nhật ký, và
+người trung tâm `P0012` có thật trong bảng.
+
+**Việc kế tiếp là PHÉP THỬ H9 — phân quyền RLS thật**, xem việc 3 ngay dưới.
+Giờ mới thử được, vì tới hôm nay mới có dữ liệu thật để thử trên.
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
 đang có rủi ro nào treo trên đầu.*
 
-**Mười tám việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Mười chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -56,7 +63,8 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Sao lưu bỏ hẳn khoá bí mật — vai `sao_luu`, bộ kiểm 33 phép** | **b91** | ✓ **04/09/2026** |
 | `gh` CLI + tự kiểm trên máy thứ hai `LapAMD` | b91 | ✓ **04/09/2026** |
 | **Sao lưu CHẠY THẬT — `05-sao-luu.sql` chạy, tài khoản sao lưu tạo, có file trên Drive** | **b91** | ✓ **04/09/2026 08:33** |
-| **Bộ sinh SQL di dời (H5) + bộ kiểm 46 phép** | **b92** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dán |
+| **Bộ sinh SQL di dời (H5) + bộ kiểm 46 phép** | **b92** | ✓ **04/09/2026** |
+| **Di dời dữ liệu CHẠY THẬT — bảng đối chiếu khớp 7/7 dòng** | **b92** | ✓ **04/09/2026 11:28** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -98,13 +106,26 @@ file sao lưu, và **sao lưu không chép ảnh**, chỉ liệt kê.
 thứ ấy và Google không cho đổi. Ba phép trong `kiem-thu/kiem-sao-luu.mjs` canh
 điều này.
 
-### 2. Di dời dữ liệu (H5) — ⚠ CÒN MỘT THAO TÁC CHỦ DỰ ÁN PHẢI DÁN
+### 2. Di dời dữ liệu (H5) — ✓ XONG 04/09/2026 11:28
 
-**Mã đã xong và đã kiểm** (b92). Từng bước cho chủ dự án:
-`di-doi/HUONG-DAN-DI-DOI.md` — mở file `.sql`, Ctrl+A, dán vào SQL Editor, Run.
+Chủ dự án đã dán `tai-lieu/di-doi-NTB-20260904.sql`. Bảng đối chiếu cuối file
+khớp cả 7 dòng, nên **không cần kiểm lại bằng cách khác** — chính bảng ấy là
+phép kiểm, và cả khối nằm trong một giao dịch: lệch một con số là tự huỷ sạch.
 
-File cần dán: `tai-lieu/di-doi-NTB-20260904.sql`
-— 59 người · 25 hôn nhân · 36 quan hệ con · 13 mục nhật ký.
+| bảng | mong đợi | đếm được |
+|---|---|---|
+| `persons` | 59 | 59 |
+| `unions` | 25 | 25 |
+| `union_children` | 36 | 36 |
+| `change_log` | 13 | 13 |
+| `media` · `sources` · `imports` | 0 | 0 |
+
+⚠ **Chưa ai MỞ APP xem cây 59 người ấy vẽ ra đúng chưa.** Bảng đối chiếu chứng
+minh dữ liệu vào đủ, không chứng minh app đọc ra và vẽ được. Đó là việc bấm
+tay, thuộc phép thử H9 ngay dưới.
+
+Phần dưới đây giữ lại vì nó ghi *vì sao* làm theo đường này — đọc `git log -p`
+thì không thấy lý do, chỉ thấy kết quả.
 
 #### Vì sao KHÔNG đi đường GEDCOM, và không viết script đăng nhập
 
@@ -178,7 +199,6 @@ tức một trong hai lý do chính của cả cuộc chuyển nhà vẫn còn t
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⚠ **File `tai-lieu/di-doi-NTB-20260904.sql` chưa ai dán** — xem việc 2 | `di-doi/HUONG-DAN-DI-DOI.md` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
