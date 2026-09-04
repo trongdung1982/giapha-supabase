@@ -3,9 +3,9 @@
 // Vai trò  : Cầu nối duy nhất xuống Supabase. Bọc thư viện supabase-js
 //            thành những hàm mang đúng hình dạng mà repo.js và pages/ chờ.
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
-//            pages/settings, pages/form-anh · gọi: cau-hinh
+//            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.2.1 · Cập nhật: 04/09/2026 22:45
+// Phiên bản: 0.3.0 · Cập nhật: 04/09/2026 23:35
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -551,6 +551,95 @@ export async function tuChoiThanhVien(treeId, email) {
   if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
   const { data, error } = await k.rpc('tu_choi_thanh_vien', {
     p_tree: treeId, p_email: email,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+// ============================================================
+// Kiểm duyệt nội dung — `luoc-do/08-kiem-duyet.sql`
+// ============================================================
+//
+// Năm cửa cho `QuanTri.html` (b98). Cả năm đều là `rpc`, không phải
+// `from('change_log')`, và đó là điều bắt buộc chứ không phải sở thích:
+// `02-rls.sql` cho mọi thành viên ĐỌC `change_log` nhưng không cho ai GHI, nên
+// đổi `trang_thai` chỉ đi được qua một hàm `security definer`. Cũng chính vì
+// thế mà phép kiểm quyền nằm trong thân hàm ở máy chủ chứ không nằm ở đây —
+// app không tự lọc, và vì thế app không thể lọc sai.
+
+/**
+ * Máy chủ trả lời: người đang đăng nhập có kiểm duyệt được cây này không.
+ * Đối xứng `coTheSua()` ở trên, và cùng lý lẽ: **hỏi máy chủ, đừng suy từ
+ * `vaiTro`**. Suy ở trình duyệt thì mỗi lần thêm một vai là phải nhớ sửa mọi
+ * chỗ suy — mà quên một chỗ thì giao diện mở nút rồi máy chủ mới chặn.
+ */
+export async function coTheKiemDuyet(treeId) {
+  const k = layKhach();
+  if (!k) return false;
+  const { data, error } = await k.rpc('co_the_kiem_duyet', { p_tree: treeId || null });
+  return !error && data === true;
+}
+
+/**
+ * Hàng chờ nội dung. Không phải quản trị thì máy chủ trả mảng rỗng.
+ *
+ * ⚠ **Không trả về cột `truoc`** — xem `08-kiem-duyet.sql` mục 9. Bảng chỉ
+ *   cần biết một lần Lưu đụng vào BAO NHIÊU dòng, không cần cả bản ghi cũ,
+ *   mà bản ghi cũ thì có thể rất nặng.
+ *
+ * @param {string} treeId
+ * @param {string|null} trangThai `'cho'` · `'duyet'` · `'tu_choi'` · `null` = tất cả
+ * @param {number} gioiHan
+ * @returns {Promise<Array<{id:number, ts:string, by_email:string, action:string,
+ *   target:string, note:string, revision:number, trang_thai:string,
+ *   so_nguoi:number, so_honnhan:number, so_quanhe:number}>>}
+ */
+export async function dsKiemDuyet(treeId, trangThai = 'cho', gioiHan = 200) {
+  const k = layKhach();
+  if (!k) return [];
+  const { data, error } = await k.rpc('ds_kiem_duyet', {
+    p_tree: treeId || null,
+    p_trang_thai: trangThai === undefined ? 'cho' : trangThai,
+    p_gioi_han: gioiHan,
+  });
+  return error ? [] : (data || []);
+}
+
+/** Đếm nhanh cho cái nhãn "Chờ duyệt (n)". Hỏng thì trả 0, không ném lỗi. */
+export async function demChoKiemDuyet(treeId) {
+  const k = layKhach();
+  if (!k) return 0;
+  const { data, error } = await k.rpc('dem_cho_kiem_duyet', { p_tree: treeId || null });
+  return error ? 0 : (Number(data) || 0);
+}
+
+/**
+ * Nhận một lần Lưu làm chính thức. Không đụng một dòng dữ liệu nào — dữ liệu
+ * đã nằm trong bảng từ lúc người ta bấm Lưu; duyệt chỉ là thôi treo cờ.
+ */
+export async function duyetThayDoi(treeId, id) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('duyet_thay_doi', {
+    p_tree: treeId, p_id: id,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/**
+ * Gạt một lần Lưu đi **và hoàn tác** dữ liệu về ảnh chụp `truoc`.
+ *
+ * ⚠ Máy chủ từ chối hoàn tác trong bốn ca, và mỗi ca trả về một `lyDo` riêng
+ *   kèm câu tiếng Việt đã viết sẵn ở `loi` — `dabisuatiep` · `keotheo` ·
+ *   `khongcoanhchup` · `vuongkhoangoai`. Nơi gọi **in thẳng `loi` ấy ra**,
+ *   đừng tự chế câu khác: chỉ máy chủ mới biết ai đã sửa tiếp và sửa lúc nào.
+ */
+export async function tuChoiThayDoi(treeId, id, lyDo = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('tu_choi_thay_doi', {
+    p_tree: treeId, p_id: id, p_ly_do: String(lyDo || ''),
   });
   if (error) return { ok: false, loi: cauLoi(error) };
   return data || { ok: false, loi: 'Máy chủ không trả lời.' };

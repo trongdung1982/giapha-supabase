@@ -206,6 +206,58 @@ trên cả tám bảng**.
 
 ---
 
+## 6b. Duyệt NỘI DUNG — một trang riêng
+
+*(Cần đã dán `luoc-do/08-kiem-duyet.sql` và `03-ham-luu-cay.sql`. Xem mục 8.)*
+
+Mục 6 duyệt **người**. Mục này duyệt **việc họ sửa** — hai chuyện khác nhau,
+hai chỗ khác nhau.
+
+**Vào bằng đường nào:** mở app → **⚙ Cài đặt** → khối **"Duyệt nội dung (n)"**
+→ bấm **Mở trang duyệt nội dung**. Trang mở ra là một trang riêng, địa chỉ
+`…/QuanTri.html`. Muốn vào thẳng thì đánh dấu trang (bookmark) địa chỉ ấy.
+
+**Trên trang có gì:** một cái bảng, **mỗi dòng là một lần ai đó bấm Lưu** —
+không phải một ô dữ liệu. Ba tấm lọc ở trên: **Chờ duyệt · Đã nhận · Đã gạt**.
+
+| Cột | Nói gì |
+|---|---|
+| Lúc | giờ họ bấm Lưu |
+| Ai sửa | email của người sửa |
+| Việc | câu app tự ghi: *"Sửa hồ sơ Nguyễn Trọng Hùng bằng form nhập liệu"* |
+| Đụng | lần Lưu ấy chạm vào bao nhiêu người / cặp / quan hệ |
+
+**Hai nút ở cột cuối:**
+
+- **Duyệt** — nhận chính thức. Không đụng gì tới dữ liệu, vì dữ liệu đã nằm
+  trong gia phả từ lúc họ bấm Lưu; duyệt chỉ là thôi treo cờ.
+- **Gạt đi** — hiện ô lý do, rồi nút đỏ **Gạt đi và hoàn tác**. Bấm nút đỏ là
+  **dữ liệu quay về đúng như trước lần Lưu ấy**.
+
+⚠ **Gạt không phải "bỏ qua", nó là "làm lại như cũ".** Đọc kỹ cột *Việc* trước
+khi bấm.
+
+⚠ **Có lúc máy chủ TỪ CHỐI hoàn tác, và đó là đúng.** Thường gặp nhất: có
+người đã sửa tiếp lên đúng những bản ghi ấy — hoàn tác bây giờ là xoá mất công
+của họ. Máy chủ hiện một dòng chữ đỏ nói rõ **ai** đã sửa tiếp và **lúc nào**.
+Cách xử: gạt cái mới hơn trước, rồi quay lại gạt cái này; hoặc sửa tay.
+
+⚠ **Bấm xong bảng tự đọc lại từ máy chủ**, nên con số trên tấm lọc luôn là số
+thật, không phải số nhớ trên màn hình.
+
+⚠ **Trên điện thoại bảng rộng hơn màn hình** — kéo ngang *trong* bảng mới thấy
+hai nút ở cột cuối. Trang tự hiện một dòng nhắc khi rơi vào cảnh ấy.
+
+**Ai vào được:** Quản trị hệ thống và Quản trị viên. Người khác mở đúng địa chỉ
+ấy cũng chỉ thấy một câu *"Trang này dành cho quản trị viên"* — chặn nằm ở máy
+chủ, không nằm ở chỗ giấu địa chỉ.
+
+**Ai bị treo cờ chờ duyệt:** chỉ vai **Thành viên** chưa bật cờ tin cậy. Bạn
+(Quản trị hệ thống) và Quản trị viên ghi thẳng, không qua hàng chờ — nên hàng
+chờ trống trơn là chuyện bình thường cho tới khi có người trong họ vào sửa.
+
+---
+
 ## 7. Cài đặt hàng chờ — dán một file
 
 **SQL Editor** → **New query** → dán cả `luoc-do/07-duyet-dang-ky.sql` → **Run**.
@@ -257,12 +309,14 @@ nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
 
 ## 9. Điều chưa làm, đừng mô tả như đã có
 
-- **Chưa có trang duyệt NỘI DUNG.** Khối "Đơn chờ duyệt" ở mục 6 duyệt
-  *người*, không duyệt *nội dung sửa*. Máy chủ đã làm xong phần của nó
-  (`08-kiem-duyet.sql`); trang `duyet.html` là việc b98, chưa viết. Trong lúc
-  chờ, nội dung sửa của thành viên vẫn hiện ra bình thường cho cả họ —
-  **đó là chủ ý**, không phải chỗ hỏng.
-- **Chưa ai thử HOÀN TÁC thật.** Đường từ chối một lần Lưu mới chỉ được bộ
-  kiểm soi bằng văn bản, chưa chạy trên Postgres lần nào.
+- **Trang duyệt nội dung chưa xem được TRƯỚC/SAU từng ô.** Bảng ở mục 6b nói
+  *ai sửa*, *sửa việc gì* (một câu) và *đụng bao nhiêu bản ghi* — nó chưa mở
+  ra cho bạn xem giá trị cũ và giá trị mới của từng ô. Muốn soi kỹ một dòng
+  thì mở gia phả xem người ấy hiện đang thế nào.
+- **Chưa ai thử HOÀN TÁC thật.** Nút *Gạt đi và hoàn tác* ở mục 6b đã viết
+  xong và đã nhìn thấy bằng mắt trên bản dựng sẵn, nhưng **chưa bấm lần nào
+  trên dữ liệu thật** — đường hoàn tác trong Postgres mới chỉ được bộ kiểm soi
+  bằng văn bản. Lần bấm thật đầu tiên nên làm trên một lần Lưu không quan
+  trọng, và nên xem lại người bị đụng ngay sau đó.
 - **Người chỉ có quyền xem vẫn xem được mọi thứ**, kể cả chi tiết người còn
   sống. Việc giấu bớt còn nằm ở `KIEN-TRUC.md` mục 6.

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     giapha-supabase · QuanTri.html
+     Vai trò  : Trang DUYỆT NỘI DUNG — bảng hàng chờ, mỗi dòng một lần Lưu.
+     Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 23:35
+
+     Trang thứ hai của app, đứng riêng khỏi `index.html` theo đúng lời chủ dự
+     án 04/09/2026: *"trang duyệt là một trang HTML độc lập, ngoài trang vẽ sơ
+     đồ, duyệt dạng bảng"*. Lý lẽ đầy đủ ở đầu `js/pages/quan-tri.js`.
+
+     ⚠ TÊN FILE CÓ CHỮ HOA, và GitHub Pages phân biệt hoa với thường.
+       `quantri.html` hay `Quantri.html` đều ra trang 404. Mọi chỗ trỏ tới nó
+       phải chép đúng từng chữ: hôm nay có đúng một chỗ, là nút trong khối
+       *Duyệt nội dung* của `js/pages/settings.js`, và `kiem-thu/kiem-trang-quan-tri.mjs`
+       gác đúng điều đó.
+
+     Không sửa file này để đổi cấu hình. Mọi giá trị phải điền nằm ở
+     `js/cau-hinh.js`.
+     ============================================================ -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- Cùng lý do với `index.html`: gia phả là dữ liệu riêng của dòng họ. Thẻ
+       này chỉ nhờ công cụ tìm kiếm tử tế bỏ qua — rào chắn thật là Row Level
+       Security ở máy chủ. -->
+  <meta name="robots" content="noindex, nofollow">
+
+  <title>Duyệt nội dung — Gia phả</title>
+
+  <style>
+    html, body { margin:0; min-height:100%; }
+    body { font-family: system-ui, sans-serif;
+           background:#faf8f5; color:#2a2622; }
+    /* ⚠ KHÁC `index.html`: KHÔNG `position:fixed; inset:0`. Trang sơ đồ là một
+       khung vẽ chiếm trọn màn hình và tự cuộn bên trong; trang này là một tài
+       liệu dài, phải cuộn được bằng cả trang như mọi trang web khác. */
+    #app { min-height:100%; }
+    #loi { padding:24px; color:#c62828; line-height:1.6; font-size:15px; }
+    #loi code { background:#f0ece6; padding:2px 5px; border-radius:4px;
+                color:#2a2622; word-break:break-all; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="loi" hidden>
+    <p><b>Không tải được trang duyệt.</b></p>
+    <p>Trình duyệt không nạp được mã từ:<br><code id="loi-dia-chi"></code></p>
+    <p>Ba nguyên nhân thường gặp, theo thứ tự hay xảy ra:</p>
+    <ol>
+      <li>Vừa đẩy mã lên GitHub chưa đến một phút — đợi rồi tải lại trang.</li>
+      <li>Thiếu file <code>js/vendor/supabase.js</code> trong repo.</li>
+      <li>Mở file bằng cách bấm đúp từ ổ đĩa. ES Modules không chạy kiểu ấy —
+          phải mở qua một địa chỉ <code>http://</code> hoặc
+          <code>https://</code>.</li>
+    </ol>
+    <p><a href="index.html">← Về sơ đồ gia phả</a></p>
+  </div>
+
+  <!-- ⚠ Thẻ này phải đứng TRƯỚC `js/app-quan-tri.js`, đúng như ở `index.html`:
+       Supabase chỉ phát hành bản UMD chạy thẳng trong trình duyệt, và bản UMD
+       đặt biến toàn cục `window.supabase`. Script thường chạy xong mới tới
+       lượt module, nên thứ tự này bảo đảm biến ấy đã có mặt lúc
+       `services/sb.js` cần tới. File nằm TRONG repo, không nạp từ CDN — luật
+       chốt 01/09/2026, xem `js/vendor/DOC-VENDOR.md`. -->
+  <script src="js/vendor/supabase.js"></script>
+
+  <script>
+    // Bắt lỗi nạp module để hiện được khối #loi ở trên. `<script type=module>`
+    // hỏng thì im lặng tuyệt đối — không có onerror nào bắn ra tới đây nếu
+    // không tự gắn.
+    window.addEventListener('error', function (e) {
+      if (e && e.target && e.target.tagName === 'SCRIPT') {
+        var dc = document.getElementById('loi-dia-chi');
+        if (dc) dc.textContent = e.target.src || '(không rõ)';
+        var l = document.getElementById('loi');
+        if (l) l.hidden = false;
+      }
+    }, true);
+  </script>
+
+  <script type="module" src="js/app-quan-tri.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.27.0 · Cập nhật: 04/09/2026 22:45
+// Phiên bản: 1.28.0 · Cập nhật: 04/09/2026 23:35
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -55,7 +55,8 @@
 
 import { state, notify } from '../state.js';
 import { coMayChu, datNguoiTrungTamMacDinh, xoaNguoiTrungTamMacDinh } from '../services/tuong-thich.js';
-import { dangXuat, dsChoDuyet, duyetThanhVien, tuChoiThanhVien } from '../services/sb.js';
+import { dangXuat, dsChoDuyet, duyetThanhVien, tuChoiThanhVien,
+         demChoKiemDuyet } from '../services/sb.js';
 import { fullName, coGiaTri, doiSongNguoi } from '../utils/text.js';
 import { veLinkTai, inAnhRaster, dpiConDungDuoc, laManHinhMayTinh, DAI_DPI,
          KHO_GIAY, CHU_CAO_KHUYEN_NGHI_MM }
@@ -148,6 +149,7 @@ export function openSettings(xuLy = {}) {
   veKhoiSaoLuu(hop);
   veKhoiXuat(hop);
   veKhoiNhap(hop);
+  veKhoiKiemDuyet(hop);
   veKhoiChoDuyet(hop);
   veKhoiPhien(hop);
 
@@ -1017,6 +1019,55 @@ function veKhoiQuanLy(vao) {
   khoi.append(hang);
   vao.append(khoi);
   return khoi;
+}
+
+// ============================================================
+// Khối "Duyệt nội dung" — đường sang QuanTri.html
+// ============================================================
+
+/**
+ * Đường duy nhất tới trang duyệt nội dung (b98).
+ *
+ * ⚠ **Chỉ một cái nút, không phải cả hàng chờ.** Duyệt nội dung cần một cái
+ *   bảng năm cột; lớp phủ Cài đặt rộng tối đa 600px và đã có bảy khối khác.
+ *   Khối này chỉ làm hai việc: nói *có bao nhiêu mục đang chờ* — con số ấy là
+ *   thứ khiến người ta biết hôm nay có việc hay không — và mở trang kia.
+ *
+ * ⚠ Điều kiện `vaiTro` bên dưới KHÔNG phải phép kiểm quyền, cùng lý lẽ với
+ *   khối *Đơn chờ duyệt* ngay dưới: nó chỉ để khỏi vẽ một khối vô nghĩa cho
+ *   người thường. Hàng rào thật nằm trong `co_the_kiem_duyet()` ở máy chủ, và
+ *   trang `QuanTri.html` hỏi lại nó một lần nữa trước khi vẽ bảng.
+ */
+function veKhoiKiemDuyet(vao) {
+  const phien = state.phien;
+  if (!phien || (phien.vaiTro !== 'quan_tri_he_thong' && phien.vaiTro !== 'quan_tri')) return;
+
+  const khoi = document.createElement('div');
+  khoi.style.cssText = 'margin-top:20px';
+  const nhan = veNhanKhoi('Duyệt nội dung');
+  khoi.append(nhan);
+
+  // ⚠ Chép ĐÚNG TỪNG CHỮ HOA: GitHub Pages phân biệt hoa với thường, nên
+  //   `quantri.html` ra trang 404. `kiem-thu/kiem-trang-quan-tri.mjs` đối
+  //   chiếu chuỗi này với tên file có thật trong repo.
+  const b = nut('Mở trang duyệt nội dung', false, true, () => {
+    window.location.href = 'QuanTri.html';
+  });
+  b.dataset.viec = 'duyet-noi-dung';
+  khoi.append(b);
+
+  const bao = veLoiNhan('Đang đếm số mục đang chờ…', false);
+  khoi.append(bao);
+  vao.append(khoi);
+
+  // Đếm bất đồng bộ rồi sửa chữ, cùng cách khối *Đơn chờ duyệt* làm:
+  // `openSettings()` là hàm đồng bộ, không đợi được mạng.
+  demChoKiemDuyet(phien.treeId).then((n) => {
+    nhan.textContent = n ? 'Duyệt nội dung (' + n + ')' : 'Duyệt nội dung';
+    bao.textContent = n
+      ? 'Có ' + n + ' lần sửa đang chờ bạn xem.'
+      : 'Không có gì đang chờ duyệt.';
+  });
 }
 
 // ============================================================
