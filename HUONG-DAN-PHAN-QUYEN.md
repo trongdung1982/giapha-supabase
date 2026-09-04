@@ -1,6 +1,6 @@
 # Hướng dẫn phân quyền — dành cho chủ dự án
 
-*Cập nhật 04/09/2026 14:30 · Luật trực hệ, chốt 04/09/2026*
+*Cập nhật 04/09/2026 16:50 · Luật trực hệ + hàng chờ duyệt*
 
 > File này viết cho người **không lập trình**. Mỗi bước ghi rõ bấm gì, và
 > ghi rõ **nhìn thấy gì thì biết là xong**.
@@ -151,13 +151,52 @@ Hỏi họ **câu báo lỗi hiện trên màn hình**, rồi tra bảng này:
 
 ---
 
-## 6. Điều chưa làm, đừng mô tả như đã có
+## 6. Hàng chờ duyệt — cách làm việc từ nay
 
-- **Chưa có màn hình duyệt trong app.** Duyệt bằng SQL ở mục 3. Hàm
-  `duyet_thanh_vien()` viết sẵn để màn hình ấy mai kia gọi vào.
-- **Chưa ai kiểm chứng luật này trên Supabase thật.** Bộ kiểm
-  `kiem-thu/kiem-quyen-truc-he.mjs` (57 phép) soi cấu trúc file SQL và chạy
-  mô hình luật trên hai cây thật — nhưng nó **không chạy SQL**. Lần bạn bấm
-  Run là lần chạy đầu tiên.
+*(Cần dán `luoc-do/07-duyet-dang-ky.sql` một lần. Xem mục 7.)*
+
+Người trong họ **tự xin vào**, bạn không phải đi thêm tay từng người nữa:
+
+1. Họ tự đăng ký tài khoản, đăng nhập.
+2. Màn hình hiện **"Bạn chưa được cấp quyền xem"** kèm ô tự giới thiệu và
+   nút **Xin vào gia phả**. Bấm xong, đơn vào hàng chờ.
+3. Bạn mở app → nút **⚙ Cài đặt** → khối **"Đơn chờ duyệt (n)"**. Mỗi đơn
+   hiện email, lời họ tự giới thiệu, giờ gửi.
+4. Điền **mã người** trong gia phả rồi bấm **Duyệt** — họ vào xem được, và
+   sửa được trực hệ của mã ấy. **Để trống mã** thì họ chỉ xem, không sửa gì.
+5. Không phải người trong họ thì bấm **Từ chối** (hỏi lại một nhịp rồi mới xoá).
+
+⚠ **Người đang chờ không xem được gì cả.** Không phải "xem được nhưng không
+sửa" — là không thấy một chữ nào, kể cả tên gia phả. Đó là chỗ khác quan
+trọng nhất so với trước ngày 04/09/2026.
+
+⚠ **Tài khoản Supabase thì vẫn ai cũng tự đăng ký được.** Cái được kiểm soát
+chặt là **chỗ đứng trong gia phả**, không phải chỗ đứng trong danh sách tài
+khoản. Người lạ đăng ký xong vẫn không thấy gì — phép thử H9 đã đo: **0 dòng
+trên cả tám bảng**.
+
+---
+
+## 7. Cài đặt hàng chờ — dán một file
+
+**SQL Editor** → **New query** → dán cả `luoc-do/07-duyet-dang-ky.sql` → **Run**.
+
+*Xong đúng khi* bảng cuối có 4 dòng, cột `gia_tri` khớp `mong_doi` — đặc biệt
+dòng cuối **`thanh vien cu bi khoa ngoai oan` phải bằng `0`**.
+
+⚠ Dán **cả file một lần**, đừng cắt từng khối chạy riêng: trong đó có một lệnh
+bật quyền cho những người đã là thành viên từ trước, và nó **phải chạy trước**
+lệnh đổi luật ngay dưới. Chạy lệch thứ tự là chính bạn bị khoá ngoài app.
+
+---
+
+## 8. Điều chưa làm, đừng mô tả như đã có
+
+- **Chưa có trang duyệt NỘI DUNG.** Khối "Đơn chờ duyệt" ở mục 6 duyệt
+  *người*, không duyệt *nội dung sửa*. Việc kia là b95, chưa viết.
+- **Chưa ai chạy `07-duyet-dang-ky.sql` trên Supabase thật.** Bộ kiểm
+  `kiem-thu/kiem-duyet-dang-ky.mjs` (40 phép) soi cấu trúc file — nhưng nó
+  **không chạy SQL**. Lần bạn bấm Run là lần chạy đầu tiên.
+  *(Luật trực hệ thì đã kiểm chứng thật rồi: phép thử H9, 5/5 hàng rào.)*
 - **Người chỉ có quyền xem vẫn xem được mọi thứ**, kể cả chi tiết người còn
   sống. Việc giấu bớt còn nằm ở `KIEN-TRUC.md` mục 6.

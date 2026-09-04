@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 15:00 · Bước gần nhất: **b94***
+*Cập nhật 04/09/2026 17:00 · Bước gần nhất: **b95***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -307,7 +307,26 @@ chủ phải từ chối và chỉ ra ai đã sửa tiếp, chứ không âm th�
   `duyet_thay_doi()` / `tu_choi_thay_doi()`. Admin duyệt tạm bằng SQL.
 - **b95** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
 
-### 5. Đăng ký tài khoản phải QUA DUYỆT — chủ dự án chốt 04/09/2026
+### 5. Đăng ký tài khoản phải QUA DUYỆT — ✓ MÃ XONG 04/09/2026 (b95), CHỜ DÁN
+
+**Đã viết:** `luoc-do/07-duyet-dang-ky.sql` (bốn hàm mới, `approved` nay gác cả
+quyền đọc) · `services/sb.js` 0.2.0 · màn hình *"Xin vào gia phả"* và *"Đơn của
+bạn đang chờ duyệt"* trong `pages/khoi-dong.js` 0.9.0 · khối **Đơn chờ duyệt**
+trong màn Cài đặt (`pages/settings.js` 1.25.0) · bộ kiểm
+`kiem-thu/kiem-duyet-dang-ky.mjs` **40 phép, đạt 40**, có kiểm chứng ngược.
+
+⚠ **Còn lại đúng một thao tác: dán `07-duyet-dang-ky.sql`.** Từng bước ở
+`HUONG-DAN-PHAN-QUYEN.md` mục 7. Chưa dán thì màn hình xin vào bấm sẽ báo lỗi
+vì hàm chưa tồn tại ở máy chủ.
+
+⚠ **Câu hỏi "có tắt tự đăng ký không" nay đã tự trả lời: KHÔNG cần.** Hàng chờ
+chặn ở chỗ đúng — chỗ đứng trong gia phả, không phải chỗ đứng trong
+`auth.users`. Người lạ đăng ký xong vẫn không thấy gì (H9 hàng rào 1 đã đo).
+Rác trong `auth.users` là cái giá, và nó rẻ.
+
+<details><summary>Thiết kế ban đầu (giữ làm chứng)</summary>
+
+### 5-cũ. Đăng ký tài khoản phải QUA DUYỆT — chủ dự án chốt 04/09/2026
 
 Câu của chủ dự án: *"việc tạo tài khoản không được phép tràn lan, phải kiểm
 soát chặt. cơ chế => đăng ký tài khoản => xếp hàng chờ, đợi admin vào duyệt
@@ -341,6 +360,8 @@ tuyệt đối nhưng admin phải tạo tay từng tài khoản (và người t
 xin vào được). Không tắt thì giữ đúng cơ chế "xếp hàng" chủ dự án mô tả. Ngả
 theo **không tắt** — vì chính chủ dự án nói *"đăng ký → xếp hàng"*, tức có
 bước đăng ký.
+
+</details>
 
 ### 6. Nút Đăng xuất — ✓ XONG 04/09/2026 13:40
 
@@ -382,7 +403,7 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
 | ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng `update` trong SQL Editor | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt | `nhat-ky/b94-phep-thu-h9.md` |
-| ⚠ **Project đang bật tự đăng ký** — chưa mở cửa nào, nhưng đẻ rác `auth.users` | việc 5 ở trên |
+| ⚠ **`07-duyet-dang-ky.sql` chưa ai dán** — mã xong, hàng chờ chưa chạy | `HUONG-DAN-PHAN-QUYEN.md` mục 7 |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |

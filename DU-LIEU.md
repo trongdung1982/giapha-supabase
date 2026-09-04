@@ -75,6 +75,20 @@ như người. Khai một người ngoài phạm vi làm bố mình là tự c�
 ⚠ **Không ai sửa được anh chị em ruột của mình** (0/514 người trên cây 681).
 Đã biết và đã chấp nhận; đường ra là nhờ bố hoặc nhờ admin.
 
+⚠ **Từ `07-duyet-dang-ky.sql` (04/09/2026), `approved` gác CẢ QUYỀN ĐỌC.**
+Trước đó nó chỉ gác quyền sửa, nên ai có tên trong `tree_members` là xem được
+cả gia phả. Nay người vừa nộp đơn có dòng trong bảng nhưng **không đọc được
+một chữ nào** — nếu không thì "xếp hàng chờ" chẳng chặn được gì.
+
+Ba vai đi tắt, không bao giờ phải chờ: `chu` (khoá chủ ra ngoài nhà mình là
+hỏng kiểu không ai cứu được), `admin` (chủ dự án cấp tay), và `sao_luu` — vai
+máy chạy hằng đêm, không có người ngồi sau để bấm nút, nên rơi vào trạng thái
+chờ là **sao lưu thất bại im lặng**.
+
+Hai cột đi kèm: `xin_luc` (null = được thêm tay, không qua hàng chờ) và
+`loi_nhan` (người nộp tự giới thiệu — admin nhìn hàng chờ chỉ thấy email, mà
+email không nói được `hoangnam92@` là cháu ông nào).
+
 ### Ba quyết định về lược đồ, và cái giá
 
 **Mã người vẫn là `P0001`, không phải uuid.** Khoá chính là **cặp**

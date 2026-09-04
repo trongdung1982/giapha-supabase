@@ -5,7 +5,7 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+// Phiên bản: 0.2.0 · Cập nhật: 04/09/2026 15:55
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -176,9 +176,20 @@ export async function layPhien() {
     return { ...nen, daDangNhap: true, email: nguoi.email, loi: cauLoi(error) };
   }
   if (!ds || !ds.length) {
-    // Đăng nhập được nhưng chưa ai thêm vào cây nào. Đây là ca thường gặp
-    // nhất với người mới, và phải nói rõ phải làm gì — không hiện lỗi thô.
-    return { ...nen, daDangNhap: true, email: nguoi.email };
+    // Đăng nhập được nhưng chưa đọc được cây nào. Đây là ca thường gặp nhất
+    // với người mới, và phải nói rõ phải làm gì — không hiện lỗi thô.
+    //
+    // ⚠ Từ `07-duyet-dang-ky.sql`, KHÔNG đọc được không còn đồng nghĩa với
+    //   chưa nộp đơn: người đã xếp hàng cũng thấy đúng con số không ở đây, vì
+    //   `approved` nay gác cả quyền đọc. Hai người ấy cần nghe hai câu khác
+    //   hẳn nhau — một người phải bấm nút, một người chỉ phải chờ — nên phải
+    //   hỏi máy chủ thêm một câu nữa.
+    return {
+      ...nen,
+      daDangNhap: true,
+      email: nguoi.email,
+      trangThai: (await trangThaiCuaToi()).trangThai,
+    };
   }
 
   const treeId = await cayDangChon(k, nguoi.id, ds);
@@ -190,10 +201,25 @@ export async function layPhien() {
     email:   nguoi.email || '',
     vaiTro,
     docDuoc: true,
-    suaDuoc: vaiTro === 'chu' || vaiTro === 'sua',
+    // ⚠ HỎI MÁY CHỦ, không tự suy từ `vaiTro`. Bản cũ viết
+    //   `vaiTro === 'chu' || vaiTro === 'sua'` và câu ấy nay sai hai đường:
+    //   bỏ sót vai `admin` (b93), và cho `sua` chưa được duyệt tưởng mình sửa
+    //   được — giao diện mở nút Sửa rồi máy chủ mới chặn ở lúc bấm Lưu.
+    //   `co_the_sua()` là chỗ DUY NHẤT trả lời câu này; hỏi nó thì không bao
+    //   giờ có hai câu trả lời khác nhau cho cùng một người.
+    suaDuoc: await coTheSua(treeId),
+    trangThai: 'daduyet',
     treeId,
     nguoiTrungTamMacDinh: await nguoiTrungTamMacDinh(k, nguoi.id, treeId),
   };
+}
+
+/** Máy chủ trả lời: người đang đăng nhập có sửa được cây này không. */
+async function coTheSua(treeId) {
+  const k = layKhach();
+  if (!k) return false;
+  const { data, error } = await k.rpc('co_the_sua', { p_tree: treeId });
+  return !error && data === true;
 }
 
 /**
@@ -457,6 +483,77 @@ export async function xoaAnhThat(dsDuongDan) {
   const { data, error } = await k.storage.from(KHO_ANH).remove(ds);
   if (error) return { ok: false, soXoa: 0, soHong: ds.length, loi: cauLoi(error) };
   return { ok: true, soXoa: (data || []).length, soHong: ds.length - (data || []).length };
+}
+
+// ============================================================
+// Xếp hàng chờ duyệt — `luoc-do/07-duyet-dang-ky.sql`
+// ============================================================
+//
+// Bốn hàm này đều là `rpc`, không phải `from(…)`, và đó là điều bắt buộc chứ
+// không phải sở thích: người chưa được duyệt **không đọc được dòng của chính
+// mình** trong `tree_members` — `approved` nay gác cả quyền đọc. Nên mọi câu
+// hỏi về trạng thái đơn phải đi qua một hàm `security definer` chỉ nói về
+// người đang gọi.
+
+/**
+ * Nộp đơn xin vào gia phả. Máy chủ đóng cứng vai `xem` và cờ chưa duyệt —
+ * người gọi không chọn được vai của mình.
+ *
+ * @param {string} [loiNhan] người nộp tự giới thiệu, để admin biết đây là ai
+ * @returns {Promise<{ok:boolean, trangThai?:string, xinLuc?:string, loi?:string}>}
+ */
+export async function xinVaoCay(loiNhan = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('xin_vao_cay', { p_loi_nhan: String(loiNhan || '') });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/**
+ * Trạng thái của chính người đang đăng nhập:
+ * `chuadangnhap` · `chuanop` · `cho` · `daduyet`.
+ *
+ * Trả `chuadangnhap` khi hỏi hụt, chứ không ném lỗi: chỗ gọi nó là màn hình
+ * từ chối, và một màn hình từ chối mà tự nó vỡ thì người dùng không còn đường
+ * nào để đi tiếp.
+ */
+export async function trangThaiCuaToi() {
+  const k = layKhach();
+  if (!k) return { trangThai: 'chuadangnhap' };
+  const { data, error } = await k.rpc('trang_thai_cua_toi', {});
+  if (error || !data) return { trangThai: 'chuadangnhap' };
+  return data;
+}
+
+/** Đơn đang xếp hàng. Không phải `chu`/`admin` thì máy chủ trả mảng rỗng. */
+export async function dsChoDuyet(treeId) {
+  const k = layKhach();
+  if (!k) return [];
+  const { data, error } = await k.rpc('ds_cho_duyet', { p_tree: treeId || null });
+  return error ? [] : (data || []);
+}
+
+/** Duyệt một đơn: gắn mã người và bật cờ. Hàm máy chủ có từ b93. */
+export async function duyetThanhVien(treeId, email, personId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('duyet_thanh_vien', {
+    p_tree: treeId, p_email: email, p_person_id: personId || null, p_duyet: true,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/** Gạt một đơn đi. Chỉ đụng được vào đơn đang chờ, không đụng thành viên thật. */
+export async function tuChoiThanhVien(treeId, email) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('tu_choi_thanh_vien', {
+    p_tree: treeId, p_email: email,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
 }
 
 // ============================================================

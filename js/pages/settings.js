@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.24.0 · Cập nhật: 04/09/2026 13:40
+// Phiên bản: 1.25.0 · Cập nhật: 04/09/2026 16:20
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -55,7 +55,7 @@
 
 import { state, notify } from '../state.js';
 import { coMayChu, datNguoiTrungTamMacDinh, xoaNguoiTrungTamMacDinh } from '../services/tuong-thich.js';
-import { dangXuat } from '../services/sb.js';
+import { dangXuat, dsChoDuyet, duyetThanhVien, tuChoiThanhVien } from '../services/sb.js';
 import { fullName, coGiaTri, doiSongNguoi } from '../utils/text.js';
 import { veLinkTai, inAnhRaster, dpiConDungDuoc, laManHinhMayTinh, DAI_DPI,
          KHO_GIAY, CHU_CAO_KHUYEN_NGHI_MM }
@@ -148,6 +148,7 @@ export function openSettings(xuLy = {}) {
   veKhoiSaoLuu(hop);
   veKhoiXuat(hop);
   veKhoiNhap(hop);
+  veKhoiChoDuyet(hop);
   veKhoiPhien(hop);
 
   const dong = document.createElement('button');
@@ -1019,14 +1020,156 @@ function veKhoiQuanLy(vao) {
 }
 
 // ============================================================
+// Khối "Đơn chờ duyệt" — chỉ chu/admin thấy
+// ============================================================
+
+/**
+ * Hàng chờ của những người đã bấm "Xin vào gia phả" ở màn hình từ chối.
+ *
+ * ⚠ **Không tự quyết ai được thấy khối này.** Điều kiện `vaiTro` bên dưới chỉ
+ *   để khỏi vẽ một khối trống cho người thường — nó KHÔNG phải phép kiểm
+ *   quyền. Phép kiểm thật nằm trong `ds_cho_duyet()` ở máy chủ: ai không phải
+ *   `chu`/`admin` gọi nó cũng chỉ nhận về mảng rỗng. Hai lớp ấy đứng ở hai
+ *   nơi và chỉ lớp dưới mới đáng tin — `KIEN-TRUC.md` gọi đó là luật "app
+ *   không tự lọc, và vì thế app không thể lọc sai".
+ *
+ * ⚠ Nạp bất đồng bộ rồi tự vẽ lại: `openSettings()` là hàm đồng bộ, không đợi
+ *   được mạng. Nên khối hiện ra ngay với một dòng "Đang xem…", và đầy lên sau.
+ *   Cách kia — chặn cả màn hình Cài đặt cho tới khi mạng trả lời — biến một
+ *   khối phụ thành thứ quyết định lúc nào màn hình mở ra.
+ */
+function veKhoiChoDuyet(vao) {
+  const phien = state.phien;
+  if (!phien || (phien.vaiTro !== 'chu' && phien.vaiTro !== 'admin')) return;
+
+  const khoi = document.createElement('div');
+  khoi.style.cssText = 'margin-top:20px';
+  const nhan = veNhanKhoi('Đơn chờ duyệt');
+  khoi.append(nhan);
+
+  const than = document.createElement('div');
+  than.append(veLoiNhan('Đang xem có ai đang đợi không…', false));
+  khoi.append(than);
+  vao.append(khoi);
+
+  napLaiChoDuyet(nhan, than, phien.treeId);
+}
+
+async function napLaiChoDuyet(nhan, than, treeId) {
+  const ds = await dsChoDuyet(treeId);
+  than.innerHTML = '';
+  nhan.textContent = ds.length ? 'Đơn chờ duyệt (' + ds.length + ')' : 'Đơn chờ duyệt';
+
+  if (!ds.length) {
+    than.append(veLoiNhan('Không có ai đang đợi.', false));
+    return;
+  }
+  ds.forEach((don) => than.append(veMotDon(don, nhan, than, treeId)));
+}
+
+/** Một đơn: ai xin, xin lúc nào, nói gì — và hai đường ra. */
+function veMotDon(don, nhan, than, treeId) {
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:8px;padding:10px 11px;border:1px solid #e6e0d8;border-radius:9px;' +
+    'background:#faf8f5';
+
+  const dongEmail = document.createElement('div');
+  dongEmail.textContent = don.email || '(không rõ email)';
+  dongEmail.style.cssText = 'font-size:14px;font-weight:600;word-break:break-all';
+  hop.append(dongEmail);
+
+  if (don.loi_nhan) {
+    const ln = document.createElement('div');
+    ln.textContent = don.loi_nhan;
+    ln.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.5';
+    hop.append(ln);
+  }
+
+  const luc = document.createElement('div');
+  luc.textContent = 'Gửi lúc ' + gioVietNam(don.xin_luc);
+  luc.style.cssText = 'margin-top:4px;font-size:12px;color:#8a8078';
+  hop.append(luc);
+
+  // Ô mã người: duyệt mà không gắn mã thì người ấy vào xem được nhưng không
+  // sửa được gì — đúng luật trực hệ (`DU-LIEU.md` mục 2b), nên để trống là
+  // một lựa chọn hợp lệ, không phải thiếu sót.
+  const oMa = document.createElement('input');
+  oMa.type = 'text';
+  oMa.placeholder = 'Mã người trong gia phả, ví dụ P0012 — để trống thì chỉ xem';
+  oMa.style.cssText =
+    'margin-top:8px;width:100%;box-sizing:border-box;padding:8px 10px;font:inherit;' +
+    'font-size:13px;border:1px solid #d8d0c6;border-radius:8px;background:#fffdf9';
+  hop.append(oMa);
+
+  const bao = document.createElement('div');
+  bao.style.cssText = 'margin-top:8px;font-size:13px;line-height:1.5';
+
+  const hang = document.createElement('div');
+  hang.style.cssText = 'display:flex;gap:8px;margin-top:8px';
+
+  const nDuyet = nut('Duyệt', true, true, async () => {
+    nDuyet.disabled = true; nTuChoi.disabled = true;
+    bao.style.color = '#8a8078';
+    bao.textContent = 'Đang duyệt…';
+    const kq = await duyetThanhVien(treeId, don.email, oMa.value.trim());
+    if (!kq || !kq.ok) {
+      nDuyet.disabled = false; nTuChoi.disabled = false;
+      bao.style.color = '#8a3a2a';
+      bao.textContent = (kq && kq.loi) || 'Không duyệt được.';
+      return;
+    }
+    napLaiChoDuyet(nhan, than, treeId);
+  });
+
+  // Từ chối là **xoá đơn**, không phải đánh dấu. Nên hỏi lại một nhịp, cùng
+  // cách với nút Đăng xuất: app này không dùng `confirm()` ở đâu cả.
+  let daHoi = false;
+  const nTuChoi = nut('Từ chối', false, true, async () => {
+    if (!daHoi) {
+      daHoi = true;
+      nTuChoi.textContent = 'Bấm lần nữa để từ chối';
+      nTuChoi.style.color = '#8a3a2a';
+      return;
+    }
+    nDuyet.disabled = true; nTuChoi.disabled = true;
+    const kq = await tuChoiThanhVien(treeId, don.email);
+    if (!kq || !kq.ok) {
+      nDuyet.disabled = false; nTuChoi.disabled = false;
+      bao.style.color = '#8a3a2a';
+      bao.textContent = (kq && kq.loi) || 'Không từ chối được.';
+      return;
+    }
+    napLaiChoDuyet(nhan, than, treeId);
+  });
+
+  hang.append(nDuyet, nTuChoi);
+  hop.append(hang, bao);
+  return hop;
+}
+
+/** `dd/mm/yyyy HH:mm` — khuôn thời gian duy nhất của dự án. */
+function gioVietNam(iso) {
+  if (!iso) return 'không rõ';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return 'không rõ';
+  const hai = (n) => String(n).padStart(2, '0');
+  return hai(d.getDate()) + '/' + hai(d.getMonth() + 1) + '/' + d.getFullYear() +
+         ' ' + hai(d.getHours()) + ':' + hai(d.getMinutes());
+}
+
+// ============================================================
 // Khối "Tài khoản và quyền" — chỉ để đọc
 // ============================================================
 
 /**
- * Phân quyền do DANH SÁCH CHIA SẺ TRÊN DRIVE quyết định, Google thực thi ở
- * tầng máy chủ; app không giữ bảng phân quyền riêng. Khối này chỉ ĐỌC lại
- * những gì máy chủ vừa nói, không phải chỗ sửa quyền — và phải viết sao cho
- * không ai hiểu nhầm là sửa được ở đây.
+ * Phân quyền do MÁY CHỦ quyết định — vai trò trong bảng `tree_members` cộng
+ * Row Level Security; app không giữ bảng phân quyền riêng. Khối này chỉ ĐỌC
+ * lại những gì máy chủ vừa nói, không phải chỗ sửa quyền — và phải viết sao
+ * cho không ai hiểu nhầm là sửa được ở đây.
+ *
+ * ⚠ Câu trước 04/09/2026 ghi *"do danh sách chia sẻ trên Drive quyết định"* —
+ *   đúng với bản Apps Script, sai hẳn trên nền này.
  */
 function veKhoiPhien(vao) {
   const phien = state.phien;
