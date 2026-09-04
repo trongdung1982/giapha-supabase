@@ -3,8 +3,8 @@
 // Vai trò  : Màn hình Cài đặt — người trung tâm mặc định, tuỳ chọn hiển thị,
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
-// Phụ thuộc: state, services/tuong-thich, utils/text, pages/export-image
-// Phiên bản: 1.23.0 · Cập nhật: 01/09/2026 10:30
+// Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
+// Phiên bản: 1.24.0 · Cập nhật: 04/09/2026 13:40
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -55,6 +55,7 @@
 
 import { state, notify } from '../state.js';
 import { coMayChu, datNguoiTrungTamMacDinh, xoaNguoiTrungTamMacDinh } from '../services/tuong-thich.js';
+import { dangXuat } from '../services/sb.js';
 import { fullName, coGiaTri, doiSongNguoi } from '../utils/text.js';
 import { veLinkTai, inAnhRaster, dpiConDungDuoc, laManHinhMayTinh, DAI_DPI,
          KHO_GIAY, CHU_CAO_KHUYEN_NGHI_MM }
@@ -1050,8 +1051,12 @@ function veKhoiPhien(vao) {
   khoi.append(bang);
 
   const nhac = document.createElement('div');
+  // ⚠ Câu cũ nói *"quyền do danh sách chia sẻ trên Google Drive quyết định"*.
+  //   Trên nền Supabase câu ấy SAI HẲN: Drive không còn dính dáng gì, quyền do
+  //   vai trò trong bảng `tree_members` và Row Level Security quyết, ở tầng máy
+  //   chủ. Sửa 04/09/2026 khi thêm nút Đăng xuất ngay dưới đây.
   nhac.textContent =
-    'Quyền do danh sách chia sẻ của file trên Google Drive quyết định, ' +
+    'Quyền do máy chủ quyết định theo vai trò của tài khoản trong gia phả này, ' +
     'không sửa được trong app. Cần đổi thì nhờ người quản lý.';
   nhac.style.cssText = 'margin-top:8px;font-size:12px;line-height:1.5;color:#8a8078';
   khoi.append(nhac);
@@ -1066,7 +1071,54 @@ function veKhoiPhien(vao) {
       "gia phả thiếu thông tin.", false));
   }
 
+  khoi.append(veNutDangXuat());
+
   vao.append(khoi);
+}
+
+/**
+ * Nút Đăng xuất. Đứng ở CUỐI khối "Tài khoản và quyền" — cùng chỗ với dòng
+ * `Đăng nhập: <email>` mà nó huỷ, nên không phải đi tìm.
+ *
+ * ⚠ Cố ý KHÔNG đặt thành nút tròn thứ sáu ở cụm nút trên màn hình sơ đồ:
+ *   `kiem-cum-nut.mjs` gác số nút ấy, và đăng xuất là việc làm mỗi tháng một
+ *   lần chứ không phải mỗi phút một lần.
+ *
+ * ⚠ Hai nhịp, không phải hộp thoại `confirm()`. App này không dùng `confirm()`
+ *   ở bất cứ đâu, và trên điện thoại hộp thoại ấy hiện ra ở một chỗ chẳng liên
+ *   quan gì tới nút vừa bấm. Bấm lần đầu, nút tự đổi chữ và đổi màu; bấm lần
+ *   nữa mới thật sự đăng xuất.
+ */
+function veNutDangXuat() {
+  const hop = document.createElement('div');
+  hop.style.cssText = 'margin-top:12px';
+
+  let daHoi = false;
+  const b = nut('Đăng xuất', false, true, async () => {
+    if (!daHoi) {
+      daHoi = true;
+      b.textContent = 'Bấm lần nữa để đăng xuất';
+      b.style.color = '#8a3a2a';
+      b.style.borderColor = '#f0d8d0';
+      return;
+    }
+    b.disabled = true;
+    b.textContent = 'Đang đăng xuất…';
+    const kq = await dangXuat();
+    if (kq && kq.ok === false) {
+      b.disabled = false;
+      b.textContent = 'Đăng xuất';
+      hop.append(veLoiNhan(kq.loi || 'Không đăng xuất được.', true));
+      return;
+    }
+    // Tải lại trang thay vì tự dựng lại màn hình đăng nhập: sau khi phiên bị
+    // xoá thì mọi thứ đang giữ trong bộ nhớ — cây, người trung tâm, ảnh — đều
+    // là dữ liệu của người vừa đi ra. Nạp lại là cách chắc chắn nhất để không
+    // sót gì lại trên màn hình cho người vào sau.
+    window.location.reload();
+  });
+  hop.append(b);
+  return hop;
 }
 
 function quyenBangChu(phien) {

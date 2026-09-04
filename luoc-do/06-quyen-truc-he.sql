@@ -3,7 +3,7 @@
 -- Vai trò  : Luật SỬA theo TRỰC HỆ. Thay hẳn ý tưởng "chia chi/nhánh".
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 05-sao-luu.sql.
 -- ⚠ Chạy xong PHẢI dán lại 03-ham-luu-cay.sql — xem mục 0 ngay dưới.
--- Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 12:05
+-- Phiên bản: 0.1.2 · Cập nhật: 04/09/2026 14:05
 -- ============================================================
 --
 -- ═══ 0. HAI FILE, KHÔNG PHẢI MỘT — ĐỌC TRƯỚC KHI DÁN ═══
@@ -252,6 +252,16 @@ as $$
 $$;
 
 -- Tham số thứ hai nay là MÃ NGƯỜI, không còn là mã nhánh. Xem mục 0.
+--
+-- ⚠ Phải DROP trước, không `create or replace` thẳng được. Bản cũ ở
+--   `02-rls.sql` đặt tên tham số hai là `p_branch`; Postgres cho đổi THÂN hàm
+--   nhưng KHÔNG cho đổi TÊN tham số bằng `create or replace`, và báo
+--   `42P13: cannot change name of input parameter "p_branch"`. Đổi tên là cố
+--   ý — tên `p_branch` nay sai nghĩa, giữ lại thì người đọc sau hiểu nhầm.
+--   Drop được an toàn vì không policy RLS nào gọi hàm này (đã soát
+--   `02-rls.sql` 04/09/2026); `luu_cay()` gọi `pham_vi_sua()`, không gọi nó.
+drop function if exists public.co_the_sua_nguoi(uuid, text);
+
 create or replace function public.co_the_sua_nguoi(p_tree uuid, p_person text)
 returns boolean
 language sql
@@ -276,12 +286,22 @@ as $$
 $$;
 
 -- ============================================================
--- 8. ADMIN DUYỆT — gọi được từ app sau này, dùng được từ SQL Editor ngay
+-- 8. ADMIN DUYỆT — cửa cho màn hình duyệt mai kia
 -- ============================================================
 -- Hôm nay chưa có màn hình duyệt (`KIEN-TRUC.md` mục 6 liệt kê các màn hình
--- còn thiếu). Nên hàm này vừa là cửa cho màn hình ấy mai kia, vừa là cách
--- chủ dự án duyệt tay ngay bây giờ mà không phải viết `update` bằng tay và
--- rủi ro gõ nhầm `where`.
+-- còn thiếu). Hàm này là cửa dựng sẵn cho màn hình ấy.
+--
+-- ⚠ **KHÔNG gọi được từ SQL Editor** — câu ghi ở đây trước 04/09/2026 nói
+--   ngược lại và đã sai. Cửa sổ SQL Editor không mang danh nghĩa tài khoản nào,
+--   nên `auth.uid()` rỗng, `vai_tro()` trả `null`, và sau bản vá bên dưới thì
+--   hàm coi đó là người ngoài và từ chối.
+--
+--   Bản chưa vá thì gọi được — nhưng chỉ vì đúng cái lỗ hổng H9 bắt được: cửa
+--   kiểm quyền không đóng với `null`. Tức "dùng được từ SQL Editor" chưa bao
+--   giờ là tính năng, nó là triệu chứng.
+--
+--   Duyệt tay từ SQL Editor thì dùng `update` — câu đầy đủ, kèm phép chặn gõ
+--   nhầm, nằm ở `HUONG-DAN-PHAN-QUYEN.md` mục 3.
 --
 -- ⚠ `security definer` nên nó tự kiểm người gọi. Không kiểm là bất kỳ ai
 --   đăng nhập cũng tự duyệt cho mình.
@@ -302,7 +322,22 @@ declare
   v_user uuid;
   n integer;
 begin
-  if public.vai_tro(p_tree) not in ('chu', 'admin') then
+  -- ⚠ `coalesce(…, '')` KHÔNG phải để cho đẹp. Bản 0.1.1 viết thẳng
+  --   `vai_tro(p_tree) not in ('chu','admin')`, và phép thử H9 ngày 04/09/2026
+  --   bắt được lỗ hổng: với người NGOÀI cây `vai_tro()` trả `null`, mà
+  --   `null not in (…)` ra `null` chứ không ra `true` — nên `if` không nhận,
+  --   cửa không đóng, và hàm chạy thẳng xuống lệnh `update` bên dưới. Người ấy
+  --   không tự duyệt cho mình được (mình chưa có dòng nào để update), nhưng
+  --   **duyệt được cho tài khoản khác** nếu biết email của họ: gắn mã người tuỳ
+  --   ý và bật `approved`. Bất kỳ ai cũng tự đăng ký được, nên "người ngoài cây"
+  --   không phải một vai hiếm.
+  --
+  --   Đây là ĐÚNG cái bẫy `co_the_sua_nguoi()` đã ghi chú cẩn thận ở mục 7 và
+  --   b87 đã ghi vào nhật ký — chỉ khác là ở đó viết dạng dương (`in`, `=`) nên
+  --   `null` rơi về `else false` và chặn đúng. Một chữ `not` là đủ lật ngược.
+  --   Đã soát lại toàn bộ `luoc-do/`: đây là chỗ DUY NHẤT dùng `not in` với
+  --   `vai_tro()`; mọi cửa khác viết dạng dương và an toàn.
+  if coalesce(public.vai_tro(p_tree), '') not in ('chu', 'admin') then
     return jsonb_build_object('ok', false, 'loi',
       'Chỉ chủ gia phả hoặc quản trị viên mới duyệt được thành viên.');
   end if;
@@ -363,4 +398,13 @@ select 'ham pham_vi_sua',
        (select count(*)::text from pg_proc
          where proname = 'pham_vi_sua'
            and pronamespace = 'public'::regnamespace),
-       '1';
+       '1'
+union all
+-- Vá lỗ hổng H9 (xem ghi chú ở mục 8). Bản chưa vá KHÔNG có chữ `coalesce`
+-- trong thân `duyet_thanh_vien` — nên dòng này phân biệt được hai bản.
+select 'cua duyet da va lo hong',
+       (select case when prosrc ilike '%coalesce(public.vai_tro%'
+                    then 'co' else 'CHUA' end
+          from pg_proc where proname = 'duyet_thanh_vien'
+           and pronamespace = 'public'::regnamespace),
+       'co';

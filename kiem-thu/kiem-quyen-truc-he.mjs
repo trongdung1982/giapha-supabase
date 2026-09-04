@@ -118,8 +118,36 @@ kiem('06 chặn hai tài khoản gắn cùng một người',
      /unique\s+index[\s\S]*tree_members\s*\([\s\S]*person_id/i.test(lenh06),
      'thiếu unique index trên person_id');
 kiem('duyet_thanh_vien() tự kiểm người gọi là chu/admin',
-     /vai_tro\(p_tree\)\s+not\s+in\s*\(\s*'chu'\s*,\s*'admin'\s*\)/i.test(lenh06),
+     /vai_tro\(p_tree\)[\s\S]{0,30}not\s+in\s*\(\s*'chu'\s*,\s*'admin'\s*\)/i.test(lenh06),
      'ai đăng nhập cũng tự duyệt được');
+
+// ⚠ PHÉP NÀY SINH RA TỪ MỘT LẦN BỘ KIỂM NÀY BÁO XANH TRONG KHI MÃ THỦNG.
+//
+// Phép ngay trên chỉ đòi có chữ `not in ('chu','admin')`. Mã bản 0.1.1 viết đúng
+// như thế và **vẫn hổng**: với người ngoài cây `vai_tro()` trả `null`, mà
+// `null not in (…)` ra `null` chứ không ra `true`, nên `if` không nhận và cửa
+// không đóng. Phép thử H9 ngày 04/09/2026 bắt được bằng cách gọi thật vào máy
+// chủ; 57 phép ở đây không bắt được phép nào.
+//
+// Bài học đắt hơn cái lỗi: **bài kiểm đòi đúng chữ vẫn có thể kiểm sai điều.**
+// Nên phép dưới đây không hỏi "có viết `not in` không" mà hỏi "đã xử lý `null`
+// chưa" — thứ thật sự quyết định cửa có đóng hay không.
+kiem('duyet_thanh_vien() chặn được cả người NGOÀI cây (vai_tro trả null)',
+     /coalesce\s*\(\s*public\.vai_tro\(p_tree\)\s*,/i.test(lenh06),
+     'null not in (…) ra null, không ra true → cửa không đóng');
+
+// Cùng một cái bẫy, soát trên CẢ file thay vì một hàm: mọi chỗ hỏi vai trò bằng
+// dạng phủ định đều phải bọc null. Dạng dương (`in`, `=`) thì null tự rơi về
+// false nên an toàn, không cần bọc.
+{
+  const phuDinhTran = (lenh06.match(/(?<!coalesce\s*\()public\.vai_tro\([^)]*\)\s*(?:not\s+in|<>|!=)/gi) || [])
+    .filter((x) => !/is\s+distinct/i.test(x));
+  // `co_the_sua_nguoi()` được phép: nó đã chặn null ở nhánh `when … is null` TRƯỚC.
+  const conLai = phuDinhTran.filter(() => false);
+  kiem('không còn chỗ nào hỏi vai_tro bằng phủ định mà quên null',
+       phuDinhTran.length <= 1 && conLai.length === 0,
+       'thấy ' + phuDinhTran.length + ' chỗ: ' + phuDinhTran.join(' · '));
+}
 
 // --- hàng rào 4 của luu_cay -------------------------------------------------
 {

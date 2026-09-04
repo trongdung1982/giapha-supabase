@@ -1,6 +1,6 @@
 # Hướng dẫn phân quyền — dành cho chủ dự án
 
-*Cập nhật 04/09/2026 12:45 · Luật trực hệ, chốt 04/09/2026*
+*Cập nhật 04/09/2026 14:30 · Luật trực hệ, chốt 04/09/2026*
 
 > File này viết cho người **không lập trình**. Mỗi bước ghi rõ bấm gì, và
 > ghi rõ **nhìn thấy gì thì biết là xong**.
@@ -66,22 +66,41 @@ không hỏng đằng cho qua. Dán nốt file thứ hai là hết.)
 
 ## 3. Gắn và duyệt một tài khoản
 
-Vẫn ở **SQL Editor** → **New query**. Dán đoạn dưới, **sửa ba chỗ in đậm**
+Vẫn ở **SQL Editor** → **New query**. Dán đoạn dưới, **sửa hai chỗ có ghi chú**
 rồi Run:
 
 ```sql
-select public.duyet_thanh_vien(
-  (select id from public.trees where tree_code = 'NTB'),
-  'nguoi-can-duyet@gmail.com',   -- email tài khoản
-  'P0012',                       -- mã người trong gia phả
-  true                           -- true = duyệt, false = gỡ duyệt
-);
+update public.tree_members
+   set person_id = 'P0012',      -- mã người trong gia phả
+       approved  = true          -- true = duyệt, false = gỡ duyệt
+ where tree_id = (select id from public.trees where tree_code = 'NTB')
+   and lower(email) = lower('nguoi-can-duyet@gmail.com')   -- email tài khoản
+   and exists (select 1 from public.persons p
+                where p.tree_id = tree_members.tree_id
+                  and p.id = 'P0012');
+
+select email, role, coalesce(person_id, '(chua gan)') as ma, approved
+  from public.tree_members
+ order by role;
 ```
 
-*Xong đúng khi:* trả về `{"ok": true, ...}`.
+*Xong đúng khi:* bảng in ra ở dưới có đúng dòng ấy mang mã người và `approved`
+bằng `true`.
 
-Nếu trả về `{"ok": false, "loi": "..."}` thì câu `loi` nói thẳng vấn đề —
-thường là **tài khoản chưa được thêm vào gia phả**, hoặc **gõ sai mã người**.
+**Không đổi gì cả** thì một trong hai điều sau sai, và dòng `exists` cố ý làm
+nó không đổi thay vì gắn bừa: email không có trong gia phả này, hoặc mã người
+gõ sai. Đối chiếu bằng mục 4 ngay dưới.
+
+⚠ **Vì sao dùng `update` chứ không gọi hàm `duyet_thanh_vien()`.** Hàm ấy có
+thật và vẫn dùng được — nhưng chỉ khi người gọi **đang đăng nhập** bằng một
+tài khoản `chu`/`admin`, tức từ màn hình duyệt của app sau này. Cửa sổ SQL
+Editor không mang danh nghĩa tài khoản nào cả, nên với hàm ấy nó là *"người
+ngoài"* và bị từ chối.
+
+Bản đầu của hàm **không** từ chối — và đó chính là lỗ hổng phép thử H9 bắt được
+ngày 04/09/2026: cửa kiểm quyền không đóng với người ngoài, nên ai cũng duyệt
+được cho tài khoản khác. Vá xong thì SQL Editor mất luôn đường tắt ấy. Đổi lại
+là đúng, và `update` ở trên làm được y hệt việc cần làm.
 
 ⚠ **Một người trong gia phả chỉ gắn được với một tài khoản.** Gắn `P0012` cho
 người thứ hai thì cơ sở dữ liệu từ chối. Đó là chủ ý: nếu không, hai người

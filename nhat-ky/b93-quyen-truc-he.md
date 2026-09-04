@@ -177,12 +177,25 @@ lần một chuỗi xuất hiện. Cả ba lần script **từ chối ghi** thay
 đúng cái nó sinh ra để làm. *Nếp rút ra:* `assert` trước khi ghi đè rẻ hơn dò
 lại một file đã hỏng.
 
+**5. Lần đầu chủ dự án bấm Run `06-quyen-truc-he.sql` thì Postgres từ chối:**
+`42P13: cannot change name of input parameter "p_branch"`. Nguyên nhân:
+`create or replace function` cho đổi **thân** hàm nhưng không cho đổi **tên
+tham số** — mà đổi tên `p_branch` → `p_person` chính là chủ ý của bước này.
+Sửa bằng một dòng `drop function if exists public.co_the_sua_nguoi(uuid, text);`
+đặt ngay trước lệnh tạo (đã soát: không policy RLS nào phụ thuộc hàm ấy, nên
+drop an toàn). Supabase SQL Editor bọc cả file trong một giao dịch nên lần
+chạy hỏng **không để lại gì**; dán lại toàn file là xong.
+*Nếp rút ra:* đổi tên tham số của một hàm đã tồn tại thì luôn phải `drop`
+trước — và soát phụ thuộc trước khi drop, đừng drop mù.
+
 ---
 
 ## Còn treo
 
 - ⚠ **Hai file SQL chưa ai dán** — `06-quyen-truc-he.sql` rồi
   `03-ham-luu-cay.sql`, đúng thứ tự. Chưa dán thì luật này **chưa tồn tại**.
+  *(Lần dán đầu 04/09/2026 13:14 hỏng vì lỗi `42P13`, đã sửa file — xem
+  "Đã thử mà hỏng" mục 5. Phải dán lại từ đầu.)*
 - ⚠ **Chưa ai kiểm chứng trên Postgres thật.** Lần chủ dự án bấm Run là lần
   chạy đầu tiên — y như b92.
 - ⚠ **Chưa có màn hình duyệt thành viên.** Duyệt bằng SQL; hàm

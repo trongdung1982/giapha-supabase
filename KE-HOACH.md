@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 04/09/2026 12:50 · Bước gần nhất: **b93***
+*Cập nhật 04/09/2026 15:00 · Bước gần nhất: **b94***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -41,10 +41,22 @@ cháu, cộng vợ/chồng. Chưa gắn thì chỉ xem. Vai admin cấp cho nhi�
 
 Mã đã viết xong (b93): `luoc-do/06-quyen-truc-he.sql` + hàng rào 4 của
 `03-ham-luu-cay.sql` viết lại, bộ kiểm `kiem-quyen-truc-he.mjs` 57 phép đạt.
-**Còn lại thao tác của chủ dự án: dán HAI file SQL** — `HUONG-DAN-PHAN-QUYEN.md`.
 
-**Việc kế tiếp là PHÉP THỬ H9 — phân quyền RLS thật**, xem việc 3 ngay dưới.
-Giờ mới thử được: có dữ liệu thật, và có luật thật để thử.
+**HAI FILE SQL ĐÃ DÁN THẬT — 04/09/2026 13:20.** Lần dán đầu vấp lỗi `42P13`
+(`create or replace` không đổi được tên tham số `p_branch` → `p_person`); thêm
+một dòng `drop function` là qua. Đã đối chiếu trên máy chủ và khớp cả hai:
+`co_the_sua_nguoi` nhận `(p_tree uuid, p_person text)`, và `luu_cay()` đang
+gọi `pham_vi_sua()`. **Luật trực hệ từ giờ có hiệu lực thật, không còn là mã
+nằm trong file.** Chưa ai đi thử — đó là việc 3.
+
+**PHÉP THỬ H9 ĐÃ XONG — 04/09/2026, năm hàng rào đạt cả năm.** Đo bằng cách gọi
+thẳng REST của Supabase, không qua trình duyệt — cách duy nhất chứng minh được
+hàng rào "ghi thẳng cửa sau bị chặn". Và phép thử **bắt được một lỗ hổng leo
+quyền thật** mà 57 phép kiểm tự động không thấy; đã vá và đánh lại đúng đòn ấy
+để chứng minh vá kín. Số đo ở `nhat-ky/b94-phep-thu-h9.md`.
+
+**Việc kế tiếp: b94/b95 — kiểm duyệt nội dung** (việc 4), và **duyệt đăng ký
+tài khoản** (việc 5, chủ dự án chốt cuối buổi 04/09).
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
@@ -179,7 +191,32 @@ sạch, cơ sở dữ liệu giữ nguyên như trước.
 ⚠ **File `.sql` chứa TOÀN BỘ gia phả nên nằm ngoài repo** (`tai-lieu/`). Repo
 `giapha-supabase` để Public, và lịch sử git giữ lại cả bản đã xoá sau này.
 
-### 3. Phép thử H9 — phân quyền THẬT
+### 3. Phép thử H9 — phân quyền THẬT — ✓ XONG 04/09/2026, 5/5 hàng rào đạt
+
+**Đo bằng cách gọi thẳng REST của Supabase từ máy, không qua trình duyệt** —
+đó là cách duy nhất chứng minh được hàng rào 4. Số đo đầy đủ ở
+`nhat-ky/b94-phep-thu-h9.md`.
+
+| Hàng rào | Kết quả |
+|---|---|
+| 1 · người ngoài cây không đọc được gì | ✓ 0 dòng trên cả 8 bảng |
+| 2 · vai `sua` chưa duyệt: đọc đủ, ghi bị từ chối | ✓ đọc 59/25/36/13, ghi 0 dòng |
+| 3 · đã duyệt: sửa được trực hệ, không sửa được ngoài | ✓ 8 `true` / 4 `false`, khớp mô hình |
+| 4 · ghi thẳng REST bị chặn | ✓ `403` khi thêm dòng, 0 dòng đổi khi sửa |
+| 5 · `revision` chặn ghi đè | ✓ `lyDo: xungdot` |
+
+⚠ **Phép thử bắt được một lỗ hổng leo quyền thật** trong `duyet_thanh_vien()`:
+với người ngoài cây `vai_tro()` trả `null`, mà `null not in (…)` ra `null` chứ
+không ra `true`, nên cửa kiểm quyền không đóng. Đã vá (`06` bản 0.1.2) và đánh
+lại đúng đòn ấy để chứng minh vá kín. **Bộ kiểm 57 phép đã báo xanh trên chính
+cái mã thủng ấy** — nay 59 phép, hai phép mới hỏi `null` thay vì hỏi đúng chữ.
+
+⚠ **Còn phải dọn:** tài khoản thử `thu-h9@nguyentrongbac.io.vn` vẫn đang gắn
+`P0012` và đã duyệt.
+
+<details><summary>Câu chữ cũ của mục này (giữ làm chứng)</summary>
+
+### 3-cũ. Phép thử H9 — phân quyền THẬT
 
 ⚠ **Câu chữ cũ của mục này đã sai từ 04/09/2026** và giữ lại đây làm chứng:
 nó nói *"mỗi tài khoản một nhánh"*, mà luật chốt lại không có nhánh nào cả.
@@ -202,6 +239,8 @@ chạy.
 ⚠ `PHAN-QUYEN_V03` ghi ba vòng kiểm chứng của bản Drive. **Chúng không áp dụng
 được cho RLS** — cơ chế khác hẳn, chưa kiểm chứng lần nào trong dự án này. Bắt
 đầu lại từ số 0.
+
+</details>
 
 ### 4. Kiểm duyệt nội dung (b94 + b95) — ĐÃ CHỐT THIẾT KẾ, CHƯA VIẾT
 
@@ -268,6 +307,51 @@ chủ phải từ chối và chỉ ra ai đã sửa tiếp, chứ không âm th�
   `duyet_thay_doi()` / `tu_choi_thay_doi()`. Admin duyệt tạm bằng SQL.
 - **b95** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
 
+### 5. Đăng ký tài khoản phải QUA DUYỆT — chủ dự án chốt 04/09/2026
+
+Câu của chủ dự án: *"việc tạo tài khoản không được phép tràn lan, phải kiểm
+soát chặt. cơ chế => đăng ký tài khoản => xếp hàng chờ, đợi admin vào duyệt
+mới tạo tài khoản thành công."*
+
+⚠ **Đo được 04/09/2026: project đang BẬT tự đăng ký** (`disable_signup: false`,
+đọc từ `/auth/v1/settings`). Bất kỳ ai biết địa chỉ Supabase đều tạo được một
+tài khoản. Việc ấy hôm nay **chưa mở cửa nào** — không có tên trong
+`tree_members` thì Row Level Security chặn sạch, và đó chính là hàng rào 1 của
+H9. Nhưng nó **đẻ rác trong `auth.users`** và người đăng ký thì không hiểu vì
+sao mình vào rồi mà không thấy gì.
+
+Ba việc, và hai trong ba đã có sẵn nền:
+
+| Cần gì | Đã có gì | Còn phải làm |
+|---|---|---|
+| Chỗ xếp hàng | cột `tree_members.approved` (b93) | hàm `xin_vao_cay()` `security definer` để người mới tự chèn được đúng MỘT dòng `role='xem', approved=false` |
+| Admin duyệt | hàm `duyet_thanh_vien()` (b93) | hàm `ds_cho_duyet()` + màn hình |
+| Người chờ thấy gì | (chưa có) | màn hình *"Đơn của bạn đang chờ duyệt"* thay cho màn từ chối trống trơn |
+
+**Không đẻ bảng mới.** Hàng chờ nằm ngay trong `tree_members` với
+`approved = false` — cùng một bảng trả lời *"ai có chân trong cây này"*, nên
+không có hai nguồn sự thật phải khớp nhau.
+
+**Gộp với b95.** `duyet.html` vốn đã là trang duyệt nội dung; thêm một bảng
+thứ hai *"Thành viên chờ duyệt"* vào đúng trang ấy rẻ hơn nhiều so với dựng
+trang thứ hai, và admin chỉ phải nhớ một địa chỉ.
+
+⚠ **Còn một câu chưa trả lời:** có tắt hẳn tự đăng ký không? Tắt thì sạch
+tuyệt đối nhưng admin phải tạo tay từng tài khoản (và người trong họ không tự
+xin vào được). Không tắt thì giữ đúng cơ chế "xếp hàng" chủ dự án mô tả. Ngả
+theo **không tắt** — vì chính chủ dự án nói *"đăng ký → xếp hàng"*, tức có
+bước đăng ký.
+
+### 6. Nút Đăng xuất — ✓ XONG 04/09/2026 13:40
+
+Chủ dự án báo giao diện sơ đồ không có đường ra. Hàm `sb.dangXuat()` đã có sẵn
+từ b87 nhưng **chưa nút nào gọi**. Thêm vào cuối khối *"Tài khoản và quyền"*
+của màn hình Cài đặt (`pages/settings.js`), hai nhịp để khỏi bấm nhầm.
+
+Sửa kèm một câu SAI ở cùng khối: nó nói *"quyền do danh sách chia sẻ trên
+Google Drive quyết định"* — câu của bản Apps Script, trên nền này Drive không
+còn dính dáng gì.
+
 ---
 
 ## ⚠ Hai câu chủ dự án phải trả lời
@@ -295,8 +379,10 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⚠ **Hai file SQL phân quyền chưa ai dán** — `06-…` rồi `03-…`, đúng thứ tự | `HUONG-DAN-PHAN-QUYEN.md` |
-| ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng SQL, hàm đã viết sẵn | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
+| ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
+| ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng `update` trong SQL Editor | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
+| ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt | `nhat-ky/b94-phep-thu-h9.md` |
+| ⚠ **Project đang bật tự đăng ký** — chưa mở cửa nào, nhưng đẻ rác `auth.users` | việc 5 ở trên |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
