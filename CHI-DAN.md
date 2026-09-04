@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 04/09/2026 06:08*
+*Nhánh Supabase · cập nhật 04/09/2026 13:15*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -15,7 +15,8 @@ nó chính là thứ nó sinh ra để tránh.
 | Mới vào nhánh này lần đầu | + `KIEN-TRUC.md` **cả file** |
 | Đụng `services/` | `KIEN-TRUC.md` mục 1, 3 · `DU-LIEU.md` mục 1, 6 |
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
-| Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 · `luoc-do/02-rls.sql` · `03-…sql` |
+| Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 + **2b** · `luoc-do/06-quyen-truc-he.sql` · `02-rls.sql` |
+| Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
 | Đụng ảnh | `KIEN-TRUC.md` mục 7 ⚠ có câu chưa chốt |
 | Đụng sao lưu, trigger Apps Script | `sao-luu/SaoLuu.gs` · `luoc-do/05-sao-luu.sql` · `kiem-thu/kiem-sao-luu.mjs` |
@@ -35,10 +36,10 @@ nó chính là thứ nó sinh ra để tránh.
 1. **`domains/` không được sửa.** Cả mười file chép nguyên từ bản Apps Script.
    Thấy mình đang sửa `domains/` là dừng lại hỏi vì sao — `BAT-DAU.md` mục 1.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
-3. **Đã chạy thật 03/09/2026** — SQL chạy, đăng nhập được, thêm được người
-   mới. Nhưng **chưa có sao lưu, chưa có dữ liệu thật, phân quyền RLS chưa ai
-   kiểm chứng**. `KIEN-TRUC.md` mục 6 kể đúng những gì còn dở; đừng mô tả
-   phần chưa kiểm như đã hoạt động.
+3. **Đã chạy thật.** Sao lưu ra Drive 04/09 08:33; 59 người đã nằm trong
+   bảng và app vẽ ra được, 04/09 11:28. Nhưng **phân quyền chưa ai kiểm
+   chứng, và luật trực hệ (b93) chưa dán vào Supabase**. `KIEN-TRUC.md` mục
+   6 kể đúng những gì còn dở; đừng mô tả phần chưa kiểm như đã hoạt động.
 
 ## Quy ước khung tài liệu này
 

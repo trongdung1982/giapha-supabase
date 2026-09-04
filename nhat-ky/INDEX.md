@@ -40,6 +40,7 @@ thường, không phải thiếu sót.
 | 90 | 03/09/2026 | Mã sao lưu (H8): trigger Apps Script chép 12 bảng ra Drive mỗi đêm, kiêm giữ sống. Chưa ai dựng | `b90-sao-luu-ra-drive.md` |
 | 91 | 04/09/2026 | Sao lưu bỏ hẳn khoá bí mật: vai `sao_luu` chỉ-đọc + đăng nhập thường; bộ kiểm 33 phép | `b91-sao-luu-bo-khoa-bi-mat.md` |
 | 92 | 04/09/2026 | Sinh một file SQL dán tay để di dời 59 người vào bảng, giữ nguyên nhật ký; bộ kiểm 46 phép | `b92-di-doi-du-lieu-bang-sql.md` |
+| 93 | 04/09/2026 | Luật sửa theo TRỰC HỆ thay hẳn ý tưởng chia chi/nhánh; gắn ID + admin duyệt; bộ kiểm 57 phép | `b93-quyen-truc-he.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -58,6 +59,7 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 | `KIEN-TRUC.md` mục 6 ghi *"Còn một ô chưa tích: Enforce HTTPS"* | b88 | b90 | Đã tích cuối ngày 03/09/2026; đo lại `http://` trả `301` sang `https://` |
 | `KE-HOACH-HA-TANG-Supabase_V01.md` bước H8: *"gỡ deploy dạng web app"* | *(24/08/2026, trước b87)* | b90 | Giả định nền của câu ấy chết ngày 02/09 khi chốt **giữ bản Apps Script chạy tiếp** cho người trong họ. Gỡ deploy là tắt app của cả họ — H8 làm bằng một dự án Apps Script **mới, riêng** |
 | `HUONG-DAN-SAO-LUU.md` bước 1: *"chép **Secret key** (`sb_secret_…`)"* | b90 | b91 | Khoá ấy **không bao giờ** dùng được từ Apps Script: Supabase chặn nó khi `User-Agent` giống trình duyệt, mà Apps Script luôn gửi `Mozilla/5.0 (compatible; Google-Apps-Script; …)` và Google không cho đổi. Bản 0.2.0 bỏ hẳn khoá bí mật, dùng vai `sao_luu` |
+| `KE-HOACH.md` việc H9: *"hai tài khoản, mỗi tài khoản một **nhánh**"* — và cả câu hỏi treo *"chi/nhánh định nghĩa thế nào"* | b87 → b92 | b93 | Luật chốt 04/09/2026 **không có nhánh nào cả**: quyền đi theo **trực hệ**, tính thẳng từ đồ thị quan hệ. Bảng `branches`/`branch_access` dựng từ `01-bang.sql` từ nay không dùng. Phép thử H9 đúng là *hai tài khoản gắn với hai người ở hai đầu cây* |
 
 ---
 
