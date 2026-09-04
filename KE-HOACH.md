@@ -203,6 +203,71 @@ chạy.
 được cho RLS** — cơ chế khác hẳn, chưa kiểm chứng lần nào trong dự án này. Bắt
 đầu lại từ số 0.
 
+### 4. Kiểm duyệt nội dung (b94 + b95) — ĐÃ CHỐT THIẾT KẾ, CHƯA VIẾT
+
+Chủ dự án chốt 04/09/2026, sau khi luật trực hệ đã xong: **mọi nội dung sửa
+đều gắn cờ tạm, admin duyệt rồi mới thành chính thức.**
+
+Ba điều chủ dự án nói rõ, và cả ba đổi thiết kế so với bản nháp đầu của tôi:
+
+1. **Dữ liệu chưa duyệt VẪN GHI THẲNG vào Supabase.** Không dựng kho chờ
+   riêng. App chạy bình thường; admin lúc nào rảnh thì vào xem — đạt thì
+   nhận chính thức, không đạt thì xoá.
+2. **Trang duyệt là một trang HTML ĐỘC LẬP**, ngoài trang vẽ sơ đồ, duyệt
+   dạng **bảng**.
+3. **Hai hạng admin**: một hạng can thiệp được hệ thống, một hạng chỉ kiểm duyệt.
+
+⚠ **Hệ quả đã chấp nhận:** dữ liệu sai vẫn hiện ra cho cả họ cho tới khi admin
+dọn. Cách này bảo vệ gia phả bằng cách **sửa sau**, không phải **chặn trước**.
+Đổi lại, người đóng góp thấy ngay việc mình làm — đó là lý do chọn nó.
+
+⚠ **Và nó nuốt trọn cái lỗ hổng leo quyền** mà hàng rào 4 của b93 sinh ra để
+chặn: khai bừa ai đó làm bố mình thì cũng chỉ là một đề nghị chờ duyệt. Từ
+b94, **admin duyệt là hàng rào thật, trực hệ chỉ còn là bộ lọc** giúp admin
+đỡ phải đọc những đề nghị chắc chắn bị từ chối. Đừng mô tả ngược lại.
+
+#### Vai, sau b94
+
+| Vai | Sửa dữ liệu | Duyệt nội dung | Đổi vai · gắn thành viên |
+|---|---|---|---|
+| `chu` | ghi thẳng | ✓ | ✓ |
+| `admin` *(kiểm duyệt)* | ghi thẳng | ✓ | ✗ |
+| `sua` + cờ `tin_cay` | ghi thẳng | ✗ | ✗ |
+| `sua` | **ghi, treo cờ chờ** | ✗ | ✗ |
+| `xem` | ✗ | ✗ | ✗ |
+
+`tin_cay` là cột mới trên `tree_members`, admin bật cho người chịu trách nhiệm
+ghi chép một chi. Mặc định `false` — tức mặc định ai cũng phải chờ duyệt, đúng
+như chủ dự án chọn.
+
+#### Cột mới, và một cái bẫy phải tránh
+
+Đơn vị kiểm duyệt là **một lần bấm Lưu**, không phải một ô dữ liệu — nên nó
+gắn vào `change_log`, bảng vốn đã có sẵn một dòng cho mỗi lần Lưu.
+
+| Cột thêm vào `change_log` | Để làm gì |
+|---|---|
+| `trang_thai` `'cho'`/`'duyet'`/`'tu_choi'` | hàng đợi |
+| **`truoc` jsonb** | **ảnh chụp các dòng bị đụng, do MÁY CHỦ tự lấy trước khi ghi** |
+| `duyet_boi` · `duyet_luc` · `ly_do_tu_choi` | vết duyệt |
+
+⚠ **KHÔNG dùng `change_log.diff` để hoàn tác.** Nó do **trình duyệt** gửi lên
+(`services/repo.js` dòng 194) và mặc định rỗng `{}`. Dựa vào nó để hoàn tác là
+để chính người sửa tự khai mình đã sửa gì — người muốn phá chỉ cần gửi `diff`
+rỗng là bản cũ biến mất vĩnh viễn. Cột `truoc` phải do `luu_cay()` tự chụp,
+cùng lý lẽ với việc `ts`/`by` bị bỏ qua và lấy lại từ JWT.
+
+⚠ **Luật hoàn tác:** chỉ hoàn tác được khi bản ghi **chưa bị lần Lưu nào sau
+đó đụng vào**. Bị đụng rồi mà vẫn hoàn tác thì xoá mất công của người sau. Máy
+chủ phải từ chối và chỉ ra ai đã sửa tiếp, chứ không âm thầm ghi đè — cùng
+đúng cái lý lẽ của hàng rào 3 (`revision`).
+
+#### Chia việc
+
+- **b94** — tầng máy chủ: cột mới, `luu_cay()` chụp `truoc` và đặt cờ,
+  `duyet_thay_doi()` / `tu_choi_thay_doi()`. Admin duyệt tạm bằng SQL.
+- **b95** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
+
 ---
 
 ## ⚠ Hai câu chủ dự án phải trả lời
