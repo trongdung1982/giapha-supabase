@@ -62,7 +62,7 @@ tài khoản** (việc 5, chủ dự án chốt cuối buổi 04/09).
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
 đang có rủi ro nào treo trên đầu.*
 
-**Hai mươi việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Hai mươi tư việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -87,7 +87,11 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Sao lưu CHẠY THẬT — `05-sao-luu.sql` chạy, tài khoản sao lưu tạo, có file trên Drive** | **b91** | ✓ **04/09/2026 08:33** |
 | **Bộ sinh SQL di dời (H5) + bộ kiểm 46 phép** | **b92** | ✓ **04/09/2026** |
 | **Di dời dữ liệu CHẠY THẬT — bảng đối chiếu khớp 7/7 dòng** | **b92** | ✓ **04/09/2026 11:28** |
-| **Luật phân quyền TRỰC HỆ — chốt, cài, bộ kiểm 57 phép** | **b93** | ✓ **04/09/2026** — ⚠ chủ dự án chưa dán |
+| **Luật phân quyền TRỰC HỆ — chốt, cài, bộ kiểm 57 phép** | **b93** | ✓ **04/09/2026 13:20** — đã dán |
+| **Phép thử H9 CHẠY THẬT — 5/5 hàng rào RLS, bắt và vá một lỗ hổng leo quyền** | **b94** | ✓ **04/09/2026** |
+| Nút Đăng xuất trong màn Cài đặt | b94 | ✓ 04/09/2026 |
+| **Hàng chờ duyệt: `approved` gác cả quyền đọc, màn hình xin vào, khối duyệt** | **b95** | ✓ **04/09/2026** |
+| **Hàng chờ CHẠY THẬT — người đang chờ đọc 0 dòng trên cả 6 bảng** | **b96** | ✓ **04/09/2026** — ⚠ chưa ai bấm Duyệt |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
