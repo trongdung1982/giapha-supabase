@@ -96,8 +96,9 @@ chủ chứ không hỏi trí nhớ của ai.
 khác *"hoàn tác được"* đúng như khoảng cách giữa *"có file sao lưu"* và
 *"khôi phục được"* — khoảng cách ấy nay đã đóng ở phía kiểm duyệt.
 
-**Việc kế tiếp: b98 — trang duyệt độc lập dạng bảng.** *(Tên chốt sau: không
-phải `duyet.html` mà là `QuanTri.html` — chủ dự án đặt 04/09/2026.)*
+**b98 ĐÃ XONG 05/09/2026 — trang duyệt `QuanTri.html` + HOÀN TÁC chạy thật.**
+Cả sáu việc của kế hoạch này nay đều xong. Việc kế tiếp chưa chốt — xem bảng
+*Còn treo* dưới, hoặc hỏi chủ dự án phiên tới làm gì.
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
@@ -396,8 +397,10 @@ này lùi xuống **b97 · b98**. Ghi lại để đọc nhật ký khỏi lạc
   + `tin_cay`, `luu_cay()` 0.3.0 chụp `truoc` và đặt cờ, `duyet_thay_doi()` /
   `tu_choi_thay_doi()`, `ds_kiem_duyet()`, và hai hạng quản trị tách ra.
   Admin duyệt tạm bằng SQL cho tới khi có màn hình. **Chưa dán.**
-- **b98** — `duyet.html`: trang độc lập, bảng, mỗi dòng một lần Lưu.
-  Cửa máy chủ đã dựng sẵn: `ds_kiem_duyet()` và `dem_cho_kiem_duyet()`.
+- **b98** — ✓ **XONG 05/09/2026**, tên chốt là `QuanTri.html` (không phải
+  `duyet.html` như dự tính ban đầu). Trang độc lập, bảng, mỗi dòng một lần
+  Lưu, 49 phép kiểm. Và **HOÀN TÁC đã chạy thật trên máy chủ, 17/17 đạt** —
+  việc chặn còn lại từ b97 nay đã đóng.
 
 ### 5. Đăng ký tài khoản phải QUA DUYỆT — ✓ XONG 04/09/2026 (b95 + b96)
 
