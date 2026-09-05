@@ -174,8 +174,8 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Đổi MÃ VAI — `chu`→`quan_tri_he_thong`, `admin`→`quan_tri`; 4 hạng có tên tiếng Việt** | **b97** | ✓ **04/09/2026 23:00** — đã dán |
 | **Thiết kế chốt trang Quản trị 4 khu + kế hoạch b100→b105; đo ra 3 lỗi khi có nhiều cây** | **b99** | ✓ **05/09/2026** |
 | **Thiết kế chốt NHIỀU CÂY — 3 câu chủ dự án chốt, `THIET-KE-NHIEU-CAY.md`** | **b100** | ✓ **05/09/2026** |
-| **Ba lỗi nhiều cây sửa xong — `10-sua-nhieu-cay.sql` + 4 file JS** | **b100** | ⏳ **chờ dán** |
-| **Cây Nguyễn Phúc Giáo 681 người — SQL di dời sinh xong, chạy đúng trên bàn thử** | **b100** | ⏳ **chờ dán** |
+| **Ba lỗi nhiều cây sửa xong — `10-sua-nhieu-cay.sql` + 4 file JS** | **b100** | ✓ **05/09/2026 16:35** — đã dán, 9/9 ĐẠT |
+| **Cây Nguyễn Phúc Giáo 681 người — SQL di dời sinh xong, chạy đúng trên bàn thử** | **b100** | ✓ **05/09/2026 16:35** — đã dán, bảng 7 dòng khớp, 16/16 ĐẠT ⚠ xem ghi chú FK |
 | **Bộ sinh SQL di dời TỰ DỰNG CÂY kèm người quản trị; bộ kiểm 46 → 47 phép** | **b100** | ✓ **05/09/2026** |
 | **Hai bộ kiểm mới: `kiem-nhieu-cay.mjs` 35 phép · `thu-nhieu-cay.sql` 16 phép chạy thật** | **b100** | ✓ **05/09/2026** |
 | **Bàn thử SQL tại chỗ nay dựng HAI cây, nên tái hiện được lỗi nhiều cây** | **b100** | ✓ **05/09/2026** |
@@ -214,7 +214,7 @@ Thứ tự vẫn theo **"đau nhất trước"**, nhưng nay có thêm một lu�
 móng của toàn bộ hệ thống quyền — sai ở đó thì mọi thứ xây bên trên đều sai
 theo, và không có gì báo lỗi.
 
-### ~~b100~~ — Ba lỗi nhiều cây, và nạp cây thứ hai · ✓ **VIẾT XONG 05/09/2026, CHỜ DÁN**
+### ~~b100~~ — Ba lỗi nhiều cây, và nạp cây thứ hai · ✓ **XONG 05/09/2026**
 
 > **Đã làm:** `luoc-do/10-sua-nhieu-cay.sql` *(9 phép tự kiểm, đạt cả 9 trên
 > bàn thử)* · `sb.js` 0.4.0 · `repo.js` 0.2.0 · `settings.js` 1.29.0 ·
@@ -222,10 +222,11 @@ theo, và không có gì báo lỗi.
 > trị** · `tai-lieu/di-doi-NPG-20260905.sql` *(681 người, khớp 7/7 dòng trên
 > bàn thử)* · hai bộ kiểm mới.
 >
-> ⚠ **CHƯA CHẠY TRÊN MÁY CHỦ THẬT.** Ba file phải dán, theo đúng thứ tự, và
-> hướng dẫn từng bước ở `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI*.
-> Điểm dừng thật là **bấm tay**: đổi qua đổi lại hai cây ba lần, người trung
-> tâm mặc định của cả hai còn nguyên.
+> ✓ **ĐÃ CHẠY TRÊN MÁY CHỦ THẬT VÀ KIỂM CHỨNG BẰNG TAY (05/09/2026 21:38).**
+> Ba file đã dán trên Supabase thật, bảng đối chiếu khớp 7/7 dòng (681 người),
+> 16/16 phép thử đạt. Điểm dừng kiểm chứng bằng tay: chủ dự án đã đổi qua đổi
+> lại giữa hai cây (NTB và NPGQ8C9), người trung tâm mặc định của cả hai cây
+> được giữ nguyên vẹn. Điểm dừng b100 hoàn thành trọn vẹn.
 
 
 | | |
