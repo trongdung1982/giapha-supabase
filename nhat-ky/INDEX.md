@@ -47,6 +47,7 @@ thường, không phải thiếu sót.
 | 97 | 04/09/2026 | Kiểm duyệt nội dung ở máy chủ: mỗi lần Lưu treo cờ, từ chối thì hoàn tác. Đổi mã vai. Đã chạy thật | `b97-kiem-duyet-noi-dung-va-doi-ma-vai.md` |
 | 98 | 05/09/2026 | Trang duyệt QuanTri.html; HOÀN TÁC chạy thật lần đầu trên máy chủ, 17/17 đạt; bàn thử SQL tại chỗ | `b98-trang-duyet-va-hoan-tac-that.md` |
 | 99 | 05/09/2026 | Thiết kế chốt trang Quản trị 4 khu, kế hoạch b99→b104; đo ra 3 lỗi khi có nhiều cây gia phả | `b99-thiet-ke-trang-quan-tri.md` |
+| 100 | 05/09/2026 | Sửa 3 lỗi nhiều cây; sinh SQL di dời cây Nguyễn Phúc Giáo 681 người; bộ kiểm mới 35+16 phép | `b100-sua-nhieu-cay.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
