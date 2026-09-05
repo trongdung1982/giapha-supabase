@@ -256,6 +256,34 @@ chủ, không nằm ở chỗ giấu địa chỉ.
 (Quản trị hệ thống) và Quản trị viên ghi thẳng, không qua hàng chờ — nên hàng
 chờ trống trơn là chuyện bình thường cho tới khi có người trong họ vào sửa.
 
+### Muốn chắc nút "Gạt đi" hoàn tác đúng — dán một file, 30 giây
+
+Nút ấy là nút **duy nhất trong cả app tự tay đổi ngược dữ liệu**, nên đáng đo
+một lần trước khi tin nó. File `kiem-thu/thu-hoan-tac.sql` làm việc ấy hộ bạn.
+
+1. Mở **SQL Editor** trên Supabase → **New query**.
+2. Mở `supabase/kiem-thu/thu-hoan-tac.sql` bằng Notepad → `Ctrl+A` → `Ctrl+C`.
+3. Dán vào → **Run**. Đợi vài giây.
+
+Nó tự đóng vai một Thành viên bấm Lưu, rồi đóng vai bạn bấm Gạt, rồi **đọc lại
+gia phả** xem dữ liệu có quay về đúng bản cũ không. Xong thì **tự dọn**: trả
+ghi chú về nguyên văn, bỏ người thử, bỏ hai dòng nhật ký của phép thử, trả vai
+tài khoản bạn về như cũ.
+
+*Xong đúng khi:* bảng hiện ra có **19 dòng**, cột **Kết** toàn `DAT` (mấy dòng
+`(ghi nhớ)` không tính). Hai dòng phải nhìn kỹ nhất là **A5** *(ghi chú đã quay
+về bản cũ)* và **B3** *(người mới đã biến mất)*.
+
+⚠ **Đừng mở app bấm gì trong lúc nó chạy** — vai của tài khoản bạn bị hạ xuống
+`sua` trong vài giây rồi nâng lại. Dòng 14 của bảng kiểm chứng vai đã trả về.
+
+⚠ **Hiện câu lỗi đỏ thay vì bảng thì KHÔNG có gì bị đổi** — cả file là một
+lệnh, vấp là Postgres trả lại toàn bộ. Chép câu lỗi ấy gửi cho Claude Code.
+
+⚠ Chạy được nhiều lần, nhưng **mỗi lần số bản ghi (`revision`) tăng vài đơn
+vị** và không trả lại được. Ai đang mở app sẽ bị bảo tải lại trang ở lần Lưu
+kế tiếp. Đó là bộ đếm chống ghi đè, không phải dữ liệu gia phả.
+
 ---
 
 ## 7. Cài đặt hàng chờ — dán một file
@@ -314,9 +342,9 @@ nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
   ra cho bạn xem giá trị cũ và giá trị mới của từng ô. Muốn soi kỹ một dòng
   thì mở gia phả xem người ấy hiện đang thế nào.
 - **Chưa ai thử HOÀN TÁC thật.** Nút *Gạt đi và hoàn tác* ở mục 6b đã viết
-  xong và đã nhìn thấy bằng mắt trên bản dựng sẵn, nhưng **chưa bấm lần nào
-  trên dữ liệu thật** — đường hoàn tác trong Postgres mới chỉ được bộ kiểm soi
-  bằng văn bản. Lần bấm thật đầu tiên nên làm trên một lần Lưu không quan
-  trọng, và nên xem lại người bị đụng ngay sau đó.
+  xong và đã nhìn thấy bằng mắt trên bản dựng sẵn, nhưng **chưa chạy lần nào
+  trên Postgres**. Phép đo đã soạn sẵn — `kiem-thu/thu-hoan-tac.sql`, cách
+  chạy ở cuối mục 6b — **và bạn là người duy nhất chạy được nó**, vì nó cần
+  SQL Editor. Chừng nào bảng kết quả chưa toàn `DAT` thì đừng tin nút đỏ ấy.
 - **Người chỉ có quyền xem vẫn xem được mọi thứ**, kể cả chi tiết người còn
   sống. Việc giấu bớt còn nằm ở `KIEN-TRUC.md` mục 6.
