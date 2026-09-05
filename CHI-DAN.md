@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 05/09/2026 08:06*
+*Nhánh Supabase · cập nhật 05/09/2026 09:43*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -17,7 +17,8 @@ nó chính là thứ nó sinh ra để tránh.
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
 | Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 + **2b** · `luoc-do/06-quyen-truc-he.sql` · `07-duyet-dang-ky.sql` · `02-rls.sql` |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
-| Đụng trang duyệt `QuanTri.html`, hay bàn thử SQL tại chỗ | `js/pages/quan-tri.js` · `../kiem-thu/ban-thu-sql/` *(ngoài repo)* |
+| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` |
+| Bàn thử SQL tại chỗ | `../kiem-thu/ban-thu-sql/` *(ngoài repo)* |
 | Đụng tên hay mã vai trò | `08-kiem-duyet.sql` mục *TÊN GỌI* · `settings.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
