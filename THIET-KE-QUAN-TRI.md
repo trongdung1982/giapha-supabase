@@ -1,12 +1,20 @@
 # THIẾT KẾ — Trang Quản trị (`QuanTri.html`)
 
-*Cập nhật 05/09/2026 09:43 · Chốt trước khi viết dòng mã đầu tiên*
+*Cập nhật 05/09/2026 · Chốt trước khi viết dòng mã đầu tiên*
 
 > **Tên file cố định, không có `_Vxx`** — lịch sử để git giữ.
 >
 > Nguồn: bản thiết kế của ChatGPT (05/09/2026, chủ dự án đặt hàng) + ba phép
 > đo trên chính mã nguồn mà ChatGPT không có cách nào biết. Chỗ nào bản này
 > **khác** bản của ChatGPT đều ghi rõ *vì sao*, ở ngay chỗ ấy.
+
+> ⚠ **BỔ SUNG 05/09/2026 — đọc `THIET-KE-NHIEU-CAY.md` cùng file này.** Chủ dự
+> án chốt ba câu về nhiều gia phả trong cùng ngày, và chúng đổi ba chỗ ở đây:
+> **khu 1** to hơn hẳn *(chủ sở hữu · xin quyền · cây mặc định · công tắc cho
+> người lạ thấy tên)*; **khu 2** thêm cột *Mã tài khoản*; **bảng quyền mục 5**
+> thêm một hạng đứng trên tất cả — *quản trị toàn hệ thống*, đọc và sửa được
+> mọi cây. Chỗ nào hai file nói khác nhau thì **`THIET-KE-NHIEU-CAY.md` đúng**,
+> vì nó viết sau.
 
 ---
 

@@ -281,9 +281,22 @@ function chayHet() {
   kiem('dấu rào $giapha$ đóng mở chẵn đôi',
        demChuoi(sql, '$giapha$') === 14, String(demChuoi(sql, '$giapha$')));
 
+  // ⚠ Phép này hỏi về DỮ LIỆU GIA PHẢ, không hỏi về mọi câu `insert` trong
+  //   file. Từ 05/09/2026 file sinh ra có thể mở đầu bằng `insert into
+  //   public.trees` + `insert into public.tree_members` — khối **dựng cây khi
+  //   cây chưa tồn tại**, nằm gọn trong `if v_tree is null then`. Hai câu ấy
+  //   đứng trước khối xoá là đúng và bắt buộc: chưa có cây thì chưa có
+  //   `tree_id` để mà xoá theo.
+  //
+  //   Cái phép này thật sự gác là: **không được chèn dữ liệu gia phả rồi mới
+  //   xoá**, vì như thế là xoá mất chính thứ vừa chèn.
+  const BANG_DU_LIEU = ['persons', 'unions', 'union_children', 'media',
+                        'sources', 'imports', 'change_log'];
   const viTriXoa = sql.lastIndexOf('delete from public.');
-  const viTriChen = sql.indexOf('insert into public.');
-  kiem('mọi câu xoá đứng TRƯỚC mọi câu chèn',
+  const viTriChen = Math.min(...BANG_DU_LIEU
+    .map((b) => sql.indexOf('insert into public.' + b))
+    .filter((i) => i >= 0));
+  kiem('mọi câu xoá đứng TRƯỚC mọi câu chèn DỮ LIỆU GIA PHẢ',
        viTriXoa > 0 && viTriChen > viTriXoa, viTriXoa + ' / ' + viTriChen);
 
   kiem('xoá con trước, xoá người sau (thứ tự khoá ngoại)',
@@ -317,10 +330,43 @@ function chayHet() {
        sql.includes('if n <> ' + dem.union_children + ' then'),
        'persons=' + dem.persons + ' children=' + dem.union_children);
 
-  // Ba thứ file này TUYỆT ĐỐI không được đụng vào.
-  for (const cam of ['public.tree_members', 'auth.users', 'storage.',
-                     'set name =', 'drop ']) {
+  // Bốn thứ file này TUYỆT ĐỐI không được đụng vào.
+  for (const cam of ['auth.users', 'storage.', 'set name =', 'drop ']) {
     kiem('không đụng tới ' + cam.trim(), !sql.includes(cam));
+  }
+
+  // ⚠ `tree_members` là ngoại lệ CÓ ĐIỀU KIỆN, mở 05/09/2026 — và điều kiện
+  //   ấy chính là thứ phép này gác.
+  //
+  //   Luật cũ *"tuyệt đối không đụng danh sách người được vào"* đúng cho cây
+  //   ĐÃ CÓ: chạy lại file di dời mà nó sửa quyền thì có ngày gỡ nhầm người
+  //   ra khỏi gia phả của chính họ. Nhưng khi cây **chưa tồn tại**, không gắn
+  //   ai vào là đẻ ra một cây không ai mở được — kể cả người vừa dựng, vì RLS
+  //   chặn cả đường đọc lẫn đường xoá.
+  //
+  //   Nên phép hỏi đúng điều: mọi câu đụng `tree_members` phải nằm TRONG
+  //   nhánh dựng cây mới, và chỉ được `insert`.
+  {
+    // ⚠ Bỏ chú thích TRƯỚC khi cắt câu. Cắt trước rồi bỏ sau thì một dấu `;`
+    //   nằm trong lời giải thích cũng thành chỗ cắt — đúng cái đã làm phép
+    //   này báo hỏng nhầm lần đầu, 05/09/2026.
+    const lenh = sql.replace(/--.*$/gm, '');
+    const cauTm = lenh.split(';').map((c) => c.trim())
+      .filter((c) => /public\.tree_members/.test(c));
+    const xauViPham = cauTm.filter(
+      (c) => /(delete|update|drop|truncate)/i.test(c));
+    kiem('không có câu nào SỬA hay XOÁ tree_members',
+         xauViPham.length === 0, xauViPham.length + ' câu vi phạm');
+
+    // Vị trí đo trên chuỗi ĐÃ BỎ chú thích, để không lệch chỉ số.
+    const iNhanh = lenh.indexOf('if v_tree is null then');
+    const iDong  = lenh.indexOf('end if;', iNhanh);
+    const moiChen = [...lenh.matchAll(/insert\s+into\s+public\.tree_members/gi)]
+      .map((m) => m.index);
+    kiem('mọi câu chèn tree_members nằm trong nhánh DỰNG CÂY MỚI',
+         moiChen.length > 0 && iNhanh >= 0 &&
+         moiChen.every((i) => i > iNhanh && i < iDong),
+         'có câu nằm ngoài `if v_tree is null` — nó sẽ chạm cả cây đã có');
   }
 
   // Repo Public: một cái khoá lọt vào file sinh ra là khoá đã lên mạng.

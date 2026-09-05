@@ -77,6 +77,18 @@ const RAO = '$giapha$';
 // múi của máy chủ (UTC) và mọi mốc lệch đi 7 tiếng.
 const MUI_GIO = '+07';
 
+// Vai quản trị, viết một lần để không gõ lệch giữa ba chỗ dùng.
+const RAO_VAI = "'quan_tri_he_thong'";
+
+// Câu lỗi khi dựng được cây mà không gắn được ai vào. Để riêng vì nó dài
+// và phải nối chuỗi trong SQL — nối sai một dấu nháy là hỏng cả file.
+const RAO_LOI = "'Dựng được cây % nhưng không gắn được người quản trị nào. " +
+  "Máy chủ chưa có tài khoản nào mang vai quan_tri_he_thong, cây dựng ra sẽ " +
+  "không ai mở được, nên dừng lại ở đây.'";
+
+/** Bọc một chuỗi vào dấu nháy đơn của SQL, nhân đôi dấu nháy bên trong. */
+function nhay(s) { return "'" + String(s || '').replace(/'/g, "''") + "'"; }
+
 // ============================================================
 // ĐỌC VÀ KIỂM FILE NGUỒN
 // ============================================================
@@ -232,6 +244,8 @@ export function sinhSql(cay, tuyChon) {
   const nhatKy  = nhatKyRa(cay);
   const soNhap  = soNhapRa(cay);
   const goc     = (cay.tree.rootPersonId || '').trim();
+  const tenCay  = (cay.tree.name || '').trim();
+  const ghiChu  = (cay.tree.note || '').trim();
 
   // Mã cây tạm bị `gan_ma_cay()` ghi đè lúc chạy, nên bỏ nó ra khỏi file cho
   // khỏi ai tưởng đó là mã thật rồi đi sửa tay.
@@ -290,11 +304,36 @@ export function sinhSql(cay, tuyChon) {
 '  v_so_nhap  jsonb := ' + khoi(soNhap) + '::jsonb;',
 '  v_nhat_ky  jsonb := ' + khoi(nhatKy) + '::jsonb;',
 'begin',
-'  -- ══ 1. TÌM CÂY, VÀ DỪNG NGAY NẾU KHÔNG THẤY ══',
+'  -- ══ 1. TÌM CÂY — CHƯA CÓ THÌ DỰNG, KÈM NGƯỜI QUẢN TRỊ ══',
+'  --',
+'  -- ⚠ Dựng cây và gắn người quản trị phải nằm TRONG CÙNG khối này. Đẻ ra một',
+'  --   dòng `trees` mà không có dòng `tree_members` nào là đẻ ra một cây',
+'  --   **không ai vào được** — kể cả người vừa dựng — vì Row Level Security',
+'  --   chặn cả đường đọc lẫn đường xoá. Lúc ấy chỉ gỡ được bằng SQL Editor.',
 '  select id into v_tree from public.trees where tree_code = v_ma_cay;',
 '  if v_tree is null then',
-'    raise exception \'Không có gia phả nào mang tree_code = %. Mở Table Editor \'',
-'      \'→ bảng trees để xem mã đúng, hoặc tạo cây trước khi di dời.\', v_ma_cay;',
+'    insert into public.trees (tree_code, name, root_person_id, note, data_version)',
+'    values (v_ma_cay, ' + nhay(tenCay) + ', v_goc, ' + nhay(ghiChu) + ', ' +
+  Number(cay.version) + ')',
+'    returning id into v_tree;',
+'',
+'    -- Ai được vào cây vừa dựng: **mọi tài khoản đang là quản trị hệ thống của',
+'    -- một cây nào đó**. Đây là một quy tắc, không phải một danh sách chép tay —',
+'    -- SQL Editor không mang danh nghĩa tài khoản nào (auth.uid() rỗng), nên',
+'    -- không có cách nào hỏi "ai đang dán file này".',
+'    --',
+'    -- ⚠ Hệ quả phải biết trước: hôm nay ai là quản trị một cây thì thành quản',
+'    --   trị luôn cây mới. Với một chủ dự án thì đúng ý. Ngày nhiều nhà cùng',
+'    --   dùng thì đường đúng là tao_gia_pha_moi() của b104, không phải file này.',
+'    insert into public.tree_members (tree_id, user_id, role, email, approved)',
+'    select distinct v_tree, tm.user_id, ' + RAO_VAI + ', tm.email, true',
+'      from public.tree_members tm',
+'     where tm.role = ' + RAO_VAI,
+'    on conflict (tree_id, user_id) do nothing;',
+'',
+'    if not exists (select 1 from public.tree_members where tree_id = v_tree) then',
+'      raise exception ' + RAO_LOI + ', v_ma_cay;',
+'    end if;',
 '  end if;',
 '',
 '  -- `gan_ma_cay()` do 03-ham-luu-cay.sql dựng. Thiếu nó thì mọi dòng dưới đây',

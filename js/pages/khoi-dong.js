@@ -4,7 +4,7 @@
 //            báo lỗi rõ ràng nếu người dùng chưa đăng nhập hoặc chưa có quyền.
 // Lớp      : pages
 // Phụ thuộc: services/repo, services/sb, pages/dang-nhap, pages/tree-view
-// Phiên bản: 0.9.0 · Cập nhật: 04/09/2026 16:05
+// Phiên bản: 0.10.0 · Cập nhật: 05/09/2026 11:09
 // ============================================================
 //
 // ⚠ **ĐỔI SO VỚI BẢN APPS SCRIPT: có thêm một kết cục thứ ba.**
@@ -110,6 +110,22 @@ function hienManHinhKhongCoQuyen(el, phien) {
     return;
   }
 
+  // ⚠ Máy chủ này có nhiều gia phả, mà người đang đứng đây chưa có chân ở cây
+  //   nào — nên KHÔNG có cây nào để xin vào bằng một cú bấm. Nói thật thay vì
+  //   hiện một nút xin vào cây do máy chủ đoán hộ; trước 05/09/2026 nó đoán,
+  //   và đoán bằng `limit 1` không `order by`.
+  if (phien.trangThai === 'nhieucay') {
+    el.append(khung([
+      tieuDe('Bạn chưa được cấp quyền xem'),
+      doan('Máy chủ này đang có ' + (phien.soCay || 'nhiều') + ' cây gia phả, ' +
+           'và bạn chưa có chân trong cây nào.'),
+      doan('Hãy nhắn cho ' + (phien.nguoiQuanLy || 'người quản lý') +
+           ' để được thêm vào đúng cây của bạn.'),
+      phien.email ? nhoMo('Bạn đang đăng nhập bằng: ' + phien.email) : null,
+    ]));
+    return;
+  }
+
   el.append(khung([
     tieuDe('Bạn chưa được cấp quyền xem'),
     doan('Bạn chưa được cấp quyền xem cây gia phả ' + (phien.tenHo || '') + '.'),
@@ -154,7 +170,7 @@ function veKhoiXinVao(el, phien) {
   nut.addEventListener('click', async () => {
     nut.disabled = true;
     nut.textContent = 'Đang gửi…';
-    const kq = await xinVaoCay(o.value);
+    const kq = await xinVaoCay(o.value, phien.treeId);
     if (!kq || !kq.ok) {
       nut.disabled = false;
       nut.textContent = 'Xin vào gia phả';

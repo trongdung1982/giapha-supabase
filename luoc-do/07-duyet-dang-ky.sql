@@ -4,6 +4,15 @@
 -- Chạy ở   : Supabase → SQL Editor. Chạy SAU 06-quyen-truc-he.sql.
 -- Phiên bản: 0.1.1 · Cập nhật: 04/09/2026 22:45 — đổi mã vai sang `quan_tri_he_thong`
 -- ============================================================
+-- ⚠⚠ BỐN HÀM CỦA FILE NÀY ĐÃ BỊ ĐỊNH NGHĨA LẠI Ở `10-sua-nhieu-cay.sql`
+--    (05/09/2026): `trang_thai_cua_toi` · `xin_vao_cay` · `ds_cho_duyet` ·
+--    `ds_kiem_duyet` · `dem_cho_kiem_duyet` — tuỳ file. Bản trong file này
+--    tự chọn cây bằng `(select id from public.trees limit 1)`, và câu ấy
+--    trả về cây NÀO TUỲ Ý khi máy chủ có nhiều hơn một cây.
+--
+--    Nên: **dán lại file này thì phải dán lại `10-sua-nhieu-cay.sql` ngay
+--    sau đó**, nếu không là lùi về bản đoán cây, và nó không báo lỗi gì —
+--    chỉ trả lời về nhầm cây, im lặng.
 --
 -- ═══ 0. FILE NÀY ĐỔI MỘT ĐIỀU LỚN — ĐỌC TRƯỚC KHI DÁN ═══
 --

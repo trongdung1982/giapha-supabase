@@ -5,7 +5,7 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.3.0 · Cập nhật: 04/09/2026 23:35
+// Phiên bản: 0.4.0 · Cập nhật: 05/09/2026 11:09
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -143,14 +143,15 @@ export async function nguoiDangNhap() {
  *
  * @returns {Promise<{daDangNhap:boolean, email:string, vaiTro:string|null,
  *   docDuoc:boolean, suaDuoc:boolean, treeId:string|null,
- *   nguoiTrungTamMacDinh:string|null, tenHo:string, nguoiQuanLy:string,
+ *   nguoiTrungTamMacDinh:string|null, hienNgayGio:boolean,
+ *   tenHo:string, nguoiQuanLy:string,
  *   loi:string|null}>}
  */
 export async function layPhien() {
   const nen = {
     daDangNhap: false, email: '', vaiTro: null,
     docDuoc: false, suaDuoc: false, treeId: null,
-    nguoiTrungTamMacDinh: null,
+    nguoiTrungTamMacDinh: null, hienNgayGio: false,
     tenHo: TEN_HO, nguoiQuanLy: NGUOI_QUAN_LY, loi: null,
   };
 
@@ -184,11 +185,19 @@ export async function layPhien() {
     //   `approved` nay gác cả quyền đọc. Hai người ấy cần nghe hai câu khác
     //   hẳn nhau — một người phải bấm nút, một người chỉ phải chờ — nên phải
     //   hỏi máy chủ thêm một câu nữa.
+    //
+    // ⚠ Lấy CẢ `treeId` chứ không chỉ lấy `trangThai` (đổi 05/09/2026): nút
+    //   "Xin vào gia phả" phải nói rõ xin vào cây nào, và người ở màn hình
+    //   này là đúng người **không đọc được bảng `trees`** nên không có đường
+    //   nào khác để biết mã cây.
+    const tt = await trangThaiCuaToi();
     return {
       ...nen,
       daDangNhap: true,
       email: nguoi.email,
-      trangThai: (await trangThaiCuaToi()).trangThai,
+      trangThai: tt.trangThai,
+      treeId: tt.treeId || null,
+      soCay: tt.soCay,
     };
   }
 
@@ -210,7 +219,7 @@ export async function layPhien() {
     suaDuoc: await coTheSua(treeId),
     trangThai: 'daduyet',
     treeId,
-    nguoiTrungTamMacDinh: await nguoiTrungTamMacDinh(k, nguoi.id, treeId),
+    ...(await caiDatCay(k, nguoi.id, treeId)),
   };
 }
 
@@ -226,11 +235,18 @@ async function coTheSua(treeId) {
  * Cây nào đang mở. Thay cho lựa chọn cất trong `PropertiesService` của Apps
  * Script — cùng tính chất: riêng theo tài khoản, không ảnh hưởng người khác.
  */
+// ⚠ Đọc CỜ `dang_mo`, không đọc "có dòng hay không" (đổi 05/09/2026, b100).
+//   Bản trước hỏi *"người này có dòng nào trong `user_settings` không"* và
+//   dùng chính sự có mặt của dòng làm câu trả lời cho "đang mở cây nào". Vì
+//   câu ấy chỉ có MỘT đáp án cho mỗi người, `chonGiaPha()` phải xoá sạch mọi
+//   dòng rồi chèn lại một dòng — tức **xoá người trung tâm mặc định của mọi
+//   cây** mỗi lần đổi cây. Với một cây thì không ai thấy; với hai cây thì mất
+//   mỗi lần. `luoc-do/10-sua-nhieu-cay.sql` mục 1 kể đầy đủ.
 async function cayDangChon(k, userId, ds) {
   const { data } = await k
     .from('user_settings')
-    .select('tree_id')
-    .eq('user_id', userId);
+    .select('tree_id, dang_mo')
+    .eq('user_id', userId).eq('dang_mo', true);
 
   const daChon = (data || []).map((r) => r.tree_id);
   const hop = ds.find((m) => daChon.includes(m.tree_id));
@@ -239,13 +255,20 @@ async function cayDangChon(k, userId, ds) {
   return hop ? hop.tree_id : ds[0].tree_id;
 }
 
-async function nguoiTrungTamMacDinh(k, userId, treeId) {
+/**
+ * Cài đặt của MỘT người trên MỘT cây. Một lần gọi lấy cả hai giá trị — chúng
+ * nằm cùng một dòng, và hỏi hai lần là hai vòng mạng cho cùng một dòng ấy.
+ */
+async function caiDatCay(k, userId, treeId) {
   const { data } = await k
     .from('user_settings')
-    .select('focus_person_id')
+    .select('focus_person_id, hien_ngay_gio')
     .eq('user_id', userId).eq('tree_id', treeId)
     .maybeSingle();
-  return (data && data.focus_person_id) || null;
+  return {
+    nguoiTrungTamMacDinh: (data && data.focus_person_id) || null,
+    hienNgayGio: !!(data && data.hien_ngay_gio),
+  };
 }
 
 /** Ghi người trung tâm mặc định của riêng người đang đăng nhập. */
@@ -433,11 +456,35 @@ export async function chonGiaPha(treeId) {
   const nguoi = await nguoiDangNhap();
   if (!k || !nguoi) return { ok: false, loi: 'Chưa đăng nhập.' };
 
-  // Xoá lựa chọn cũ rồi ghi lựa chọn mới: `user_settings` khoá theo
-  // (user_id, tree_id) nên "đang chọn cây nào" phải là dòng DUY NHẤT có mặt.
-  await k.from('user_settings').delete().eq('user_id', nguoi.id);
-  const { error } = await k.from('user_settings')
-    .upsert({ user_id: nguoi.id, tree_id: treeId });
+  // ⚠ **KHÔNG `delete` gì cả** (đổi 05/09/2026, b100). Bản trước xoá sạch mọi
+  //   dòng `user_settings` của người này rồi chèn lại một dòng, vì nó dùng
+  //   *sự vắng mặt của những dòng khác* để nói "đang mở cây nào". Cái giá là
+  //   người trung tâm mặc định của MỌI cây bị cuốn theo mỗi lần đổi cây.
+  //
+  //   Nay việc ấy là một CỜ trên chính dòng ấy, và hai câu lệnh (tắt cờ cũ,
+  //   bật cờ mới) gói trong một giao dịch ở máy chủ — trình duyệt không phải
+  //   giữ đúng thứ tự qua hai vòng mạng.
+  const { data, error } = await k.rpc('dat_cay_dang_mo', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (data && data.ok === false) return { ok: false, loi: data.loi || 'Không đổi được gia phả.' };
+  return { ok: true, loi: null };
+}
+
+/**
+ * Bật/tắt hàng NGÀY GIỖ, nhớ riêng cho từng cây của từng người.
+ *
+ * ⚠ Là cài đặt **theo cây**, không phải theo người: một cây đã nhập đủ ngày
+ *   giỗ và một cây chưa nhập ngày nào thì muốn hai lựa chọn khác nhau. Trước
+ *   05/09/2026 công tắc này **không lưu ở đâu cả** — tắt trình duyệt là mất.
+ */
+export async function datHienNgayGio(treeId, bat) {
+  const k = layKhach();
+  const nguoi = await nguoiDangNhap();
+  if (!k || !nguoi) return { ok: false, loi: 'Chưa đăng nhập.' };
+
+  const { error } = await k.from('user_settings').upsert({
+    user_id: nguoi.id, tree_id: treeId, hien_ngay_gio: !!bat,
+  });
   return error ? { ok: false, loi: cauLoi(error) } : { ok: true, loi: null };
 }
 
@@ -499,29 +546,40 @@ export async function xoaAnhThat(dsDuongDan) {
  * Nộp đơn xin vào gia phả. Máy chủ đóng cứng vai `xem` và cờ chưa duyệt —
  * người gọi không chọn được vai của mình.
  *
+ * ⚠ `treeId` bỏ trống thì máy chủ chỉ tự chọn hộ khi hệ thống có ĐÚNG MỘT
+ *   cây; nhiều cây thì nó từ chối kèm câu chỉ đường. Đó là chủ ý — xem
+ *   `luoc-do/10-sua-nhieu-cay.sql` mục 4e.
+ *
  * @param {string} [loiNhan] người nộp tự giới thiệu, để admin biết đây là ai
+ * @param {string|null} [treeId] xin vào cây nào
  * @returns {Promise<{ok:boolean, trangThai?:string, xinLuc?:string, loi?:string}>}
  */
-export async function xinVaoCay(loiNhan = '') {
+export async function xinVaoCay(loiNhan = '', treeId = null) {
   const k = layKhach();
   if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
-  const { data, error } = await k.rpc('xin_vao_cay', { p_loi_nhan: String(loiNhan || '') });
+  const { data, error } = await k.rpc('xin_vao_cay', {
+    p_tree: treeId || null, p_loi_nhan: String(loiNhan || ''),
+  });
   if (error) return { ok: false, loi: cauLoi(error) };
   return data || { ok: false, loi: 'Máy chủ không trả lời.' };
 }
 
 /**
  * Trạng thái của chính người đang đăng nhập:
- * `chuadangnhap` · `chuanop` · `cho` · `daduyet`.
+ * `chuadangnhap` · `chuanop` · `cho` · `daduyet` · `nhieucay`.
+ *
+ * ⚠ `nhieucay` là trạng thái MỚI (05/09/2026): người chưa có chân ở cây nào,
+ *   mà máy chủ lại có nhiều cây — nên không có cây nào để nói về. Trước đó
+ *   máy chủ đoán bừa một cây và trả lời như thể chắc chắn.
  *
  * Trả `chuadangnhap` khi hỏi hụt, chứ không ném lỗi: chỗ gọi nó là màn hình
  * từ chối, và một màn hình từ chối mà tự nó vỡ thì người dùng không còn đường
  * nào để đi tiếp.
  */
-export async function trangThaiCuaToi() {
+export async function trangThaiCuaToi(treeId = null) {
   const k = layKhach();
   if (!k) return { trangThai: 'chuadangnhap' };
-  const { data, error } = await k.rpc('trang_thai_cua_toi', {});
+  const { data, error } = await k.rpc('trang_thai_cua_toi', { p_tree: treeId || null });
   if (error || !data) return { trangThai: 'chuadangnhap' };
   return data;
 }
@@ -529,8 +587,11 @@ export async function trangThaiCuaToi() {
 /** Đơn đang xếp hàng. Không phải `quan_tri_he_thong`/`quan_tri` thì máy chủ trả mảng rỗng. */
 export async function dsChoDuyet(treeId) {
   const k = layKhach();
-  if (!k) return [];
-  const { data, error } = await k.rpc('ds_cho_duyet', { p_tree: treeId || null });
+  // ⚠ Thiếu `treeId` thì KHÔNG gọi. Trước 05/09/2026 máy chủ tự đoán một cây
+  //   bằng `limit 1` không `order by` — với nhiều cây là duyệt nhầm hàng chờ
+  //   của nhà khác, im lặng. Nay hàm máy chủ bắt buộc có `p_tree`.
+  if (!k || !treeId) return [];
+  const { data, error } = await k.rpc('ds_cho_duyet', { p_tree: treeId });
   return error ? [] : (data || []);
 }
 
@@ -596,9 +657,9 @@ export async function coTheKiemDuyet(treeId) {
  */
 export async function dsKiemDuyet(treeId, trangThai = 'cho', gioiHan = 200) {
   const k = layKhach();
-  if (!k) return [];
+  if (!k || !treeId) return [];
   const { data, error } = await k.rpc('ds_kiem_duyet', {
-    p_tree: treeId || null,
+    p_tree: treeId,
     p_trang_thai: trangThai === undefined ? 'cho' : trangThai,
     p_gioi_han: gioiHan,
   });
@@ -608,8 +669,8 @@ export async function dsKiemDuyet(treeId, trangThai = 'cho', gioiHan = 200) {
 /** Đếm nhanh cho cái nhãn "Chờ duyệt (n)". Hỏng thì trả 0, không ném lỗi. */
 export async function demChoKiemDuyet(treeId) {
   const k = layKhach();
-  if (!k) return 0;
-  const { data, error } = await k.rpc('dem_cho_kiem_duyet', { p_tree: treeId || null });
+  if (!k || !treeId) return 0;
+  const { data, error } = await k.rpc('dem_cho_kiem_duyet', { p_tree: treeId });
   return error ? 0 : (Number(data) || 0);
 }
 

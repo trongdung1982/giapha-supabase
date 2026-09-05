@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 05/09/2026 10:22 · Bước gần nhất: **b99** · Việc kế tiếp: **b100***
+*Cập nhật 05/09/2026 · Bước gần nhất: **b100** · Việc kế tiếp: **b101***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -117,6 +117,27 @@ khiến nó là trang riêng. Cài đặt vì thế xuống **6 khối**, không
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
 đang có rủi ro nào treo trên đầu.*
 
+**NHIỀU GIA PHẢ — BA CÂU CHỐT 05/09/2026, VÀ MỘT LUẬT CŨ BỊ LẬT.**
+Chủ dự án mở một mặt trận thứ hai ngay trong phiên b99: cho người trong họ dựng
+cây riêng *(phải xin phép mới được)*, phân biệt **"được xem"** với **"được truy
+cập"**, và xin nạp luôn cây **Nguyễn Phúc Giáo — 681 người**. Ba câu đã chốt:
+
+| Câu | Chốt |
+|---|---|
+| Quản trị toàn hệ thống nhìn tới đâu trên cây nhà khác? | **Đọc VÀ SỬA được mọi cây** |
+| Đăng nhập xong thấy danh sách cây nào? | **Mọi cây — nhưng CHỦ CÂY tự bật/tắt cho người lạ thấy tên cây mình** |
+| Người dựng cây mới thì mã cũ của họ xử lý sao? | **Cây mới cấp mã riêng + một cột trỏ về cây cũ** |
+
+⚠ **Câu thứ nhất LẬT một luật đã ghi thành chữ ở chính file này** — mục *Nhiều
+cây gia phả* bên dưới từng viết *"không có siêu quản trị toàn hệ thống"*. Từ
+05/09/2026 câu ấy hết đúng. Gặp nó ở đâu trong lịch sử git thì đọc kèm ngày.
+
+Thiết kế chốt ở **`THIET-KE-NHIEU-CAY.md`**. Phát hiện làm cho việc này rẻ hơn
+vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một hàm `vai_tro()`**, nên
+"quản trị toàn hệ thống ở mọi cây" chèn được ở **hai chỗ**, không phải mười
+một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
+nhất của cả dự án cho tới nay.
+
 **Hai mươi chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
@@ -152,6 +173,12 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Hai hạng quản trị tách ra — `quan_tri` chỉ kiểm duyệt, không đổi được quyền** | **b97** | ✓ **04/09/2026** — đã dán |
 | **Đổi MÃ VAI — `chu`→`quan_tri_he_thong`, `admin`→`quan_tri`; 4 hạng có tên tiếng Việt** | **b97** | ✓ **04/09/2026 23:00** — đã dán |
 | **Thiết kế chốt trang Quản trị 4 khu + kế hoạch b100→b105; đo ra 3 lỗi khi có nhiều cây** | **b99** | ✓ **05/09/2026** |
+| **Thiết kế chốt NHIỀU CÂY — 3 câu chủ dự án chốt, `THIET-KE-NHIEU-CAY.md`** | **b100** | ✓ **05/09/2026** |
+| **Ba lỗi nhiều cây sửa xong — `10-sua-nhieu-cay.sql` + 4 file JS** | **b100** | ⏳ **chờ dán** |
+| **Cây Nguyễn Phúc Giáo 681 người — SQL di dời sinh xong, chạy đúng trên bàn thử** | **b100** | ⏳ **chờ dán** |
+| **Bộ sinh SQL di dời TỰ DỰNG CÂY kèm người quản trị; bộ kiểm 46 → 47 phép** | **b100** | ✓ **05/09/2026** |
+| **Hai bộ kiểm mới: `kiem-nhieu-cay.mjs` 35 phép · `thu-nhieu-cay.sql` 16 phép chạy thật** | **b100** | ✓ **05/09/2026** |
+| **Bàn thử SQL tại chỗ nay dựng HAI cây, nên tái hiện được lỗi nhiều cây** | **b100** | ✓ **05/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -169,15 +196,47 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 
 ---
 
-## Việc kế tiếp — b100 → b105, MỘT PHIÊN MỘT BƯỚC
+## Việc kế tiếp — b100 → b109, MỘT PHIÊN MỘT BƯỚC
 
-Thiết kế đầy đủ ở **`THIET-KE-QUAN-TRI.md`**. Bảng này chỉ nói *phiên nào làm
-gì, đẻ ra sản phẩm gì, dừng lại ở đâu*.
+⚠ **Chuỗi này viết lại 05/09/2026** sau khi chủ dự án chốt ba câu về **nhiều
+gia phả**. Chuỗi cũ (b100→b105, chỉ nói trang Quản trị) vẫn còn nguyên trong
+`git log -p KE-HOACH.md`; nó không sai, nó chỉ **thiếu tầng dưới**.
 
-Thứ tự xếp theo **"đau nhất trước"** — việc nào hôm nay đang phải gõ SQL tay
-nhiều nhất thì làm trước, không xếp theo cái nào dễ vẽ.
+Hai tài liệu thiết kế, đọc theo việc:
 
-### b100 — Khung điều hướng
+| Sắp làm | Đọc |
+|---|---|
+| Quyền cấp hệ thống · danh sách cây · tạo cây · mã xuyên cây | **`THIET-KE-NHIEU-CAY.md`** |
+| Bốn khu của `QuanTri.html` | **`THIET-KE-QUAN-TRI.md`** |
+
+Thứ tự vẫn theo **"đau nhất trước"**, nhưng nay có thêm một luật thứ hai:
+**việc nào đụng `vai_tro()` thì đứng sau việc không đụng.** `vai_tro()` là nền
+móng của toàn bộ hệ thống quyền — sai ở đó thì mọi thứ xây bên trên đều sai
+theo, và không có gì báo lỗi.
+
+### ~~b100~~ — Ba lỗi nhiều cây, và nạp cây thứ hai · ✓ **VIẾT XONG 05/09/2026, CHỜ DÁN**
+
+> **Đã làm:** `luoc-do/10-sua-nhieu-cay.sql` *(9 phép tự kiểm, đạt cả 9 trên
+> bàn thử)* · `sb.js` 0.4.0 · `repo.js` 0.2.0 · `settings.js` 1.29.0 ·
+> `khoi-dong.js` 0.10.0 · bộ sinh SQL di dời nay **tự dựng cây kèm người quản
+> trị** · `tai-lieu/di-doi-NPG-20260905.sql` *(681 người, khớp 7/7 dòng trên
+> bàn thử)* · hai bộ kiểm mới.
+>
+> ⚠ **CHƯA CHẠY TRÊN MÁY CHỦ THẬT.** Ba file phải dán, theo đúng thứ tự, và
+> hướng dẫn từng bước ở `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI*.
+> Điểm dừng thật là **bấm tay**: đổi qua đổi lại hai cây ba lần, người trung
+> tâm mặc định của cả hai còn nguyên.
+
+
+| | |
+|---|---|
+| **Làm** | Gỡ Hỏng 1 *(`chonGiaPha()` xoá sạch `user_settings`)* · Hỏng 2 *(`hienNgayGio` không lưu)* · Hỏng 3 *(8 chỗ `coalesce(… limit 1)`)* · rồi sinh SQL di dời cho `tai-lieu/giapha-nguyen-phuc-giao.json` |
+| **Sản phẩm** | `sb.js` sửa · `luoc-do/10-sua-nhieu-cay.sql` · file SQL di dời cây **NPGQ8C9, 681 người · 189 hôn nhân** · bộ kiểm |
+| **Điểm dừng** | Chủ dự án dán hai file, bảng đối chiếu khớp **cả 7/7 dòng** như lần di dời 04/09. Rồi **đổi qua đổi lại giữa hai cây ba lần**, và người trung tâm mặc định của **cả hai** cây còn nguyên |
+| **⚠ Hệ quả tức thì** | `xin_vao_cay()` đang tự từ chối khi hệ thống có **từ hai cây trở lên** — nạp cây thứ hai là chạm đúng chỗ ấy. Phải bắt truyền `p_tree` tường minh trong cùng bước này |
+| **Vì sao đứng đầu** | Chủ dự án xin nạp cây này; và ba lỗi kia **chỉ lộ ra khi có cây thứ hai**, nên sửa sau là sửa trong lúc đang có triệu chứng |
+
+### b101 — Khung điều hướng trang Quản trị
 
 | | |
 |---|---|
@@ -186,47 +245,73 @@ nhiều nhất thì làm trước, không xếp theo cái nào dễ vẽ.
 | **Điểm dừng** | Mở trên máy tính và trên điện thoại, bấm qua lại 4 mục, `F5` về đúng khu. Ba khu chưa làm hiện đúng câu *"chưa làm"*, không hiện bảng trống |
 | **SQL** | Không đụng |
 
-Làm trước vì nó **không đẻ ra SQL nào** mà chứng minh được cả khung — sai thì
-sai lúc chưa có gì xây lên trên.
+Vẫn đứng sớm vì nó **không đẻ ra SQL nào** mà chứng minh được cả khung — sai
+thì sai lúc chưa có gì xây lên trên.
 
-### b101 — Thành viên & quyền, tầng máy chủ
+### b102 — ⚠⚠ Tầng quyền cấp hệ thống
 
-| | |
-|---|---|
-| **Làm** | `luoc-do/10-quan-ly-thanh-vien.sql` — 5 hàm: `ds_thanh_vien` · `doi_vai_thanh_vien` · `gan_nguoi_cho_thanh_vien` · `dat_tin_cay_thanh_vien` · `go_thanh_vien` |
-| **Sản phẩm** | File SQL + `kiem-thu/kiem-quan-ly-thanh-vien.mjs`, có **kiểm chứng ngược** *(bẻ gãy mã có chủ ý, xác nhận bài kiểm bắt được)* |
-| **Điểm dừng** | Bộ kiểm xanh **và** chủ dự án đã dán file, bảng tự kiểm cuối file khớp. Chạy thử qua bàn thử SQL tại chỗ trước khi đưa cho chủ dự án dán |
-| **⚠ Bẫy** | `null not in (…)` cho ra `null`, không cho ra `true` — đúng cái đã mở lỗ leo quyền 04/09. Mọi phép kiểm vai hỏi `null` trước |
-
-### b102 — Thành viên & quyền, màn hình
+**Bước nguy hiểm nhất của cả dự án cho tới nay.** Nó sửa `vai_tro()`.
 
 | | |
 |---|---|
-| **Làm** | `khu-thanh-vien.js` — bảng, ba tấm lọc *(Đang chờ · Đã duyệt · Tất cả)*, bốn thao tác hai nhịp |
+| **Làm** | `luoc-do/11-quyen-he-thong.sql` — bảng `tai_khoan` *(+ trigger trên `auth.users`)* · bảng `cau_hinh` · `trees.chu_so_huu` · `trees.cho_nguoi_la_thay_ten` · `unique` trên `tree_code` · hàm `la_quan_tri_toan_he_thong` · `cay_mac_dinh` · `co_the_xem_cay` · `duoc_tao_cay` · `ma_tai_khoan_cua_toi` · `dat_cay_mac_dinh` · **sửa `vai_tro()` và `la_thanh_vien()`** · 6 luật RLS đọc đổi sang `co_the_xem_cay` |
+| **Sản phẩm** | File SQL + `kiem-thu/kiem-quyen-he-thong.mjs` có **kiểm chứng ngược** + **một phép thử gọi thẳng REST** kiểu H9 |
+| **Điểm dừng** | Bốn hàng rào đo được bằng REST: ① quản trị toàn hệ thống đọc **và ghi** được cây mình không có chân · ② người lạ **không** đọc được cây không phải cây mặc định · ③ người vào bằng cửa cây mặc định **đọc được `persons` nhưng KHÔNG đọc được `tree_members`** *(đúng chỗ rò rỉ email ở mục 3 thiết kế)* · ④ người vào bằng cửa ấy ghi bị từ chối |
+| **⚠ Bẫy 1** | Quên sửa `la_thanh_vien()` → quản trị toàn hệ thống **sửa được mà không đọc được**. Triệu chứng: *"Lưu báo thành công mà màn hình trống"* |
+| **⚠ Bẫy 2** | `la_quan_tri_toan_he_thong()` phải viết dạng **khẳng định** + `coalesce(…, false)`. Đúng bẫy `null` đã mở lỗ leo quyền 04/09 mà 57 phép kiểm báo xanh |
+| **⚠ Bẫy 3** | Đổi nhầm luật RLS của `tree_members` sang `co_the_xem_cay` là **lộ email cả họ** cho mọi tài khoản |
+| **Phải chốt trước** | Tên gọi — `THIET-KE-NHIEU-CAY.md` mục 11 |
+
+### b103 — Khu Gia phả, và Cài đặt gọn lại
+
+| | |
+|---|---|
+| **Làm** | `ds_gia_pha()` *(hàm `security definer`, lọc theo CỘT)* · `khu-gia-pha.js` — danh sách cây · chủ sở hữu · vai của tôi · nút **Chọn** / **Xin quyền** · công tắc *cho người lạ thấy tên* · ô chọn **cây mặc định** *(chỉ quản trị toàn hệ thống)*. Gỡ khối **Gia phả** và **Đơn chờ duyệt** khỏi `settings.js` |
+| **Sản phẩm** | Khu 1 chạy thật · `settings.js` từ 10 khối xuống **6** |
+| **Điểm dừng** | Đăng nhập bằng một tài khoản **không có chân trong cây nào**: thấy đúng danh sách cây đã bật công tắc, bấm Xin quyền nộp được đơn, và **không mở được nội dung cây nào**. Đặt cây mặc định rồi thử lại: mở được đúng một cây ấy |
+| **⚠ Không làm** | Không mở RLS trên `trees`. Lọc cột bằng hàm, không bằng RLS |
+
+### b104 — Tạo gia phả mới
+
+| | |
+|---|---|
+| **Làm** | `luoc-do/12-tao-cay.sql` — `tao_gia_pha_moi(p_ten, p_ma_cay, p_note)`, hai câu `insert` **trong cùng một giao dịch** · `repo.taoGiaPhaMoi()` thôi trả `'chualam'` · màn hình trong khu 1 |
+| **Sản phẩm** | File SQL + bộ kiểm + màn hình |
+| **Điểm dừng** | Một tài khoản **được cấp `duoc_tao_cay`** dựng được cây rỗng, tự thành quản trị của nó, thêm được người đầu tiên. Một tài khoản **không được cấp** bấm vào thì bị máy chủ từ chối *(không phải bị JavaScript giấu nút)* |
+| **⚠ Bẫy** | Đẻ ra `trees` mà không đẻ `tree_members` là đẻ ra cây **không ai vào được, kể cả người vừa tạo** — và RLS chặn nên chính họ cũng không xoá được |
+| **⚠ Bẫy 2** | `tree_code` phải `unique`. Hai cây cùng mã thì `NTBK7R3_P0013` hết là duy nhất |
+
+### b105 — Thành viên & quyền, tầng máy chủ
+
+| | |
+|---|---|
+| **Làm** | `luoc-do/13-quan-ly-thanh-vien.sql` — 5 hàm: `ds_thanh_vien` · `doi_vai_thanh_vien` · `gan_nguoi_cho_thanh_vien` · `dat_tin_cay_thanh_vien` · `go_thanh_vien`. `ds_thanh_vien` trả thêm **mã ngắn tài khoản** |
+| **Sản phẩm** | File SQL + `kiem-thu/kiem-quan-ly-thanh-vien.mjs`, có **kiểm chứng ngược** |
+| **Điểm dừng** | Bộ kiểm xanh **và** chủ dự án đã dán file, bảng tự kiểm cuối file khớp. Chạy qua bàn thử SQL tại chỗ trước khi đưa dán |
+| **⚠ Bẫy** | `null not in (…)` cho ra `null`, không cho ra `true`. Mọi phép kiểm vai hỏi `null` trước |
+
+### b106 — Thành viên & quyền, màn hình
+
+| | |
+|---|---|
+| **Làm** | `khu-thanh-vien.js` — bảng, ba tấm lọc *(Đang chờ · Đã duyệt · Tất cả)*, bốn thao tác hai nhịp. Cột **Mã tài khoản** để chỉ đúng người khi tên trùng · màn Cài đặt hiện *"Mã tài khoản của bạn"* |
 | **Sản phẩm** | Khu 2 chạy thật, **và tài khoản thử `thu-h9@…` được dọn bằng chính màn hình ấy** |
 | **Điểm dừng** | Sáu việc đo được: thấy tài khoản · thấy `P0012` · đổi được vai · gắn được mã khác · bật/tắt `tin_cay` · gỡ được. Rồi đăng nhập lại bằng một tài khoản `sua` và xác nhận `pham_vi_sua()` phản ánh đúng |
 
 Bước này **xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md`** — chỗ hôm nay bảo chủ
 dự án gõ `update` trong SQL Editor.
 
-### b103 — Chi tiết TRƯỚC/SAU khi kiểm duyệt
+### b107 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
 | | |
 |---|---|
-| **Làm** | `chi_tiet_kiem_duyet(p_tree, p_id)` + mở rộng một dòng trong bảng kiểm duyệt |
+| **Làm** | `chi_tiet_kiem_duyet(p_tree, p_id)` · `domains/so-sanh.js` **(file MỚI, không sửa 10 file cũ)** · mở rộng một dòng thành **bảng phẳng kiểu Excel**: `Người · Trường · Trước · Sau · Loại` |
 | **Sản phẩm** | File SQL + bộ kiểm + màn hình mở rộng dòng |
-| **Điểm dừng** | Chọn một lần Lưu thật, thấy đúng *giá trị trước → giá trị sau*. Rồi dựng cảnh xung đột: Lưu A, Lưu B đụng cùng bản ghi → cột SAU nói rõ đó là trạng thái hôm nay, nút hoàn tác mờ kèm lý do |
-| **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại — `THIET-KE-QUAN-TRI.md` khu 3 |
+| **Điểm dừng** | Chọn một lần Lưu thật, thấy đúng từng ô *trước → sau*, trường không đổi thì **không vẽ dòng**. Rồi dựng cảnh xung đột: Lưu A, Lưu B đụng cùng bản ghi → cột SAU nói rõ đó là trạng thái hôm nay, nút hoàn tác mờ kèm lý do |
+| **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại |
+| **⚠ Giữ nguyên** | Xem theo **ô**, duyệt theo **lần Lưu**. Không cho nhận từng ô |
 
-### b104 — Khu Gia phả, và Cài đặt gọn lại
-
-| | |
-|---|---|
-| **Làm** | `khu-gia-pha.js` *(dùng lại `layDanhSachGiaPha()` đã có)* · gỡ khối **Gia phả** và khối **Đơn chờ duyệt** khỏi `settings.js` |
-| **Sản phẩm** | `settings.js` từ 10 khối xuống **6**, và ngắn đi đáng kể |
-| **Điểm dừng** | Đổi được cây từ trang Quản trị · mở Cài đặt thấy đúng 6 khối · `/kiem-tra` đạt cả 9 phép |
-
-### b105 — Khu Sao lưu + Số đếm đối chiếu
+### b108 — Khu Sao lưu + Số đếm đối chiếu
 
 | | |
 |---|---|
@@ -235,11 +320,23 @@ dự án gõ `update` trong SQL Editor.
 | **Điểm dừng** | Số trên màn hình khớp với số đếm được trong file sao lưu đêm gần nhất |
 | **⚠ Không làm** | **Không vẽ nút Khôi phục.** Máy chủ chưa khôi phục được, vẽ nút là giả vờ giải quyết bằng giao diện |
 
-### Sau b105 — chưa đặt số, chưa chốt
+### b109 — Mã người xuyên cây
 
-`tao_gia_pha_moi()` · nhập GEDCOM/Excel qua máy chủ · **khôi phục thật** *(việc
-nguy hiểm nhất, và phải kiểm chứng bằng vòng `sao lưu → đổi dữ liệu → khôi phục
-→ dữ liệu quay đúng trạng thái cũ`, không phải bằng việc có file JSON)*.
+| | |
+|---|---|
+| **Làm** | `persons.noi_ve` · thêm tên cột vào bảng `TEN_PERSON` của `hinh-dang.js` · ô nhập trong màn hồ sơ · dòng *"Người này cũng có trong gia phả …"* + nút nhảy sang **chỉ khi người xem truy cập được cây kia** |
+| **Sản phẩm** | File SQL nhỏ + bộ kiểm + màn hình |
+| **Điểm dừng** | Lưu một vòng rồi đọc lại, `noi_ve` **còn nguyên** — đúng phép kiểm mà cột `branch_id` từng cần |
+| **⚠ Bẫy** | Cột không có tên trong `TEN_PERSON` thì mỗi lần lưu ghi `null` đè lên, **và không có gì báo lỗi** — `DU-LIEU.md` mục 3 điều 7 |
+| **Đứng cuối vì** | Chưa ai dựng cây thứ ba. Cột này chỉ có việc khi có người dựng cây cho bên nhà họ |
+
+### Sau b109 — chưa đặt số, chưa chốt
+
+Nhập GEDCOM/Excel qua máy chủ · **khôi phục thật** *(việc nguy hiểm nhất, và
+phải kiểm chứng bằng vòng `sao lưu → đổi dữ liệu → khôi phục → dữ liệu quay
+đúng trạng thái cũ`, không phải bằng việc có file JSON)* · nối **quan hệ** bắc
+qua hai cây *(cột `noi_ve` chỉ nói "cùng một con người", không nói "cùng một
+gia đình")*.
 
 ---
 
@@ -568,7 +665,7 @@ còn dính dáng gì.
 
 ---
 
-## ⚠ NHIỀU CÂY GIA PHẢ — đo 05/09/2026, hai chỗ hỏng và một câu phải trả lời
+## ⚠ NHIỀU CÂY GIA PHẢ — ba chỗ hỏng đo được, ba câu nay đã chốt
 
 Chủ dự án hỏi cuối phiên b98: *"app có nhiều cây gia phả khác nhau, cơ chế quản
 lý trong Supabase thế nào?"*. Đo trên mã thật, không đoán.
@@ -578,6 +675,10 @@ lý trong Supabase thế nào?"*. Đo trên mã thật, không đoán.
 `trees` mỗi cây một dòng. `tree_members` khoá `(tree_id, user_id)` — nên **vai
 trò là thuộc tính của CẶP (người, cây), không phải của người**. Một người có
 thể là quản trị hệ thống ở cây A và chỉ là khách ở cây B.
+
+⚠ **ĐOẠN DƯỚI ĐÂY ĐÃ BỊ LẬT NGÀY 05/09/2026** — chủ dự án chốt là **có** quản
+trị toàn hệ thống, đọc và sửa được mọi cây. Giữ nguyên chữ cũ làm chứng cứ về
+điều gì đúng cho tới hôm ấy; đường đi mới ở `THIET-KE-NHIEU-CAY.md` mục 2.
 
 Luật RLS `doc_trees ... using (la_thanh_vien(id))` (`02-rls.sql` dòng 162) trả
 lời trọn câu *"ai xem được toàn bộ cây, ai chỉ xem được vài cây"*: **không có
@@ -625,7 +726,7 @@ lời về **một cây khác cây đang mở**, và trả lời im lặng.
 nhầm hàng chờ**. Đường sửa: bỏ `coalesce`, bắt nơi gọi truyền `p_tree` tường
 minh — `state.phien.treeId` luôn có sẵn.
 
-### Câu chủ dự án phải trả lời: AI ĐƯỢC TẠO CÂY MỚI
+### ~~Câu chủ dự án phải trả lời~~: AI ĐƯỢC TẠO CÂY MỚI — **CHỐT 05/09/2026**
 
 `repo.taoGiaPhaMoi()` còn trả `lyDo: 'chualam'`, nên hôm nay **không ai tạo
 được cây mới từ app** — phải dựng tay trong Supabase.
@@ -634,11 +735,16 @@ minh — `state.phien.treeId` luôn có sẵn.
 trả lời được: bảng ấy chỉ nói *"trong cây X, người này là gì"*, không nói
 *"người này có được đẻ ra cây Y chưa tồn tại không"*.
 
-**Đề xuất, và nó không đẻ bảng mới:** *ai đang là `quan_tri_he_thong` của ít
-nhất MỘT cây thì tạo được cây mới*, và **người tạo tự động thành
-`quan_tri_he_thong` của cây vừa tạo**. Rẻ, không cần bảng cấp hệ thống, và
-không đẻ ra được một `trees` trơ trọi không ai vào được. Nếu chủ dự án muốn
-chặt hơn thì mới cần một cờ riêng — và lúc ấy phải dựng bảng cấp người.
+**Chủ dự án chọn đường CHẶT HƠN**: *"tôi không khoá việc cho phép người trong
+họ tạo cây, nhưng phải xin phép và được cấp quyền mới tạo được"*. Nên phải dựng
+bảng cấp người thật — `tai_khoan`, cột `duoc_tao_cay`. Cùng bảng ấy trả lời nốt
+hai câu khác cũng không thuộc cây nào: *ai là quản trị toàn hệ thống*, và *mã
+ngắn của tài khoản* để chỉ đúng người khi tên trùng.
+
+Giữ lại một nửa đề xuất cũ vì nó vẫn đúng: **người tạo tự động thành
+`quan_tri_he_thong` của cây vừa tạo**, và hai câu `insert` phải nằm trong cùng
+một giao dịch — đẻ ra `trees` trơ trọi là đẻ ra cây không ai vào được, kể cả
+người vừa tạo. Chi tiết: `THIET-KE-NHIEU-CAY.md` mục 4 và mục 7.
 
 ---
 
@@ -672,15 +778,19 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b102**, bằng chính màn hình mới | `nhat-ky/b94-phep-thu-h9.md` |
 | ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b102** | `luoc-do/08-kiem-duyet.sql` mục 3 |
 | ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b103** | `THIET-KE-QUAN-TRI.md` khu 3 |
-| ⚠ **NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây** | mục *Nhiều cây gia phả* ở trên, Hỏng 1 |
-| ⚠ **NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu** — tắt trình duyệt là mất | mục *Nhiều cây*, Hỏng 2 |
-| ⚠ **NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ** — hỏi nhầm cây, im lặng | mục *Nhiều cây*, Hỏng 3 |
-| ⚠ **Chưa ai tạo được cây mới, và chưa chốt ai được tạo** | mục *Nhiều cây*, câu cuối |
+| ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
+| ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
+| ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |
+| ⚠ **Chưa ai tạo được cây mới** — ai được tạo đã chốt 05/09 → **b104** | `THIET-KE-NHIEU-CAY.md` mục 7 |
+| ⚠ **Cây Nguyễn Phúc Giáo 681 người** — SQL sinh xong, **chờ chủ dự án dán** | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
+| ⚠ **`xin_vao_cay()` vẫn từ chối khi có nhiều cây mà không nói rõ cây nào** — cố ý, gỡ ở **b103** | `luoc-do/10-sua-nhieu-cay.sql` mục 4e |
+| ⚠ **Chưa bấm thử app trên HAI cây** — bàn thử đo được máy chủ, không đo được người bấm | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
+| ⚠ **Tên gọi chưa chốt**: hai thứ khác hẳn nhau cùng tên *"quản trị hệ thống"* | `THIET-KE-NHIEU-CAY.md` mục 11 |
 | ~~Chưa ai thử HOÀN TÁC thật~~ — ✓ **đã chạy trên máy chủ thật 05/09/2026, 17/17 đạt** | `kiem-thu/thu-hoan-tac.sql` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
-| ⚠ **Chưa bấm thử app trên cây 681 người** — bộ kiểm chạy trên cây 59 người, và lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
+| ⚠ **Chưa bấm thử app trên cây 681 người** — nay có cây ấy thật *(chờ dán)*; lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
 | Bốn màn hình chưa mở được (sao lưu · dựng gia phả mới · bỏ chọn · quyền ảnh) | `KIEN-TRUC.md` mục 6 |
 | Giấu chi tiết người còn sống với người chỉ có quyền xem | `KIEN-TRUC.md` mục 6 |
 | Lỗi điện thoại: chọn số đời không tự vẽ lại | `BAT-DAU.md` mục 5 |

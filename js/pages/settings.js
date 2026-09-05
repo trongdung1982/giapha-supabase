@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.28.0 · Cập nhật: 04/09/2026 23:35
+// Phiên bản: 1.29.0 · Cập nhật: 05/09/2026 11:09
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -56,7 +56,7 @@
 import { state, notify } from '../state.js';
 import { coMayChu, datNguoiTrungTamMacDinh, xoaNguoiTrungTamMacDinh } from '../services/tuong-thich.js';
 import { dangXuat, dsChoDuyet, duyetThanhVien, tuChoiThanhVien,
-         demChoKiemDuyet } from '../services/sb.js';
+         demChoKiemDuyet, datHienNgayGio } from '../services/sb.js';
 import { fullName, coGiaTri, doiSongNguoi } from '../utils/text.js';
 import { veLinkTai, inAnhRaster, dpiConDungDuoc, laManHinhMayTinh, DAI_DPI,
          KHO_GIAY, CHU_CAO_KHUYEN_NGHI_MM }
@@ -320,6 +320,16 @@ function veKhoiHienThi(vao) {
     state.hienNgayGio = hopChon.checked;
     notify();
     if (xuLyNgoai.onDoiHienThi) xuLyNgoai.onDoiHienThi();
+
+    // Vẽ lại NGAY, ghi xuống máy chủ SAU và không đợi. Công tắc hiển thị mà
+    // đứng chờ một vòng mạng thì cảm giác như app treo; còn nếu ghi hỏng thì
+    // cái mất là một tuỳ chọn, không phải một dòng gia phả.
+    const treeId = state.phien && state.phien.treeId;
+    if (treeId) {
+      datHienNgayGio(treeId, hopChon.checked).then((kq) => {
+        if (!kq || !kq.ok) console.warn('[settings] không lưu được công tắc ngày giỗ:', kq && kq.loi);
+      });
+    }
   });
 
   const chu = document.createElement('span');

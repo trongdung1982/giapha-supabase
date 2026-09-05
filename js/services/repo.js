@@ -4,7 +4,7 @@
 // Lớp      : services — được gọi bởi: pages · gọi: services/sb,
 //            services/hinh-dang, utils, state
 // Phụ thuộc: services/sb.js, services/hinh-dang.js, utils/graph.js, state.js
-// Phiên bản: 0.1.0 · Cập nhật: 02/09/2026 22:45
+// Phiên bản: 0.2.0 · Cập nhật: 05/09/2026 11:09
 // ============================================================
 //
 // ═══ RANH GIỚI ĐỔI KHO LƯU TRỮ ═══
@@ -59,6 +59,10 @@ export async function khoiTao() {
 
   await napCay();
   state.focusPersonId = chonNguoiTrungTam(phien);
+
+  // Công tắc *Hiện hàng ngày giỗ*, nhớ riêng cho từng cây của từng người.
+  // ⚠ Trước 05/09/2026 nó không được lưu ở đâu cả — tắt trình duyệt là mất.
+  state.hienNgayGio = phien.hienNgayGio === true;
 
   return phien;
 }

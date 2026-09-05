@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 05/09/2026 09:43*
+*Nhánh Supabase · cập nhật 05/09/2026*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -17,6 +17,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
 | Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 + **2b** · `luoc-do/06-quyen-truc-he.sql` · `07-duyet-dang-ky.sql` · `02-rls.sql` |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
+| **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
 | **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` |
 | Bàn thử SQL tại chỗ | `../kiem-thu/ban-thu-sql/` *(ngoài repo)* |
 | Đụng tên hay mã vai trò | `08-kiem-duyet.sql` mục *TÊN GỌI* · `settings.js` hàm `vaiTroBangChu()` |
@@ -45,6 +46,8 @@ nó chính là thứ nó sinh ra để tránh.
    hàng chờ duyệt dán chiều 04/09, người đang chờ đọc được **0 dòng** (b96).
    Cả hai đo bằng cách gọi thẳng REST, không qua trình duyệt. `KIEN-TRUC.md`
    mục 6 kể những gì còn dở.
+   ⚠ **Cây THỨ HAI (681 người) đã sinh SQL nhưng CHƯA DÁN** — b100. Ba chỗ
+   hỏng của nhiều cây cũng vậy. Đừng viết như thể máy chủ đã có hai cây.
 
 ## Quy ước khung tài liệu này
 
