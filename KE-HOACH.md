@@ -88,11 +88,16 @@ dòng**, và hai dòng đáng tiền nhất — *"còn bao nhiêu HÀM / LUẬT 
 cũ"* — đều bằng **0**. Đó là chứng cứ không sót file nào, và nó hỏi thẳng máy
 chủ chứ không hỏi trí nhớ của ai.
 
-⚠ **Nhưng chưa ai thử HOÀN TÁC thật.** Đường từ chối mới chỉ được bộ kiểm soi
-bằng văn bản. Có mã hoàn tác khác với hoàn tác được — cùng loại khoảng cách
-với *"có file sao lưu"* và *"khôi phục được"*.
+**HOÀN TÁC ĐÃ CHẠY THẬT — 05/09/2026.** Chủ dự án dán
+`kiem-thu/thu-hoan-tac.sql` vào SQL Editor: **17/17 đạt**, `revision 10 → 14`,
+59 người không đổi, hai dòng nhật ký của phép thử tự dọn. Cả hai nhánh của
+đường hoàn tác đều đúng — trả **giá trị cũ** về (A5) và **lấy người mới đi**
+(B3). Trước đó nó chỉ được bộ kiểm soi bằng văn bản, và *"có mã hoàn tác"*
+khác *"hoàn tác được"* đúng như khoảng cách giữa *"có file sao lưu"* và
+*"khôi phục được"* — khoảng cách ấy nay đã đóng ở phía kiểm duyệt.
 
-**Việc kế tiếp: b98 — `duyet.html`**, trang duyệt độc lập dạng bảng.
+**Việc kế tiếp: b98 — trang duyệt độc lập dạng bảng.** *(Tên chốt sau: không
+phải `duyet.html` mà là `QuanTri.html` — chủ dự án đặt 04/09/2026.)*
 
 ⚠ *Hôm nay dữ liệu trong bảng là dữ liệu giả và app chưa có người dùng nào, nên
 không có gì khẩn ở đây — thứ tự các bước là vì đúng trình tự, không phải vì
@@ -293,7 +298,8 @@ chạy.
 bốn phép kiểm chứng ngược — bẻ gãy mã có chủ ý rồi xác nhận bài kiểm bắt được.
 Còn lại: `duyet.html` (b98).
 
-⚠ **Chưa ai thử HOÀN TÁC thật.** Bộ kiểm soi văn bản, không chạy SQL.
+✓ **HOÀN TÁC đã chạy thật 05/09/2026** — `kiem-thu/thu-hoan-tac.sql` dán vào
+SQL Editor, 17/17 đạt. Trước đó bộ kiểm chỉ soi văn bản, không chạy SQL.
 
 #### Sáu file đã dán, đúng thứ tự này — giữ lại phòng khi phải dựng lại
 
@@ -500,7 +506,7 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ⚠ **Chưa có màn hình duyệt thành viên** — duyệt bằng `update` trong SQL Editor | `HUONG-DAN-PHAN-QUYEN.md` mục 3 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt | `nhat-ky/b94-phep-thu-h9.md` |
 | ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor | `luoc-do/08-kiem-duyet.sql` mục 3 |
-| ⚠ **Chưa ai thử HOÀN TÁC thật** — đường từ chối mới chỉ được bộ kiểm soi văn bản, chưa chạy trên Postgres lần nào | `nhat-ky/b97-kiem-duyet-noi-dung-va-doi-ma-vai.md` |
+| ~~Chưa ai thử HOÀN TÁC thật~~ — ✓ **đã chạy trên máy chủ thật 05/09/2026, 17/17 đạt** | `kiem-thu/thu-hoan-tac.sql` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |

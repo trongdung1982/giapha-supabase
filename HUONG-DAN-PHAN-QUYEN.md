@@ -274,11 +274,10 @@ tài khoản bạn về như cũ.
 `(ghi nhớ)` không tính). Hai dòng phải nhìn kỹ nhất là **A5** *(ghi chú đã quay
 về bản cũ)* và **B3** *(người mới đã biến mất)*.
 
-ℹ **Phép này đã chạy đạt 17/17 trên một bản sao gia phả dựng lại ngay trên máy**
-(cùng lược đồ, cùng 59 người) ngày 05/09/2026 — xem `kiem-thu/ban-thu-sql/`
-ở thư mục cha. Nên lần bạn dán không còn là lần chạy đầu tiên của mã ấy; nó là
-lần đầu tiên trên **máy chủ thật**, và đó vẫn là điều duy nhất bản sao không
-nói thay được.
+ℹ **Đã chạy 05/09/2026 và đạt 17/17 — cả trên bản sao dựng ở máy lẫn trên máy
+chủ thật.** Trên máy chủ thật: `revision 10 → 14`, 59 người không đổi, hai
+dòng nhật ký của phép thử tự dọn, vai trò tài khoản trả về `quan_tri_he_thong`.
+Đó là lần đầu tiên đường hoàn tác chạy trên Postgres thật.
 
 ⚠ **Đừng mở app bấm gì trong lúc nó chạy** — vai của tài khoản bạn bị hạ xuống
 `sua` trong vài giây rồi nâng lại. Dòng 14 của bảng kiểm chứng vai đã trả về.
@@ -347,11 +346,9 @@ nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
   *ai sửa*, *sửa việc gì* (một câu) và *đụng bao nhiêu bản ghi* — nó chưa mở
   ra cho bạn xem giá trị cũ và giá trị mới của từng ô. Muốn soi kỹ một dòng
   thì mở gia phả xem người ấy hiện đang thế nào.
-- **HOÀN TÁC đã chạy đúng trên BẢN SAO, chưa chạy trên MÁY CHỦ THẬT.**
-  05/09/2026: dựng lại cả cơ sở dữ liệu trên máy — cùng lược đồ, cùng 59
-  người — và đường hoàn tác đạt cả 17 phép. Còn thiếu đúng một bước, và chỉ
-  bạn làm được: dán `kiem-thu/thu-hoan-tac.sql` vào SQL Editor (cách chạy ở
-  cuối mục 6b). Chừng nào bảng kết quả trên máy chủ thật chưa toàn `DAT` thì
-  đừng tin hẳn nút đỏ ấy.
+- ~~Chưa ai thử HOÀN TÁC thật.~~ ✓ **Đã chạy trên máy chủ thật 05/09/2026,
+  17/17 đạt** — cả hai nhánh: trả giá trị cũ về, và lấy người mới đi. Nút đỏ
+  *Gạt đi và hoàn tác* từ nay tin được. Muốn đo lại lúc nào cũng được, cách
+  chạy ở cuối mục 6b.
 - **Người chỉ có quyền xem vẫn xem được mọi thứ**, kể cả chi tiết người còn
   sống. Việc giấu bớt còn nằm ở `KIEN-TRUC.md` mục 6.
