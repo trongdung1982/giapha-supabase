@@ -147,15 +147,33 @@ begin
     raise exception 'Không mượn được danh nghĩa tài khoản trong SQL Editor: auth.uid() vẫn rỗng. Phép thử này không chạy được ở đây — phải đo bằng REST như b94 đã làm.';
   end if;
 
-  -- Người đem ra sửa: chính người mà tài khoản này gắn vào, để chắc chắn nằm
-  -- trong trực hệ của chính mình ở bước đóng vai Thành viên.
-  v_goc := coalesce(v_nguoi_cu,
-                    (select root_person_id from public.trees where id = v_tree),
-                    (select id from public.persons
-                      where tree_id = v_tree and deleted = false
-                      order by id limit 1));
+  -- ══ NGƯỜI ĐEM RA SỬA ══
+  --
+  -- Tài khoản đã gắn mã rồi thì lấy đúng mã ấy — chắc chắn nằm trong trực hệ
+  -- của chính mình ở bước đóng vai Thành viên, và không phải đụng gì tới cột
+  -- `person_id`.
+  --
+  -- ⚠ Chưa gắn thì phải chọn một người **CHƯA AI GẮN**. Bản đầu chọn gốc cây
+  --   (`trees.root_person_id`) và vấp ngay lần chạy thật đầu tiên
+  --   (05/09/2026): `tree_members_person_uniq` — mỗi người chỉ gắn được một
+  --   tài khoản, mà `P0012` thì tài khoản thử `thu-h9@` của b94 đang giữ.
+  --   Cái vấp ấy không mất gì (cả file là một giao dịch), nhưng nó chỉ ra
+  --   rằng "gốc cây" là lựa chọn TỆ NHẤT: gốc cây là người dễ đã có tài khoản
+  --   gắn vào nhất.
+  if v_nguoi_cu is not null then
+    v_goc := v_nguoi_cu;
+  else
+    select p.id into v_goc
+      from public.persons p
+     where p.tree_id = v_tree and p.deleted = false
+       and not exists (select 1 from public.tree_members tm
+                        where tm.tree_id = v_tree and tm.person_id = p.id)
+     order by p.id
+     limit 1;
+  end if;
+
   if v_goc is null then
-    raise exception 'Gia phả chưa có người nào để thử.';
+    raise exception 'Không tìm được người nào chưa gắn tài khoản để đem ra thử.';
   end if;
 
   select note, to_jsonb(p.*) into v_note_cu, v_hang
@@ -172,8 +190,12 @@ begin
 
   -- Đóng vai Thành viên thường: vai `sua`, chưa bật cờ tin cậy. Đúng hạng
   -- người mà `08-kiem-duyet.sql` bắt phải xếp hàng chờ duyệt.
+  -- ⚠ `person_id` chỉ đặt khi tài khoản CHƯA gắn ai. Đặt vô điều kiện là vấp
+  --   `tree_members_person_uniq` — đã vấp thật 05/09/2026, xem ghi chú ở khối
+  --   chọn người phía trên.
   update public.tree_members
-     set role = 'sua', tin_cay = false, person_id = v_goc, approved = true
+     set role = 'sua', tin_cay = false, approved = true,
+         person_id = coalesce(person_id, v_goc)
    where tree_id = v_tree and user_id = v_uid;
 
   insert into thu_hoan_tac_kq values
