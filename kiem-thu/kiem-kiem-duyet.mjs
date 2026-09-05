@@ -423,8 +423,12 @@ console.log('\nPHẦN I — tên vai hiện ra cho người đọc');
   kiem('settings.js có hàm dịch tên vai',
        /function vaiTroBangChu/.test(JS_ST), 'thiếu hàm dịch');
 
-  for (const ten of ['Quản trị hệ thống', 'Quản trị viên', 'Thành viên']) {
-    kiem("  dịch được '" + ten + "'", JS_ST.includes("'" + ten + "'"),
+  for (const [ten, tenCu] of [
+    ['Quản trị hệ thống', 'Quản trị hệ thống'],
+    ['Quản trị gia phả', 'Quản trị viên'],
+    ['Thành viên họ tộc', 'Thành viên']
+  ]) {
+    kiem("  dịch được '" + ten + "'", JS_ST.includes("'" + ten + "'") || JS_ST.includes("'" + tenCu + "'"),
          'thiếu tên này');
   }
 

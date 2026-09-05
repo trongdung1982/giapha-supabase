@@ -411,25 +411,27 @@ Nút **xuất CSV** của bảng phẳng: làm được rẻ, nhưng chưa ai xi
 
 ---
 
-## 11. ⚠ Một câu còn phải chốt: TÊN GỌI
+## 11. ✓ ĐÃ CHỐT: TÊN GỌI VÀ KIẾN TRÚC MÃ VAI (05/09/2026)
 
-Sau đợt này sẽ có **hai thứ khác hẳn nhau cùng tên "quản trị hệ thống"**:
+Chủ dự án đã chốt dứt khoát quyết định về tên gọi hiển thị và nguyên tắc phân quyền ở Lượt 48:
 
-| Mã trong bảng | Nghĩa thật | Tên đang hiện |
+### 1. Hệ thống tên gọi hiển thị chính thức 4 vai
+Chỉ đổi chữ tiếng Việt hiển thị trên giao diện (trong `settings.js` hàm `vaiTroBangChu()`), giữ nguyên mã vai kỹ thuật:
+
+| Mã trong bảng | Tên hiển thị chính thức | Ý nghĩa / Phạm vi |
 |---|---|---|
-| `tree_members.role = 'quan_tri_he_thong'` | Người quản trị **một cây** | "Quản trị hệ thống" |
-| `tai_khoan.quan_tri_toan_he_thong` | Người quản trị **cả phần mềm** | *(chưa có tên)* |
+| `quan_tri_he_thong` | **Quản trị hệ thống** | Siêu quản trị của cả hệ thống phần mềm |
+| `quan_tri` | **Quản trị gia phả** | Người quản trị, kiểm duyệt dữ liệu của một cây/chi cụ thể |
+| `sua` | **Thành viên họ tộc** | Con cháu trong họ, sửa thông tin trong phạm vi trực hệ |
+| `xem` | **Khách** | Người chỉ có quyền xem dữ liệu |
+| `sao_luu` | **Tài khoản sao lưu** | Tài khoản chuyên dụng để chạy sao lưu tự động |
 
-Nhầm hai thứ này là nhầm nguy hiểm — một bên sửa được một cây, một bên sửa
-được mọi cây.
+*(Đã cập nhật vào `settings.js` 1.29.1)*.
 
-**Đề xuất, và nó KHÔNG đổi mã trong bảng** *(đổi mã vai lần trước tốn 5 file,
-b97)*: chỉ đổi **chữ hiển thị** trong `settings.js` hàm `vaiTroBangChu()` —
-một chỗ duy nhất:
+### 2. Kiến trúc mã vai và phân định loại tài khoản
+- **Không đẻ thêm mã `quan_tri_toan_he_thong`**: Giữ nguyên và dùng đúng mã `quan_tri_he_thong` đã có trong hệ thống.
+- **Phân biệt rạch ròi Loại tài khoản và Quyền trên từng cây**:
+  + Tài khoản Quản trị hệ thống (`quan_tri_he_thong`) là vai trò quản trị tối cao của toàn hệ thống phần mềm.
+  + Quyền thao tác dữ liệu gia phả gắn liền với từng cây: Người tạo cây nào thì có vai Quản trị gia phả (`quan_tri`) của cây đó; sang cây khác của người khác thì không mặc nhiên có quyền can thiệp nếu không được chủ cây kia phân quyền.
+- Thiết kế chi tiết cấu trúc bảng tài khoản cấp hệ thống ở b102 do Claude Code quyết định kỹ thuật ở phiên sau, bám sát đúng nguyên tắc này.
 
-- `quan_tri_he_thong` → **"Quản trị gia phả"**
-- `quan_tri` → **"Kiểm duyệt viên"** *(giữ nguyên cũng được)*
-- vai mới cấp hệ thống → **"Quản trị toàn hệ thống"**
-
-⚠ Chủ dự án phải chốt trước khi viết file SQL, vì tên vai mới sẽ đóng cứng vào
-tên cột `tai_khoan.quan_tri_toan_he_thong`.

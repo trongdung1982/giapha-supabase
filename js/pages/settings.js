@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.29.0 · Cập nhật: 05/09/2026 11:09
+// Phiên bản: 1.29.1 · Cập nhật: 05/09/2026 22:15
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -1352,8 +1352,8 @@ function quyenBangChu(phien) {
  */
 function vaiTroBangChu(vaiTro) {
   if (vaiTro === 'quan_tri_he_thong') return 'Quản trị hệ thống';
-  if (vaiTro === 'quan_tri') return 'Quản trị viên';
-  if (vaiTro === 'sua') return 'Thành viên';
+  if (vaiTro === 'quan_tri') return 'Quản trị gia phả';
+  if (vaiTro === 'sua') return 'Thành viên họ tộc';
   if (vaiTro === 'xem') return 'Khách';
   if (vaiTro === 'sao_luu') return 'Tài khoản sao lưu';
   return vaiTro || '';
