@@ -77,7 +77,7 @@ Nên **hai chỗ sửa, không phải mười một**:
 ```sql
 -- Chỗ 1 — vai_tro(): quản trị toàn hệ thống mang vai cao nhất ở MỌI cây
 select case
-  when public.la_quan_tri_toan_he_thong() then 'quan_tri_he_thong'
+  when public.la_quan_tri_he_thong() then 'quan_tri_he_thong'
   else (select role from public.tree_members
          where tree_id = p_tree and user_id = auth.uid())
 end;
@@ -95,7 +95,7 @@ quản trị toàn hệ thống **sửa được mà không đọc được**. `
 nó hỏi `co_the_sua()`, còn RLS chặn vì nó hỏi `la_thanh_vien()`. Triệu chứng
 sẽ là *"bấm Lưu báo thành công mà màn hình trống"* — mất nửa buổi mới lần ra.
 
-**2 · Hàm `la_quan_tri_toan_he_thong()` phải viết dạng KHẲNG ĐỊNH và bọc
+**2 · Hàm `la_quan_tri_he_thong()` phải viết dạng KHẲNG ĐỊNH và bọc
 `coalesce(…, false)`.** Đây đúng cái bẫy `null` đã mở một lỗ leo quyền thật
 ngày 04/09 (b94) mà 57 phép kiểm tự động báo xanh. Bảng `tai_khoan` có thể
 chưa có dòng cho người ấy → `select … ` trả `null` → `case` không nhận nhánh
@@ -182,7 +182,7 @@ trả lời sẵn câu *"xoá cây đang là cây mặc định thì sao"*: khô
 create table public.tai_khoan (
   user_id                 uuid primary key references auth.users(id) on delete cascade,
   ma_ngan                 text not null unique,   -- 'TK7Q3M' — hiện cho người dùng đọc
-  quan_tri_toan_he_thong  boolean not null default false,
+  la_quan_tri_he_thong    boolean not null default false,
   duoc_tao_cay            boolean not null default false,
   tao_luc                 timestamptz not null default now()
 );
@@ -212,7 +212,7 @@ phải viết ra và phải có phép kiểm, vì nó chạy ngoài tầm mắt.
 
 | Cột | Kiểu | Để làm gì |
 |---|---|---|
-| `chu_so_huu` | `uuid references auth.users(id)` | Người dựng cây. Hiện trong danh sách, và là người mặc định mang vai `quan_tri_he_thong` của cây |
+| `chu_so_huu` | `uuid references auth.users(id)` | Người dựng cây. Hiện trong danh sách, và là người mặc định mang vai `quan_tri` (Quản trị gia phả) của cây |
 | `cho_nguoi_la_thay_ten` | `boolean not null default false` | Công tắc tầng 1. **Mặc định TẮT** — cây đã có phải do chủ bật, không tự nhiên phơi ra |
 
 ⚠ `default false` là quyết định có chủ ý: cây `NTBK7R3` và cây `NPGQ8C9` đang
@@ -225,7 +225,7 @@ bật tay. Mặc định mở là kiểu hỏng không ai để ý cho tới khi
 
 | Hàm | Trả về | Ghi chú |
 |---|---|---|
-| `la_quan_tri_toan_he_thong()` | `boolean` | `coalesce(…, false)`. Nền của tất cả |
+| `la_quan_tri_he_thong()` | `boolean` | `coalesce(…, false)`. Nền của tất cả |
 | `cay_mac_dinh()` | `uuid` | Đọc `cau_hinh`, có thể `null` |
 | `co_the_xem_cay(p_tree)` | `boolean` | Gác 6 bảng nội dung — mục 3 |
 | `duoc_tao_cay()` | `boolean` | `tai_khoan.duoc_tao_cay` hoặc quản trị toàn hệ thống |
@@ -323,7 +323,7 @@ Nối **quan hệ** giữa hai cây (ông A ở cây này là con ông B ở câ
 ```
 duoc_tao_cay()  →  tao_gia_pha_moi(p_ten, p_ma_cay, p_note)
                         ├── insert trees (chu_so_huu = auth.uid())
-                        └── insert tree_members (role='quan_tri_he_thong',
+                        └── insert tree_members (role='quan_tri',
                                                   approved=true)
                             ── TRONG CÙNG MỘT GIAO DỊCH
 ```

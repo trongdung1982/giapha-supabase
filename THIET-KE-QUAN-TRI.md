@@ -182,7 +182,7 @@ bấm lần nữa mới chạy — không `confirm()`)*:
 ### Khu 3 — Kiểm duyệt
 
 Giữ nguyên bản chất và gần như nguyên giao diện hiện có (`quan-tri.js` 0.1.0).
-Ba tấm lọc, mỗi dòng một **lần bấm Lưu**, hai nút *Nhận* và *Gạt đi và hoàn tác*.
+Ba tấm lọc, mỗi dòng một **lần bấm Lưu**, hai nút *Duyệt* và *Từ chối và hoàn tác*.
 
 **Thêm đúng một thứ: mở rộng một dòng để xem TRƯỚC/SAU.**
 
@@ -268,7 +268,7 @@ khôi phục được. Khu này ban đầu chỉ **hiện trạng thái**, và n
 | Khu 2 · gỡ thành viên | ✓ | ✗ | ✗ | ✗ |
 | Khu 3 · xem hàng chờ | ✓ | ✓ | ✗ | ✗ |
 | Khu 3 · xem chi tiết trước/sau | ✓ | ✓ | ✗ | ✗ |
-| Khu 3 · nhận · gạt và hoàn tác | ✓ | ✓ | ✗ | ✗ |
+| Khu 3 · duyệt · từ chối và hoàn tác | ✓ | ✓ | ✗ | ✗ |
 | Khu 4 · xem trạng thái sao lưu | ✓ | ✗ | ✗ | ✗ |
 
 Vai máy `sao_luu` **không dùng giao diện** — nó là script chạy đêm, không có
