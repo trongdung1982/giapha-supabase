@@ -148,6 +148,13 @@ la_thanh_vien(p_tree)    -- giữ nguyên nghĩa cũ
                          -- gác: tree_members · change_log · imports · user_settings
 ```
 
+⚠ **Bẫy NULL trong `co_the_xem_cay` (đo được 06/09/2026):** Khi `cay_mac_dinh()`
+trả về `null` (chưa cấu hình cây mặc định), phép so sánh `p_tree = null` cho ra
+`null`. Trong SQL, `false OR null` cho ra `null` chứ không cho ra `false`! Vì vậy
+thân hàm `co_the_xem_cay` bắt buộc phải bọc `coalesce(..., false)` và canh
+`(cay_mac_dinh() IS NOT NULL AND p_tree = cay_mac_dinh())`, nếu không hàm sẽ trả
+`null` cho người lạ. Đã kiểm chứng tại `kiem-thu/ban-thu-sql/kich-ban-kiem-b102.sql`.
+
 ⚠ **Người vào bằng cửa cây mặc định không có vai** (`vai_tro()` trả `null`),
 nên `co_the_sua()` trả `false` — họ xem, không sửa. Đúng ý chủ dự án, và đúng
 mà không cần thêm một câu `if` nào.
