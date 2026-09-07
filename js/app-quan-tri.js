@@ -1,9 +1,9 @@
 // ============================================================
 // giapha-supabase · js/app-quan-tri.js
-// Vai trò  : Điểm khởi động của trang QuanTri.html — trang duyệt nội dung.
+// Vai trò  : Điểm khởi động của trang QuanTri.html — khung quản trị bốn khu.
 // Lớp      : pages
-// Phụ thuộc: pages/quan-tri
-// Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 23:35
+// Phụ thuộc: pages/quan-tri/khung
+// Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
 // ============================================================
 //
 // Đối xứng `js/app.js`, và cố ý giữ mỏng đúng như thế: một điểm khởi động chỉ
@@ -14,7 +14,7 @@
 //   mọi thứ nó `import` — tức cả bộ vẽ sơ đồ — về máy người chỉ định đọc một
 //   cái bảng.
 
-import { mountQuanTri } from './pages/quan-tri.js';
+import { mountKhung } from './pages/quan-tri/khung.js';
 
 async function main() {
   const el = document.getElementById('app');
@@ -22,7 +22,7 @@ async function main() {
     console.error('[quan-tri] không tìm thấy phần tử #app trong QuanTri.html');
     return;
   }
-  await mountQuanTri(el);
+  await mountKhung(el);
 }
 
 if (document.readyState === 'loading') {

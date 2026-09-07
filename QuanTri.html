@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <!-- ============================================================
      giapha-supabase · QuanTri.html
-     Vai trò  : Trang DUYỆT NỘI DUNG — bảng hàng chờ, mỗi dòng một lần Lưu.
-     Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 23:35
+     Vai trò  : Trang QUẢN TRỊ — khung bốn khu: Gia phả · Thành viên ·
+                Kiểm duyệt · Sao lưu. Mỗi lần vẽ đúng một khu.
+     Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
 
      Trang thứ hai của app, đứng riêng khỏi `index.html` theo đúng lời chủ dự
      án 04/09/2026: *"trang duyệt là một trang HTML độc lập, ngoài trang vẽ sơ
-     đồ, duyệt dạng bảng"*. Lý lẽ đầy đủ ở đầu `js/pages/quan-tri.js`.
+     đồ, duyệt dạng bảng"*. Lý lẽ đầy đủ ở đầu
+     `js/pages/quan-tri/khu-kiem-duyet.js`; ba luật của khung ở đầu
+     `js/pages/quan-tri/khung.js`.
 
      ⚠ TÊN FILE CÓ CHỮ HOA, và GitHub Pages phân biệt hoa với thường.
        `quantri.html` hay `Quantri.html` đều ra trang 404. Mọi chỗ trỏ tới nó
@@ -27,7 +30,12 @@
        Security ở máy chủ. -->
   <meta name="robots" content="noindex, nofollow">
 
-  <title>Duyệt nội dung — Gia phả</title>
+  <title>Quản trị — Gia phả</title>
+
+  <!-- Bố cục khung bốn khu. File riêng chứ không nhúng: bản giả để nhìn
+       bằng mắt (`kiem-thu/trang-quan-tri-gia.html`, ngoài repo) nạp đúng
+       file này, nên hai chỗ không thể lệch nhau. -->
+  <link rel="stylesheet" href="quan-tri.css">
 
   <style>
     html, body { margin:0; min-height:100%; }
@@ -40,6 +48,7 @@
     #loi { padding:24px; color:#c62828; line-height:1.6; font-size:15px; }
     #loi code { background:#f0ece6; padding:2px 5px; border-radius:4px;
                 color:#2a2622; word-break:break-all; }
+
   </style>
 </head>
 <body>

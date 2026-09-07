@@ -1,10 +1,11 @@
 // ============================================================
 // giapha-supabase · kiem-thu/kiem-trang-quan-tri.mjs
 // Vai trò  : Kiểm TRANG DUYỆT NỘI DUNG — `QuanTri.html`,
-//            `js/app-quan-tri.js`, `js/pages/quan-tri.js` và năm cửa mới
-//            trong `js/services/sb.js` (b98).
+//            `js/app-quan-tri.js`, `js/pages/quan-tri/khung.js`,
+//            `js/pages/quan-tri/khu-kiem-duyet.js` và năm cửa mới trong
+//            `js/services/sb.js` (b98 + b101).
 // Chạy     : cd supabase/kiem-thu && node kiem-trang-quan-tri.mjs
-// Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 23:35
+// Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
 // ============================================================
 //
 // ═══ BÀI KIỂM NÀY CHỨNG MINH ĐƯỢC GÌ, VÀ KHÔNG CHỨNG MINH ĐƯỢC GÌ ═══
@@ -32,6 +33,13 @@
 //   5. **Lấy `vaiTro` phía trình duyệt làm hàng rào** thay vì hỏi máy chủ.
 //   6. **Điểm khởi động kéo theo cả bộ vẽ sơ đồ** về máy người chỉ định đọc
 //      một cái bảng.
+//   7. **Tên class trong JS lệch tên class trong CSS** (b101). Khung vẽ ra
+//      vẫn đủ chữ nhưng bố cục vỡ — không có lỗi nào, và trên máy người
+//      viết mã thì nó thường vẫn *trông* tạm được. PHẦN F đối chiếu từng
+//      class `qt-` trong `khung.js` với `quan-tri.css`.
+//   8. **Hai bộ mã cho hai bề ngang màn hình** (b101). Hỏi `innerWidth`
+//      trong JS rồi vẽ khác đi thì hôm nay đúng, và lệch dần từ lần sửa
+//      thứ hai trở đi — vì hai chỗ ấy không ai bắt phải sửa cùng nhau.
 //
 // ⚠ Nguyên tắc giữ từ b94 và b97: **đừng hỏi đúng chữ, hãy hỏi đúng điều.**
 //   PHẦN G ở cuối bẻ gãy chính mã này rồi kiểm lại — một phép "đạt" trên mã
@@ -45,8 +53,10 @@ const DAY = dirname(fileURLToPath(import.meta.url));
 const doc = (p) => readFileSync(resolve(DAY, p), 'utf8');
 
 const HTML = doc('../QuanTri.html');
+const CSS = doc('../quan-tri.css');
 const JS_APP = doc('../js/app-quan-tri.js');
-const JS_QT = doc('../js/pages/quan-tri.js');
+const JS_QT = doc('../js/pages/quan-tri/khu-kiem-duyet.js');
+const JS_KH = doc('../js/pages/quan-tri/khung.js');
 const JS_SB = doc('../js/services/sb.js');
 const JS_ST = doc('../js/pages/settings.js');
 const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
@@ -84,6 +94,15 @@ kiem('có meta robots noindex — gia phả không nằm trong kết quả tìm 
 
 kiem('có <title>', /<title>[^<]+<\/title>/.test(HTML), 'thiếu title');
 
+// CSS của khung nằm ở FILE RIÊNG chứ không nhúng, để bản giả dùng để nhìn
+// bằng mắt (`kiem-thu/trang-quan-tri-gia.html`) nạp đúng một nguồn ấy.
+kiem('nạp quan-tri.css — bố cục khung bốn khu',
+     /<link\s+rel="stylesheet"\s+href="quan-tri\.css">/.test(HTML),
+     'thiếu thẻ link tới quan-tri.css');
+
+kiem('file quan-tri.css có thật',
+     existsSync(resolve(DAY, '../quan-tri.css')), 'thiếu file');
+
 kiem('có đường về trang chính khi không nạp được mã',
      /href="index\.html"/.test(HTML), 'không có lối về index.html');
 
@@ -96,8 +115,9 @@ kiem('không nạp mã từ máy chủ ngoài',
 // ============================================================
 console.log('\nPHẦN B — js/app-quan-tri.js');
 
-kiem('nạp màn hình duyệt', /from '\.\/pages\/quan-tri\.js'/.test(JS_APP),
-     'không import pages/quan-tri.js');
+kiem('nạp khung quản trị',
+     /from '\.\/pages\/quan-tri\/khung\.js'/.test(JS_APP),
+     'không import pages/quan-tri/khung.js');
 
 kiem('vẽ vào #app', /getElementById\('app'\)/.test(JS_APP), 'không tìm #app');
 
@@ -106,9 +126,9 @@ kiem('KHÔNG kéo theo bộ vẽ sơ đồ (bẫy 6)',
      khongKeoTheoSoDo(JS_APP), 'import tree-view/khoi-dong — kéo cả bộ vẽ về');
 
 // ============================================================
-// PHẦN C — màn hình js/pages/quan-tri.js
+// PHẦN C — khu Kiểm duyệt js/pages/quan-tri/khu-kiem-duyet.js
 // ============================================================
-console.log('\nPHẦN C — màn hình js/pages/quan-tri.js');
+console.log('\nPHẦN C — khu Kiểm duyệt js/pages/quan-tri/khu-kiem-duyet.js');
 
 kiem('không chạm window.supabase — luật MỘT CỬA (bẫy 4)',
      motCua(JS_QT), 'gọi thẳng máy chủ, phá luật một cửa của CLAUDE.md mục 5');
@@ -136,8 +156,8 @@ kiem('vẽ lại cả bảng sau mỗi lần bấm',
 
 // Nút gạt phải nói ra hậu quả TRƯỚC khi bấm: gạt không phải bỏ qua, nó hoàn
 // tác dữ liệu về ảnh chụp trước lần Lưu.
-kiem('nút gạt nói rõ nó HOÀN TÁC dữ liệu',
-     /Gạt đi và hoàn tác/.test(JS_QT), 'chữ trên nút không nói ra hậu quả');
+kiem('nút từ chối nói rõ nó HOÀN TÁC dữ liệu',
+     /Từ chối và hoàn tác/.test(JS_QT), 'chữ trên nút không nói ra hậu quả');
 
 // App này không dùng confirm() ở đâu cả — trên điện thoại hộp thoại ấy hiện ra
 // ở một chỗ chẳng liên quan gì tới nút vừa bấm.
@@ -148,7 +168,8 @@ kiem('có ô lý do khi gạt — câu ấy lưu vào nhật ký',
      /textarea/.test(JS_QT) && /tuChoiThayDoi\([^)]*oLyDo|oLyDo\.value/.test(JS_QT),
      'gạt mà không gửi lý do lên');
 
-for (const [ten, ma] of [['quan-tri.js', JS_QT], ['app-quan-tri.js', JS_APP]]) {
+for (const [ten, ma] of [['khu-kiem-duyet.js', JS_QT], ['khung.js', JS_KH],
+                         ['app-quan-tri.js', JS_APP]]) {
   kiem(ten + ' có ghi chú đầu file đúng khuôn', ghiChuDauFile(ma), 'thiếu dòng');
 }
 
@@ -206,6 +227,81 @@ kiem('khối ấy chỉ mọc cho hai vai quản trị',
      'điều kiện vai không đúng hai vai quản trị');
 
 // ============================================================
+// PHẦN F — khung điều hướng bốn khu (b101)
+// ============================================================
+console.log('\nPHẦN F — khung js/pages/quan-tri/khung.js');
+
+// Khung không phải hàng rào (hàng rào ở Postgres), nhưng nó vẫn phải theo
+// luật một cửa: mọi lời gọi máy chủ đi qua `services/sb.js`.
+kiem('khung không chạm window.supabase — luật MỘT CỬA',
+     motCua(JS_KH), 'khung gọi thẳng máy chủ');
+
+kiem('khung KHÔNG kéo theo bộ vẽ sơ đồ',
+     khongKeoTheoSoDo(JS_KH), 'khung import tree-view/khoi-dong');
+
+kiem('khung không tự lọc quyền bằng vaiTro phía trình duyệt',
+     !/vaiTro\s*===/.test(boGhiChuJs(JS_KH)), 'khung tự cấp quyền');
+
+// Bốn khu, và `ma` của chúng là giao kèo với người dùng: nó đi vào `#` của
+// địa chỉ, nên đổi một chữ là mọi link đã gửi đi hỏng.
+for (const ma of ['gia-pha', 'thanh-vien', 'kiem-duyet', 'sao-luu']) {
+  kiem('có khu ' + ma, new RegExp("ma: '" + ma + "'").test(JS_KH),
+       'thiếu khu này trong danh sách KHU');
+}
+
+// Luật 3 của khung: khu đang mở ghi vào `#`, và cú bấm lẫn nút Back đều đi
+// qua đúng một đường là `hashchange`.
+kiem('khu đang mở ghi vào # của địa chỉ',
+     /location\.hash/.test(JS_KH) && /'hashchange'/.test(JS_KH),
+     'không thấy đường đi qua hashchange');
+
+// `#` lạ thì phải sửa thanh địa chỉ bằng replaceState. Gán `location.hash`
+// trong hàm vẽ đẻ ra một hashchange nữa (vẽ hai lần) và thêm một mục vào
+// lịch sử — nút Back quay về đúng cái `#` hỏng vừa bỏ đi.
+kiem('# lạ được sửa bằng replaceState, không gán lại location.hash',
+     suaHashBangReplaceState(JS_KH),
+     'hàm vẽ khu gán location.hash — vẽ hai lần và kẹt nút Back');
+
+// Luật 2: mỗi lần chỉ vẽ MỘT khu, và chỉ khu ấy gọi máy chủ. Khung chỉ được
+// gọi hai hàm ĐẾM; đọc dữ liệu của một khu là việc của chính khu ấy.
+kiem('khung chỉ gọi hai hàm đếm, không đọc dữ liệu khu nào',
+     /dsChoDuyet/.test(JS_KH) && /demChoKiemDuyet/.test(JS_KH) &&
+     !/\bdsKiemDuyet\s*\(/.test(boGhiChuJs(JS_KH)),
+     'khung đọc luôn dữ liệu của một khu');
+
+// `CLAUDE.md` mục 7: trường trống thì không vẽ hàng đó. Huy hiệu "0" nói
+// *có việc đấy* trong khi sự thật là không có việc nào.
+kiem('số 0 thì không vẽ huy hiệu',
+     /if\s*\(!nut\s*\|\|\s*!so\)\s*return/.test(JS_KH),
+     'vẽ cả số 0');
+
+// Ba khu chưa viết phải nói thẳng chúng làm ở bước nào — bảng trống nói
+// "không có dữ liệu", mà sự thật là "chưa ai viết màn hình này".
+kiem('ba khu chưa làm đều có câu nói rõ làm ở bước nào',
+     (JS_KH.match(/chuaLam:/g) || []).length === 3, 'thiếu câu chuaLam');
+
+// Luật "một danh sách khu, hai cách vẽ": chỗ biết bề ngang màn hình nằm
+// TRỌN trong @media của QuanTri.html.
+kiem('khung không hỏi bề ngang màn hình trong JS (chỗ hỏng câm 8)',
+     motBoMa(JS_KH), 'khung có nhánh riêng theo innerWidth/matchMedia');
+
+kiem('quan-tri.css có @media đổi thanh trái thành hàng thẻ ngang',
+     /@media[^{]*max-width:\s*680px[\s\S]{0,500}\.qt-dieu-huong[^}]*row/.test(CSS),
+     'thiếu @media chuyển .qt-dieu-huong sang hàng ngang');
+
+// Chỗ hỏng câm 7: class trong JS lệch class trong CSS.
+{
+  const thieu = classThieuTrongCss(JS_KH, CSS);
+  kiem('mọi class qt- dùng trong khung đều có trong quan-tri.css',
+       thieu.length === 0, 'thiếu định nghĩa: ' + thieu.join(', '));
+}
+
+kiem('khu Kiểm duyệt được nhúng vào khung, không còn là cả trang',
+     /mountKhuKiemDuyet/.test(JS_KH) &&
+     /export\s+async\s+function\s+mountKhuKiemDuyet/.test(JS_QT),
+     'khung không gọi được khu Kiểm duyệt');
+
+// ============================================================
 // PHẦN G — KIỂM CHỨNG NGƯỢC: bẻ gãy mã rồi xem bài kiểm có bắt được không
 // ============================================================
 console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
@@ -249,6 +345,29 @@ console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
   const hong5 = JS_APP + "\nimport { mountTreeView } from './pages/tree-view.js';\n";
   kiem('bắt được điểm khởi động kéo theo bộ vẽ', !khongKeoTheoSoDo(hong5),
        'không bắt được');
+}
+
+// G6 — đổi tên một class trong JS mà quên đổi trong CSS. Đây là chỗ hỏng câm
+// số 7: chữ vẫn đủ, bố cục vỡ, không có lỗi nào.
+{
+  const hong6 = JS_KH.replace("'qt-nut'", "'qt-nut-moi'");
+  kiem('bắt được class trong JS không có trong CSS',
+       classThieuTrongCss(hong6, CSS).length > 0, 'không bắt được');
+}
+
+// G7 — khung tự hỏi bề ngang màn hình, tức bắt đầu có bộ mã thứ hai.
+{
+  const hong7 = JS_KH + "\nif (window.innerWidth < 680) veHangThe();\n";
+  kiem('bắt được nhánh riêng theo bề ngang màn hình', !motBoMa(hong7),
+       'không bắt được');
+}
+
+// G8 — sửa `#` lạ bằng cách gán lại location.hash: vẽ hai lần, kẹt nút Back.
+{
+  const hong8 = JS_KH.replace(/window\.history\.replaceState\([^;]*;/,
+                              "window.location.hash = khu.ma;");
+  kiem('bắt được # lạ bị sửa bằng cách gán lại location.hash',
+       !suaHashBangReplaceState(hong8), 'không bắt được');
 }
 
 // ------------------------------------------------------------
@@ -374,4 +493,44 @@ function coCapQuyen(sql, ten) {
 function tenFileTrongMaCoThat(js, dsFile) {
   const ds = [...js.matchAll(/'([A-Za-z0-9_-]+\.html)'/g)].map((m) => m[1]);
   return ds.length > 0 && ds.every((f) => dsFile.includes(f));
+}
+
+/**
+ * Hàm vẽ khu phải sửa `#` lạ bằng `replaceState`, KHÔNG bằng cách gán lại
+ * `location.hash`. Gán vào nó đẻ ra một `hashchange` nữa — vẽ hai lần — và
+ * thêm một mục vào lịch sử, khiến nút Back quay về đúng cái `#` vừa bỏ đi.
+ *
+ * ⚠ Chỉ soi trong THÂN hàm `veKhu`. Chỗ khác gán `location.hash` là đúng:
+ *   cú bấm vào nút điều hướng chính là phải gán nó.
+ */
+function suaHashBangReplaceState(js) {
+  const m = js.match(/function veKhu\([\s\S]*?\n}\n/);
+  if (!m) return false;
+  const than = boGhiChuJs(m[0]);
+  return /replaceState/.test(than) && !/location\.hash\s*=/.test(than);
+}
+
+/**
+ * Một danh sách khu, hai cách vẽ đổi bằng `@media` — chứ không phải hai bộ
+ * mã. File khung không được hỏi màn hình rộng bao nhiêu.
+ */
+function motBoMa(js) {
+  const lenh = boGhiChuJs(js);
+  return !/innerWidth/.test(lenh) && !/matchMedia/.test(lenh);
+}
+
+/**
+ * Mọi class `qt-…` mà `khung.js` gán vào DOM phải có mặt trong
+ * `quan-tri.css`. Trả mảng những class thiếu.
+ *
+ * Đây là phép duy nhất bắt được chỗ hỏng câm số 7 — đổi tên class một bên
+ * mà quên bên kia thì trang vẫn hiện đủ chữ, chỉ là bố cục vỡ, và không có
+ * một câu lỗi nào ở đâu cả.
+ */
+function classThieuTrongCss(js, css) {
+  const dung = new Set();
+  for (const m of js.matchAll(/'(qt-[a-z-]+)'/g)) dung.add(m[1]);
+  const co = new Set();
+  for (const m of css.matchAll(/\.(qt-[a-z-]+)/g)) co.add(m[1]);
+  return [...dung].filter((c) => !co.has(c));
 }

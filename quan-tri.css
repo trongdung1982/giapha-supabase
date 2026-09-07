@@ -1,0 +1,76 @@
+/* ============================================================
+   giapha-supabase · quan-tri.css
+   Vai trò  : Bố cục khung bốn khu của `QuanTri.html` — thanh trái trên máy
+              tính, hàng thẻ ngang trên điện thoại.
+   Phiên bản: 0.1.0 · Cập nhật: 07/09/2026 19:33
+
+   ⚠ FILE RIÊNG, KHÔNG NHÚNG VÀO `QuanTri.html`, và đó là chủ ý. Bản giả để
+     nhìn bằng mắt — `../kiem-thu/trang-quan-tri-gia.html`, nằm NGOÀI repo —
+     nạp đúng file này. Nhúng CSS vào trang thật thì bản giả phải chép lại
+     một bản thứ hai, và hai bản thì có ngày lệch nhau: lúc ấy cái nhìn thấy
+     không còn nói được gì về trang thật nữa.
+
+   ⚠ Đây cũng là chỗ DUY NHẤT biết màn hình rộng bao nhiêu. `js/pages/
+     quan-tri/khung.js` vẽ đúng một danh sách khu và không hỏi câu ấy lần nào.
+   ============================================================ */
+
+.qt-khung { display:grid; grid-template-columns:210px minmax(0,1fr);
+            gap:24px; margin:0 auto; padding:22px 18px 60px;
+            box-sizing:border-box; max-width:1120px; }
+
+/* `sticky`, KHÔNG `fixed`: trang này là một tài liệu dài phải cuộn được
+   bằng cả trang (xem ghi chú #app ở trên). `sticky` giữ nguyên điều ấy. */
+.qt-thanh { position:sticky; top:18px; height:max-content; }
+
+.qt-nhan { font-size:14px; letter-spacing:.1em; margin:0 0 14px;
+           color:#6a625a; font-weight:600; }
+
+.qt-dieu-huong { display:flex; flex-direction:column; }
+
+/* Ngôn ngữ hình lấy nguyên của `veThanhLoc()` trong khu Kiểm duyệt: cùng
+   bo 9px, cùng nền #2a2622 khi đang chọn, cùng viền #e6e0d8 khi không. */
+.qt-nut { display:flex; align-items:center; justify-content:space-between;
+          gap:8px; width:100%; padding:10px 12px; margin:0 0 6px;
+          border:1px solid #e6e0d8; border-radius:9px; background:#faf8f5;
+          color:#2a2622; font:inherit; font-size:15px; text-align:left;
+          cursor:pointer; touch-action:manipulation; }
+.qt-nut:hover { border-color:#c9c0b4; }
+.qt-nut.dang-mo { background:#2a2622; color:#fffdf9; border-color:#2a2622;
+                  font-weight:600; }
+
+/* Con số đếm. Nền sáng cả khi nút đang đen — số phải đọc được ở cả hai. */
+.qt-so { flex:none; min-width:21px; padding:1px 6px; border-radius:10px;
+         background:#e9dfd0; color:#5b4533; font-size:12px;
+         font-weight:600; text-align:center; }
+
+.qt-ve-so-do { display:inline-block; margin-top:24px; color:#6a625a;
+               font-size:15px; }
+
+.qt-than { min-width:0; }   /* không có dòng này thì bảng rộng làm phình cả lưới */
+.qt-tua { margin:0 0 12px; font-size:22px; }
+.qt-chua-lam { padding:18px; border:1px solid #e6e0d8; border-radius:10px;
+               background:#fffdf9; color:#6a625a; line-height:1.6; }
+
+.qt-canh-bao { max-width:560px; margin:0 auto; padding:32px 24px;
+               line-height:1.6; }
+.qt-canh-bao h1 { margin:0 0 12px; font-size:22px; }
+.qt-canh-bao a { color:#6a625a; }
+
+/* Màn hình rộng: bỏ trần 1120px, cho bảng kiểm duyệt dùng hết bề ngang. */
+@media (min-width: 1240px) {
+  .qt-khung { max-width:none;
+              padding-left:clamp(24px, 5vw, 80px);
+              padding-right:clamp(24px, 5vw, 80px); }
+}
+
+/* Điện thoại: thanh trái thành HÀNG THẺ NGANG ở đầu trang. Cùng cây DOM,
+   chỉ đổi chiều của hai cái `flex`. */
+@media (max-width: 680px) {
+  .qt-khung { grid-template-columns:minmax(0,1fr); gap:14px;
+              padding:16px 12px 48px; }
+  .qt-thanh { position:static; }
+  .qt-nhan { display:none; }        /* tựa trang đã có ở <title> và ở khu */
+  .qt-dieu-huong { flex-direction:row; flex-wrap:wrap; gap:8px; }
+  .qt-nut { width:auto; margin:0; padding:8px 14px; font-size:13px; }
+  .qt-ve-so-do { margin-top:14px; }
+}

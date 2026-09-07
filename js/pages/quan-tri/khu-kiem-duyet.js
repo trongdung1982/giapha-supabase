@@ -1,10 +1,10 @@
 // ============================================================
-// giapha-supabase · js/pages/quan-tri.js
-// Vai trò  : Màn hình DUYỆT NỘI DUNG — bảng hàng chờ, mỗi dòng một lần Lưu.
-//            Nhận chính thức, hoặc gạt đi và hoàn tác.
+// giapha-supabase · js/pages/quan-tri/khu-kiem-duyet.js
+// Vai trò  : Khu KIỂM DUYỆT của trang Quản trị — bảng hàng chờ, mỗi dòng
+//            một lần Lưu. Nhận chính thức, hoặc từ chối và hoàn tác.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, pages/dang-nhap, utils/date
-// Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 23:35
+// Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
 // ============================================================
 //
 // ═══ VÌ SAO NÓ LÀ MỘT TRANG RIÊNG, KHÔNG PHẢI MỘT KHỐI TRONG CÀI ĐẶT ═══
@@ -46,15 +46,15 @@
 //   ô — người duyệt hôm nay đọc câu `note` và tin nó.
 
 import { layPhien, coTheKiemDuyet, dsKiemDuyet, demChoKiemDuyet,
-         duyetThayDoi, tuChoiThayDoi } from '../services/sb.js';
-import { mountDangNhap } from './dang-nhap.js';
-import { stampNow } from '../utils/date.js';
+         duyetThayDoi, tuChoiThayDoi } from '../../services/sb.js';
+import { mountDangNhap } from '../dang-nhap.js';
+import { stampNow } from '../../utils/date.js';
 
 /** Ba tấm lọc, đúng ba giá trị `change_log.trang_thai` cho phép. */
 const LOC = [
   { ma: 'cho',     chu: 'Chờ duyệt' },
   { ma: 'duyet',   chu: 'Đã nhận' },
-  { ma: 'tu_choi', chu: 'Đã gạt' },
+  { ma: 'tu_choi', chu: 'Đã từ chối' },
 ];
 
 let locDangXem = 'cho';
@@ -76,7 +76,7 @@ let locDangXem = 'cho';
  *
  * @param {HTMLElement} containerEl
  */
-export async function mountQuanTri(containerEl) {
+export async function mountKhuKiemDuyet(containerEl) {
   veKhungChu(containerEl, 'Đang mở trang duyệt…');
 
   let phien;
@@ -92,7 +92,7 @@ export async function mountQuanTri(containerEl) {
   // Đăng nhập xong thì chạy LẠI từ đầu hàm này, không gọi thẳng phần vẽ bảng:
   // phiên và quyền đều phải lấy lại. Cùng cách `khoi-dong.js` làm.
   if (!phien.daDangNhap) {
-    mountDangNhap(containerEl, () => mountQuanTri(containerEl));
+    mountDangNhap(containerEl, () => mountKhuKiemDuyet(containerEl));
     return;
   }
 
@@ -123,9 +123,13 @@ function veTrang(el, phien) {
   el.innerHTML = '';
 
   const trang = document.createElement('div');
-  trang.style.cssText =
-    'box-sizing:border-box;max-width:1000px;margin:0 auto;padding:22px 18px 60px;' +
-    'font-family:system-ui,sans-serif;color:#2a2622;line-height:1.5';
+  // ⚠ KHÔNG đặt lề, trần bề ngang hay khoảng đệm ở đây (bỏ b101). Khu này
+  //   từng là cả một trang nên nó tự căn giữa mình trong 1000px; nay nó
+  //   nằm trong ô bên phải của khung bốn khu, và khung đã lo đúng việc ấy.
+  //   Để lại thì tựa khu Kiểm duyệt thụt vào so với tựa ba khu kia —
+  //   lệch 18px, đủ để nhìn thấy khi bấm qua lại, và không có phép bất
+  //   biến nào bắt được.
+  trang.style.cssText = 'color:#2a2622;line-height:1.5';
 
   const than = document.createElement('div');   // chỗ bảng sẽ mọc ra
   const nhanLoc = new Map();                    // ma -> phần tử nút, để đổi chữ
@@ -135,7 +139,6 @@ function veTrang(el, phien) {
   trang.append(veDau(phien, napLai));
   trang.append(veThanhLoc(nhanLoc, napLai));
   trang.append(than);
-  trang.append(veChan());
   el.append(trang);
 
   napLai();
@@ -206,17 +209,11 @@ function toMauLoc(nhanLoc) {
   }
 }
 
-function veChan() {
-  const p = document.createElement('div');
-  p.style.cssText = 'margin-top:24px;font-size:13px';
-
-  const a = document.createElement('a');
-  a.href = 'index.html';
-  a.textContent = '← Về sơ đồ gia phả';
-  a.style.cssText = 'color:#6a625a';
-  p.append(a);
-  return p;
-}
+// ⚠ Khu này KHÔNG còn tự vẽ lối *← Về sơ đồ gia phả* ở chân (bỏ b101).
+//   Từ khi nó nằm trong khung bốn khu, thanh điều hướng đã có sẵn một lối
+//   về, và hai lối cạnh nhau trên cùng một màn hình chỉ khiến người ta
+//   phải chọn giữa hai thứ giống hệt nhau. Ảnh `kiem-thu/kq-1.png` chụp
+//   đúng lúc còn cả hai.
 
 // ============================================================
 // Bảng
@@ -226,9 +223,9 @@ function veChan() {
  * Đọc hàng chờ rồi vẽ lại cả bảng.
  *
  * ⚠ **Vẽ lại cả bảng sau mỗi lần bấm, không sửa một dòng tại chỗ.** Duyệt hay
- *   gạt đều đổi con số trên tấm lọc, và gạt còn đổi cả dữ liệu mà những dòng
+ *   từ chối đều đổi con số trên tấm lọc, và từ chối còn đổi cả dữ liệu mà
  *   khác đang nói về — một lần Lưu sau đó vừa mới bị chặn vì "đã bị sửa tiếp"
- *   có thể hoàn tác được ngay sau khi lần này bị gạt. Giữ bảng cũ trên màn
+ *   có thể hoàn tác được ngay sau khi lần này bị từ chối. Giữ bảng cũ trên
  *   hình là để người duyệt quyết định dựa trên một bức tranh đã cũ.
  */
 async function napBang(than, nhanLoc, phien) {
@@ -278,13 +275,13 @@ async function napBang(than, nhanLoc, phien) {
   than.append(khung);
 
   // Nói ra CHỈ KHI nó đúng, và đo để biết nó đúng: trên máy tính bảng vừa
-  // màn hình nên câu này không mọc. Hai nút Duyệt / Gạt đi nằm ở cột cuối,
+  // màn hình nên câu này không mọc. Hai nút Duyệt / Từ chối nằm ở cột cuối,
   // tức chúng là thứ đầu tiên biến mất khi màn hình hẹp — không nói thì
   // người cầm điện thoại tưởng trang này chỉ để đọc.
   if (khung.scrollWidth > khung.clientWidth + 4) {
     than.append(veLoiNhan(
       'Màn hình hẹp hơn bảng — kéo ngang trong bảng để thấy hai nút ' +
-      'Duyệt và Gạt đi ở cột cuối.', false));
+      'Duyệt và Từ chối ở cột cuối.', false));
   }
 }
 
@@ -368,19 +365,19 @@ function veMotDong(ruot, d, phien, napLai) {
     napLai();
   });
 
-  const nGat = nut('Gạt đi', false, () => moKhoiGat(oPhu, phu, d, phien, doiNut, bao, napLai));
-  nGat.style.color = '#8a3a2a';
+  const nTuChoi = nut('Từ chối', false, () => moKhoiTuChoi(oPhu, phu, d, phien, doiNut, bao, napLai));
+  nTuChoi.style.color = '#8a3a2a';
 
   function doiNut(batDuoc) {
     nDuyet.disabled = !batDuoc;
-    nGat.disabled = !batDuoc;
-    for (const b of [nDuyet, nGat]) {
+    nTuChoi.disabled = !batDuoc;
+    for (const b of [nDuyet, nTuChoi]) {
       b.style.opacity = batDuoc ? '1' : '0.45';
       b.style.cursor = batDuoc ? 'pointer' : 'not-allowed';
     }
   }
 
-  hangNut.append(nDuyet, nGat);
+  hangNut.append(nDuyet, nTuChoi);
   oCuoi.append(hangNut);
 }
 
@@ -389,11 +386,11 @@ function veMotDong(ruot, d, phien, napLai) {
  * không dùng `confirm()` ở bất cứ đâu, và trên điện thoại hộp thoại ấy hiện ra
  * ở một chỗ chẳng liên quan gì tới nút vừa bấm.
  *
- * ⚠ Chữ trên nút xác nhận nói thẳng **"và hoàn tác"**. Gạt một lần Lưu không
+ * ⚠ Chữ trên nút xác nhận nói thẳng **"và hoàn tác"**. Từ chối một lần Lưu
  *   phải là bỏ qua nó — máy chủ trả dữ liệu về đúng ảnh chụp trước lúc Lưu,
  *   và người bấm phải biết điều ấy TRƯỚC khi bấm, không phải sau.
  */
-function moKhoiGat(oPhu, phu, d, phien, doiNut, bao, napLai) {
+function moKhoiTuChoi(oPhu, phu, d, phien, doiNut, bao, napLai) {
   oPhu.innerHTML = '';
   phu.hidden = false;
 
@@ -404,14 +401,14 @@ function moKhoiGat(oPhu, phu, d, phien, doiNut, bao, napLai) {
 
   const nhac = document.createElement('div');
   nhac.textContent =
-    'Gạt đi thì dữ liệu quay về đúng như trước lần Lưu này. Việc của người ' +
+    'Từ chối thì dữ liệu quay về đúng như trước lần Lưu này. Việc của người ' +
     'sửa sau đó (nếu có) sẽ chặn phép hoàn tác lại — máy chủ sẽ nói rõ.';
   nhac.style.cssText = 'font-size:12px;line-height:1.5;color:#8a3a2a';
 
   const oLyDo = document.createElement('textarea');
   oLyDo.rows = 2;
   oLyDo.maxLength = 500;
-  oLyDo.placeholder = 'Vì sao gạt? (không bắt buộc) — câu này lưu lại trong nhật ký';
+  oLyDo.placeholder = 'Lý do từ chối? (không bắt buộc) — câu này lưu lại trong nhật ký';
   oLyDo.style.cssText =
     'margin-top:8px;width:100%;box-sizing:border-box;padding:8px 10px;font:inherit;' +
     'font-size:13px;border:1px solid #e0c8c0;border-radius:8px;background:#fffdf9;' +
@@ -420,7 +417,7 @@ function moKhoiGat(oPhu, phu, d, phien, doiNut, bao, napLai) {
   const hangNut = document.createElement('div');
   hangNut.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
 
-  const nXacNhan = nut('Gạt đi và hoàn tác', true, async () => {
+  const nXacNhan = nut('Từ chối và hoàn tác', true, async () => {
     nXacNhan.disabled = true;
     nThoi.disabled = true;
     doiNut(false);
@@ -431,7 +428,7 @@ function moKhoiGat(oPhu, phu, d, phien, doiNut, bao, napLai) {
       // (`dabisuatiep` · `keotheo` · `khongcoanhchup` · `vuongkhoangoai`).
       // In thẳng câu ấy — chỉ nó mới biết ai đã sửa tiếp và sửa lúc nào.
       doiNut(true);
-      bao((kq && kq.loi) || 'Không gạt được.', true);
+      bao((kq && kq.loi) || 'Không từ chối được.', true);
       return;
     }
     napLai();
@@ -483,7 +480,7 @@ function dungVao(d) {
 function veNhanTrangThai(tt) {
   const d = document.createElement('div');
   d.textContent = tt === 'duyet' ? 'Đã nhận'
-                : tt === 'tu_choi' ? 'Đã gạt và hoàn tác'
+                : tt === 'tu_choi' ? 'Đã từ chối và hoàn tác'
                 : tt;
   d.style.cssText = 'font-size:12px;color:#8a8078';
   return d;
@@ -541,14 +538,13 @@ function veKhungChu(el, tieuDe, giaiThich) {
     d.append(p);
   }
 
-  d.append(veChan());
   el.append(d);
 }
 
 /** Mạng hỏng hoặc máy chủ từ chối — kèm nút Thử lại. */
 function veLoiNangNe(el, cauLoi) {
   veKhungChu(el, 'Không mở được trang duyệt', cauLoi);
-  const b = nut('Thử lại', false, () => mountQuanTri(el));
+  const b = nut('Thử lại', false, () => mountKhuKiemDuyet(el));
   b.style.width = 'auto';
   b.style.marginTop = '12px';
   el.firstChild.append(b);
