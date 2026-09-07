@@ -1,6 +1,6 @@
 # NHẬT KÝ — nhánh Supabase
 
-*Bắt đầu từ bước 87 · Cập nhật 04/09/2026 18:45*
+*Bắt đầu từ bước 87 · Cập nhật 07/09/2026 22:13*
 
 > ⚠ **FILE NÀY CHỈ ĐƯỢC THÊM DÒNG. Không bao giờ sinh lại cả file.**
 >
@@ -49,7 +49,7 @@ thường, không phải thiếu sót.
 | 99 | 05/09/2026 | Thiết kế chốt trang Quản trị 4 khu, kế hoạch b99→b104; đo ra 3 lỗi khi có nhiều cây gia phả | `b99-thiet-ke-trang-quan-tri.md` |
 | 100 | 05/09/2026 | Sửa 3 lỗi nhiều cây; sinh SQL di dời cây Nguyễn Phúc Giáo 681 người; bộ kiểm mới 35+16 phép | `b100-sua-nhieu-cay.md` |
 | 101 | 07/09/2026 | Trang Quản trị thành khung 4 khu: thanh điều hướng, khu ghi vào # địa chỉ, hai con số đếm | `b101-khung-quan-tri.md` |
-| 102 | 07/09/2026 | Tầng quyền hệ thống: rà bản AGY, đo ra 2 lỗ hổng (leo quyền · sao lưu rỗng), vá; 29/29 | `b102-tang-quyen-he-thong.md` |
+| 102 | 07/09/2026 | Tầng quyền hệ thống: rà bản AGY, đo ra 2 lỗ hổng (leo quyền · sao lưu rỗng), vá, đã dán | `b102-tang-quyen-he-thong.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước

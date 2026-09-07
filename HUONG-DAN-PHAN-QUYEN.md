@@ -340,9 +340,10 @@ nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
 
 ---
 
-## 8b. Tầng quyền cấp hệ thống — dán MỘT file *(việc đang chờ bạn)*
+## 8b. Tầng quyền cấp hệ thống — dán MỘT file
 
-*(b102, soạn 07/09/2026. Chưa làm thì làm; làm rồi thì bỏ qua mục này.)*
+*(b102, 07/09/2026. **✓ ĐÃ LÀM XONG trên cả hai Supabase — thật và Staging.**
+Giữ lại mục này để dựng lại từ đầu khi cần; ngày thường thì bỏ qua.)*
 
 **File:** `luoc-do/11-quyen-he-thong.sql`
 

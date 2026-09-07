@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 07/09/2026 · Bước gần nhất: **b102** · Việc kế tiếp: **b103** — sau khi chủ dự án dán `11-quyen-he-thong.sql`*
+*Cập nhật 07/09/2026 · Bước gần nhất: **b102** (đã dán) · Việc kế tiếp: **b103***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -180,7 +180,7 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Hai bộ kiểm mới: `kiem-nhieu-cay.mjs` 35 phép · `thu-nhieu-cay.sql` 16 phép chạy thật** | **b100** | ✓ **05/09/2026** |
 | **Bàn thử SQL tại chỗ nay dựng HAI cây, nên tái hiện được lỗi nhiều cây** | **b100** | ✓ **05/09/2026** |
 | **Trang Quản trị thành khung BỐN KHU — bấm thử trên app thật, đạt cả bốn điểm dừng** | **b101** | ✓ **07/09/2026** — đã đẩy `041b2a5` |
-| **Tầng quyền cấp hệ thống — `11-quyen-he-thong.sql` 0.2.0 vào repo, bốn hàng rào 16/16** | **b102** | ✓ mã xong **07/09/2026** · ⏳ **chưa dán** |
+| **Tầng quyền cấp hệ thống — `11-quyen-he-thong.sql` 0.2.0, bốn hàng rào 16/16** | **b102** | ✓ **07/09/2026** — đã dán CẢ HAI Supabase |
 | **Rà bản AGY bằng phép ĐO: bắt được 2 lỗ hổng mà 12/12 tự kiểm báo xanh** | **b102** | ✓ **07/09/2026** |
 | **Phép đo mượn danh nghĩa tài khoản (`set local role authenticated`) — 29/29, có 3 phép kiểm chứng ngược** | **b102** | ✓ **07/09/2026** |
 
@@ -230,8 +230,8 @@ RLS — nên nó hỏi HÀM (`co_the_xem_cay()` trả `false`, đúng) chứ kh�
 (`select … from persons` vẫn ra 59 dòng). Đúng bài học H9 ngày 04/09, lặp lại
 y hệt sau ba ngày.
 
-⏳ **Bản 0.2.0 CHƯA AI DÁN.** Máy chủ thật chưa có gì; Staging đang giữ bản
-0.1.0 mang cả hai lỗ hổng.
+✓ **BẢN 0.2.0 ĐÃ DÁN CẢ HAI SUPABASE — 07/09/2026 tối.** Máy chủ thật nay có
+tầng quyền cấp hệ thống; và Staging thôi mang hai lỗ hổng của bản 0.1.0.
 
 ---
 
@@ -309,7 +309,7 @@ theo, và không có gì báo lỗi.
 Vẫn đứng sớm vì nó **không đẻ ra SQL nào** mà chứng minh được cả khung — sai
 thì sai lúc chưa có gì xây lên trên.
 
-### ~~b102~~ — ⚠⚠ Tầng quyền cấp hệ thống · ✓ **MÃ XONG 07/09/2026 · CHƯA DÁN**
+### ~~b102~~ — ⚠⚠ Tầng quyền cấp hệ thống · ✓ **XONG 07/09/2026, ĐÃ DÁN**
 
 **Bước nguy hiểm nhất của cả dự án cho tới nay.** Nó sửa `vai_tro()`.
 
@@ -349,9 +349,14 @@ thì sai lúc chưa có gì xây lên trên.
 > `quan_tri_toan_he_thong`**. Tên hàm đúng là `la_quan_tri_he_thong()` — dòng
 > "Làm" dưới đây trước ghi sai, đã sửa.
 >
-> ⏳ **CÒN LẠI, và là việc của chủ dự án:** dán `11-quyen-he-thong.sql`.
-> Máy chủ thật **chưa có gì**; Staging đang giữ bản **0.1.0 mang cả hai lỗ
-> hổng**, dán đè bản 0.2.0 lên là vá được. Chưa dán thì b103 chưa bắt đầu được.
+> ✓ **ĐÃ DÁN CẢ HAI SUPABASE — 07/09/2026 tối, chủ dự án xác nhận.** Máy chủ
+> thật lẫn Staging đều đang chạy bản 0.2.0. b103 bắt đầu được.
+>
+> ⚠ **Chưa ai bấm thử trên app.** Bảng tự kiểm nói lược đồ đúng, phép đo nói
+> hàng rào đứng — cả hai đều là máy chủ tự nói về mình. Cái chưa có là một
+> người đăng nhập bằng trình duyệt và mở được cây mình không có chân. Đó là
+> loại kiểm chứng chỉ người bấm mới đóng được, đúng như b96 và b101 đã dạy;
+> b103 sẽ đi qua nó vì khu Gia phả chính là màn hình dùng `ds_gia_pha()`.
 
 | | |
 |---|---|

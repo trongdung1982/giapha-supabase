@@ -43,12 +43,12 @@ nó chính là thứ nó sinh ra để tránh.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
 3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09
    11:28; luật trực hệ dán 13:20, phép thử H9 **5/5 hàng rào đạt** (b94);
-   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc được **0 dòng** (b96).
-   Cả hai đo bằng cách gọi thẳng REST, không qua trình duyệt. `KIEN-TRUC.md`
-   mục 6 kể những gì còn dở.
+   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — cả
+   hai đo bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101).
-   `11-quyen-he-thong.sql` **đã vào repo (b102) nhưng CHƯA AI DÁN** — máy chủ
-   thật lẫn Staging đều chưa có bản 0.2.0. **b103 → b105 vẫn ở `codex/`.**
+   `11-quyen-he-thong.sql` 0.2.0 **đã dán cả hai Supabase** 07/09 (b102) —
+   tầng quyền hệ thống có hiệu lực thật, **nhưng chưa ai bấm thử trên app**.
+   **b103 → b105 vẫn ở `codex/`.**
 
 ## Quy ước khung tài liệu này
 

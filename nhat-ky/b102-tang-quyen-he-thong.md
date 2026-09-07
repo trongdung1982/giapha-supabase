@@ -1,6 +1,6 @@
 # b102 — Tầng quyền cấp hệ thống, và hai lỗ hổng phép đo bắt được
 
-*07/09/2026 · Claude Code · nhánh Supabase*
+*07/09/2026 20:15 → 22:13 · Claude Code CLI · nhánh Supabase*
 
 ---
 
@@ -199,11 +199,23 @@ mục b102 mới là chỗ còn ghi tên cũ `la_quan_tri_toan_he_thong`. Đã s
 
 ---
 
-## Còn treo sau bước này
+## Đã dán, trong chính phiên này — 07/09/2026 tối
 
-- ⚠ **Máy chủ THẬT chưa có gì.** File `11` bản 0.2.0 chưa ai dán. Bản 0.1.0
-  đang nằm trên **Staging** và **mang cả hai lỗ hổng** — dán đè bản 0.2.0 lên
-  Staging là vá được, vì `create or replace` và `drop policy if exists`.
+Chủ dự án dán `11-quyen-he-thong.sql` 0.2.0 lên **cả hai** Supabase: máy chủ
+thật và Staging. Nên **tầng quyền cấp hệ thống có hiệu lực thật từ hôm nay**,
+và Staging thôi mang hai lỗ hổng của bản 0.1.0.
+
+⚠ **Nhưng chưa ai bấm thử trên app.** Bảng tự kiểm nói lược đồ đúng, phép đo
+nói hàng rào đứng — cả hai đều là **máy chủ tự nói về mình**. Cái còn thiếu là
+một người đăng nhập bằng trình duyệt rồi mở được cây mình không có chân trong
+đó. Khoảng cách ấy đúng bằng khoảng cách giữa *"có mã hoàn tác"* và *"hoàn tác
+được"* mà b98 đã đo, và giữa *"bộ kiểm 71 phép xanh"* với ba lỗi bố cục chỉ
+ảnh chụp bắt được ở b101. b103 sẽ đi qua nó, vì khu Gia phả chính là màn hình
+đầu tiên gọi `ds_gia_pha()`.
+
+---
+
+## Còn treo sau bước này
 - ⚠ **b103 → b105 của AGY vẫn ngoài repo.** Đã soi lướt `12-tao-cay.sql` và
   `13-quan-ly-thanh-vien.sql`: **không file nào thêm luật ghi**, nên lỗ hổng
   loại này không lặp lại ở đó. Chưa rà kỹ, chưa đo.
