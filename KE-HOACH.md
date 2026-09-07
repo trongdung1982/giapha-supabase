@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 05/09/2026 · Bước gần nhất: **b100** · Việc kế tiếp: **b101***
+*Cập nhật 07/09/2026 · Bước gần nhất: **b101** · Việc kế tiếp: **b102***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -196,6 +196,20 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 
 ---
 
+**TRANG QUẢN TRỊ NAY LÀ KHUNG BỐN KHU — 07/09/2026.** Chủ dự án bấm thử trên
+app thật (`nguyentrongbac.io.vn/QuanTri.html`): bấm qua lại bốn mục, `F5` về
+đúng khu, nút Back đi ngược đúng thứ tự, điện thoại thành hàng thẻ ngang —
+**đạt cả bốn**. Ba khu chưa viết nói thẳng chúng làm ở bước nào, không vẽ bảng
+trống. Đây là nền cho b103 → b108, nên nó đứng trước mọi khu.
+
+⚠ **Antigravity đã dựng sẵn b102 → b105 trong `codex/`, NGOÀI repo.** Chủ dự
+án đã dán SQL cả bốn lên **Supabase Staging** và xác nhận đạt. Nhưng **máy chủ
+thật chưa có gì**, và `supabase/` chưa nhận một dòng nào của bốn bước ấy. Việc
+của Claude Code từ đây là **rà lại rồi tích hợp**, không phải viết mới — và rà
+bằng phép **đo**, không bằng đọc lướt lời khai.
+
+---
+
 ## Việc kế tiếp — b100 → b109, MỘT PHIÊN MỘT BƯỚC
 
 ⚠ **Chuỗi này viết lại 05/09/2026** sau khi chủ dự án chốt ba câu về **nhiều
@@ -237,7 +251,28 @@ theo, và không có gì báo lỗi.
 | **⚠ Hệ quả tức thì** | `xin_vao_cay()` đang tự từ chối khi hệ thống có **từ hai cây trở lên** — nạp cây thứ hai là chạm đúng chỗ ấy. Phải bắt truyền `p_tree` tường minh trong cùng bước này |
 | **Vì sao đứng đầu** | Chủ dự án xin nạp cây này; và ba lỗi kia **chỉ lộ ra khi có cây thứ hai**, nên sửa sau là sửa trong lúc đang có triệu chứng |
 
-### b101 — Khung điều hướng trang Quản trị
+### ~~b101~~ — Khung điều hướng trang Quản trị · ✓ **XONG 07/09/2026**
+
+> **Đã làm:** `js/pages/quan-tri/khung.js` *(mới)* · `quan-tri.css` *(mới)* ·
+> `js/pages/quan-tri.js` → `js/pages/quan-tri/khu-kiem-duyet.js` *(đổi tên,
+> chủ dự án chốt)* · `app-quan-tri.js` · `QuanTri.html` ·
+> `kiem-thu/kiem-trang-quan-tri.mjs` **71 đạt, 0 hỏng** *(thêm PHẦN F 16 phép
+> và ba phép kiểm chứng ngược)* · `kiem-thu/xem-khung-quan-tri.mjs` *(ngoài
+> repo, chụp bốn ảnh để nhìn bằng mắt)*.
+>
+> ✓ **ĐÃ ĐẨY LÊN GITHUB VÀ CHỦ DỰ ÁN BẤM THỬ TRÊN APP THẬT (07/09/2026).**
+> Commit `041b2a5`. Bốn mục bấm qua lại · `F5` về đúng khu · nút Back đi
+> ngược đúng thứ tự · điện thoại thành hàng thẻ ngang: **đạt cả bốn**.
+>
+> ⚠ **Ba lỗi chỉ ảnh chụp bắt được**, bộ kiểm văn bản báo xanh cả 71 phép:
+> hai lối *← Về sơ đồ* trùng nhau · tựa khu Kiểm duyệt thụt vào 18px ·
+> giờ trong ghi chú đầu file ghi theo mạch chuyện chứ không theo đồng hồ.
+> Hai lỗi đầu **nảy sinh từ chính việc nhúng** một màn hình vốn là cả trang
+> vào một khu — b103 và b106 sẽ gặp lại y hệt. `nhat-ky/b101`.
+>
+> ⚠ **KHÔNG làm** nút *Tông màu* và 10 phối màu của bản thử AGY — không nằm
+> trong điểm dừng b101, chủ dự án chốt để lại. Mã còn nguyên trong `codex/`.
+
 
 | | |
 |---|---|
@@ -774,24 +809,25 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 | Việc | Ghi ở đâu |
 |---|---|
+| ⚠⚠ **b102 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`. Chủ dự án đã dán SQL cả bốn lên **Staging** (`uheeqpjfpprxjdqgcevf`) và xác nhận đạt; **máy chủ thật chưa có gì**, repo chính chưa nhận một dòng nào. Việc lớn nhất đang chờ | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
-| ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b101 · b102** | `THIET-KE-QUAN-TRI.md` khu 2 |
+| ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b105 · b106** *(sửa 07/09: dòng cũ ghi b101 · b102, sai — b101 chỉ dựng khung)* | `THIET-KE-QUAN-TRI.md` khu 2 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b102**, bằng chính màn hình mới | `nhat-ky/b94-phep-thu-h9.md` |
 | ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b102** | `luoc-do/08-kiem-duyet.sql` mục 3 |
-| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b103** | `THIET-KE-QUAN-TRI.md` khu 3 |
-| ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
-| ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
-| ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **chờ dán** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |
+| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b107** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
+| ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
+| ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
+| ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |
 | ⚠ **Chưa ai tạo được cây mới** — ai được tạo đã chốt 05/09 → **b104** | `THIET-KE-NHIEU-CAY.md` mục 7 |
-| ⚠ **Cây Nguyễn Phúc Giáo 681 người** — SQL sinh xong, **chờ chủ dự án dán** | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
+| ~~Cây Nguyễn Phúc Giáo 681 người~~ — ✓ **đã dán 05/09/2026 21:38**, khớp 7/7 dòng, chủ dự án đổi qua lại giữa hai cây | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
 | ⚠ **`xin_vao_cay()` vẫn từ chối khi có nhiều cây mà không nói rõ cây nào** — cố ý, gỡ ở **b103** | `luoc-do/10-sua-nhieu-cay.sql` mục 4e |
-| ⚠ **Chưa bấm thử app trên HAI cây** — bàn thử đo được máy chủ, không đo được người bấm | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
+| ~~Chưa bấm thử app trên HAI cây~~ — ✓ chủ dự án đổi qua đổi lại giữa NTB và NPGQ8C9, người trung tâm mặc định của cả hai còn nguyên *(05/09)* | `di-doi/HUONG-DAN-DI-DOI.md` mục *LẦN THỨ HAI* |
 | ⚠ **Tên gọi chưa chốt**: hai thứ khác hẳn nhau cùng tên *"quản trị hệ thống"* | `THIET-KE-NHIEU-CAY.md` mục 11 |
 | ~~Chưa ai thử HOÀN TÁC thật~~ — ✓ **đã chạy trên máy chủ thật 05/09/2026, 17/17 đạt** | `kiem-thu/thu-hoan-tac.sql` |
 | ⚠ **Bộ bất biến bố cục đang gác nhầm nhánh** — xem ngay dưới bảng | `/kiem-tra` phép 9 |
 | ⚠ **Sao lưu KHÔNG chép ảnh** — chỉ liệt kê. Ảnh vẫn nằm đúng một chỗ | `KIEN-TRUC.md` mục 7 |
 | ⚠ **Chưa ai thử KHÔI PHỤC từ file sao lưu** — có file khác với khôi phục được | `sao-luu/HUONG-DAN-SAO-LUU.md` |
-| ⚠ **Chưa bấm thử app trên cây 681 người** — nay có cây ấy thật *(chờ dán)*; lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
+| ⚠ **Chưa bấm thử app trên cây 681 người** — cây ấy nay có thật trên máy chủ; lỗi `vn` của b89 lộ ra ở app thật chứ không lộ ở bộ kiểm | `nhat-ky/b89` |
 | Bốn màn hình chưa mở được (sao lưu · dựng gia phả mới · bỏ chọn · quyền ảnh) | `KIEN-TRUC.md` mục 6 |
 | Giấu chi tiết người còn sống với người chỉ có quyền xem | `KIEN-TRUC.md` mục 6 |
 | Lỗi điện thoại: chọn số đời không tự vẽ lại | `BAT-DAU.md` mục 5 |
