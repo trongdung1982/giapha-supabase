@@ -340,6 +340,45 @@ nói mã cũ. Khác `0` nghĩa là còn sót một file chưa dán.
 
 ---
 
+## 8b. Tầng quyền cấp hệ thống — dán MỘT file *(việc đang chờ bạn)*
+
+*(b102, soạn 07/09/2026. Chưa làm thì làm; làm rồi thì bỏ qua mục này.)*
+
+**File:** `luoc-do/11-quyen-he-thong.sql`
+
+Nó dựng hai bảng mới — `tai_khoan` (ai là Quản trị hệ thống, ai được tạo cây)
+và `cau_hinh` (cây mặc định) — rồi sửa hai hàm nền móng để bạn đọc và sửa được
+**mọi cây**, kể cả cây bạn không có tên trong danh sách thành viên.
+
+### Làm thế nào
+
+1. Mở **Supabase → SQL Editor** → bấm **New query**.
+2. Mở `luoc-do/11-quyen-he-thong.sql` bằng Notepad → `Ctrl+A` → `Ctrl+C`.
+3. Dán vào ô soạn thảo → bấm **Run**.
+4. Kéo xuống cuối, đọc **bảng 16 dòng** hiện ra.
+
+### Đọc bảng ấy thế nào
+
+- Mọi dòng phải là **ĐẠT**, trừ dòng 11 có thể là *CẦN CHÚ Ý* — không sao.
+- Nếu thấy chữ **BỎ QUA**, cũng không sao: nó nghĩa là máy chủ này không có
+  tài khoản mà dòng ấy đi tìm.
+- Thấy chữ **HỎNG** ở bất kỳ dòng nào thì **dừng lại, đừng dùng tiếp**, nhắn
+  cho tôi biết dòng nào. Đặc biệt dòng 13 và dòng 14 — hai dòng ấy canh đúng
+  hai lỗ hổng đã tìm ra ở b102.
+
+### ⚠ Trên Supabase **Staging** thì làm gì
+
+Staging đang giữ bản cũ (0.1.0) và **bản ấy có lỗ hổng: bất kỳ ai đăng nhập
+cũng tự đặt mình thành Quản trị hệ thống được**. Dán bản mới đè lên là vá —
+làm y hệt bốn bước trên, chọn project Staging thay vì project thật.
+
+Không việc gì phải hốt hoảng: Staging là máy thử, dữ liệu trong đó là dữ liệu
+giả, và chưa ai ngoài bạn có tài khoản ở đó.
+
+*Xong đúng khi:* bảng 16 dòng không còn chữ **HỎNG** nào.
+
+---
+
 ## 9. Điều chưa làm, đừng mô tả như đã có
 
 - **Trang duyệt nội dung chưa xem được TRƯỚC/SAU từng ô.** Bảng ở mục 6b nói

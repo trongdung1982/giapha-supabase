@@ -49,6 +49,7 @@ thường, không phải thiếu sót.
 | 99 | 05/09/2026 | Thiết kế chốt trang Quản trị 4 khu, kế hoạch b99→b104; đo ra 3 lỗi khi có nhiều cây gia phả | `b99-thiet-ke-trang-quan-tri.md` |
 | 100 | 05/09/2026 | Sửa 3 lỗi nhiều cây; sinh SQL di dời cây Nguyễn Phúc Giáo 681 người; bộ kiểm mới 35+16 phép | `b100-sua-nhieu-cay.md` |
 | 101 | 07/09/2026 | Trang Quản trị thành khung 4 khu: thanh điều hướng, khu ghi vào # địa chỉ, hai con số đếm | `b101-khung-quan-tri.md` |
+| 102 | 07/09/2026 | Tầng quyền hệ thống: rà bản AGY, đo ra 2 lỗ hổng (leo quyền · sao lưu rỗng), vá; 29/29 | `b102-tang-quyen-he-thong.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -72,6 +73,8 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 | `b95-hang-cho-duyet.md` mục *Còn treo*: *"`07-duyet-dang-ky.sql` chưa dán"* | b95 | b96 | Chủ dự án dán ngay trong cùng phiên, 04/09/2026 chiều, tự kiểm khớp 4/4. Đã đo hết mốc A→C của luồng xin vào; còn nửa cuối là chủ dự án bấm Duyệt trên màn hình Cài đặt |
 | Mọi bước gọi vai bằng mã **`chu`** và **`admin`** | b87 → b96 | b97 | Hai mã ấy **không còn tồn tại** từ 04/09/2026 tối: `chu` → `quan_tri_he_thong`, `admin` → `quan_tri` (`09-doi-ma-vai.sql`, đã chạy thật). Đọc nhật ký cũ thì thay ngầm hai chữ ấy. Tên cho người đọc: Quản trị hệ thống · Quản trị viên · Thành viên · Khách |
 | `08-kiem-duyet.sql` 0.1.1 mục *TÊN GỌI*: *"Mã trong bảng KHÔNG đổi theo… trả cái giá ấy để được mấy chữ trên màn hình là không đáng"* | b97 | b97 | Sai **trong cùng buổi**. Lý lẽ hụt một vế: mã vai không chỉ nằm trong bảng — nó hiện trên màn hình Cài đặt, trong câu báo lỗi máy chủ, và trong mọi đoạn SQL chủ dự án phải dán tay. *"Chỉ nằm trong cơ sở dữ liệu"* là mô tả của người đọc mã, không phải của người dùng app |
+| `KE-HOACH.md` mục b102: hàm tên **`la_quan_tri_toan_he_thong`** | b99 | b102 | `THIET-KE-NHIEU-CAY.md` mục 11 chốt 05/09/2026: **không đẻ thêm mã `quan_tri_toan_he_thong`**, dùng đúng `quan_tri_he_thong` đã có. Tên thật là `la_quan_tri_he_thong()`. Và dòng *"Phải chốt trước: tên gọi"* của b102 đã hết hiệu lực từ 05/09 — mục 11 mở đầu bằng "✓ ĐÃ CHỐT" |
+| `11-quyen-he-thong.sql` 0.1.0: bảng tự kiểm 12/12 ĐẠT, và `kich-ban-kiem-b102.sql` 12/12 ĐẠT | *(AGY, 07/09/2026)* | b102 | Cả hai **đo sai vật**. Bảng tự kiểm chỉ hỏi *"thứ này có tồn tại không"*, không hỏi *"nó có chặn được không"*. Kịch bản kiểm tự định nghĩa lại lược đồ trong chính nó, và chạy bằng `postgres` — superuser đi vòng qua mọi RLS. Bản 0.1.0 mang **hai lỗ hổng**: ai cũng tự đặt mình thành Quản trị hệ thống, và sao lưu đêm ra file rỗng |
 
 ---
 

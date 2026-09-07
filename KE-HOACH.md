@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 07/09/2026 · Bước gần nhất: **b101** · Việc kế tiếp: **b102***
+*Cập nhật 07/09/2026 · Bước gần nhất: **b102** · Việc kế tiếp: **b103** — sau khi chủ dự án dán `11-quyen-he-thong.sql`*
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -138,7 +138,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Hai mươi chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Ba mươi chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -179,6 +179,10 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Bộ sinh SQL di dời TỰ DỰNG CÂY kèm người quản trị; bộ kiểm 46 → 47 phép** | **b100** | ✓ **05/09/2026** |
 | **Hai bộ kiểm mới: `kiem-nhieu-cay.mjs` 35 phép · `thu-nhieu-cay.sql` 16 phép chạy thật** | **b100** | ✓ **05/09/2026** |
 | **Bàn thử SQL tại chỗ nay dựng HAI cây, nên tái hiện được lỗi nhiều cây** | **b100** | ✓ **05/09/2026** |
+| **Trang Quản trị thành khung BỐN KHU — bấm thử trên app thật, đạt cả bốn điểm dừng** | **b101** | ✓ **07/09/2026** — đã đẩy `041b2a5` |
+| **Tầng quyền cấp hệ thống — `11-quyen-he-thong.sql` 0.2.0 vào repo, bốn hàng rào 16/16** | **b102** | ✓ mã xong **07/09/2026** · ⏳ **chưa dán** |
+| **Rà bản AGY bằng phép ĐO: bắt được 2 lỗ hổng mà 12/12 tự kiểm báo xanh** | **b102** | ✓ **07/09/2026** |
+| **Phép đo mượn danh nghĩa tài khoản (`set local role authenticated`) — 29/29, có 3 phép kiểm chứng ngược** | **b102** | ✓ **07/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -207,6 +211,27 @@ trống. Đây là nền cho b103 → b108, nên nó đứng trước mọi khu.
 thật chưa có gì**, và `supabase/` chưa nhận một dòng nào của bốn bước ấy. Việc
 của Claude Code từ đây là **rà lại rồi tích hợp**, không phải viết mới — và rà
 bằng phép **đo**, không bằng đọc lướt lời khai.
+
+**VÀ CÂU TRÊN VỪA TỰ CHỨNG MINH — 07/09/2026 (b102).** Rà bản `11` của AGY
+bằng phép đo, không bằng đọc: file chạy đúng, bốn hàng rào đứng vững, **nhưng
+mang hai lỗ hổng mà bảng tự kiểm 12/12 và kịch bản kiểm của AGY đều báo xanh.**
+
+Một: luật RLS của bảng `tai_khoan` viết `for all`, nên **ai cũng tự đặt mình
+thành Quản trị hệ thống** bằng một lệnh `PATCH` vào dòng của chính mình — đo
+được, người lạ đọc 59 người và email cả họ. Hai: `la_thanh_vien()` bị viết gọn
+làm mất mệnh đề ba vai đi tắt của `07`, nên **sao lưu đêm sẽ ra file rỗng mà
+không báo lỗi**. Cả hai đã vá, `11-quyen-he-thong.sql` **0.2.0**, đo lại
+**29/29 ĐẠT** kèm ba phép kiểm chứng ngược.
+
+Vì sao hai lớp kiểm cũ không thấy, và câu này đáng dán lên tường: **hỏi hàm
+quyết quyền không phải là đo hàng rào.** Bảng tự kiểm chỉ hỏi *"thứ này có tồn
+tại không"*; kịch bản kiểm chạy bằng `postgres`, mà superuser đi vòng qua mọi
+RLS — nên nó hỏi HÀM (`co_the_xem_cay()` trả `false`, đúng) chứ không hỏi BẢNG
+(`select … from persons` vẫn ra 59 dòng). Đúng bài học H9 ngày 04/09, lặp lại
+y hệt sau ba ngày.
+
+⏳ **Bản 0.2.0 CHƯA AI DÁN.** Máy chủ thật chưa có gì; Staging đang giữ bản
+0.1.0 mang cả hai lỗ hổng.
 
 ---
 
@@ -284,19 +309,60 @@ theo, và không có gì báo lỗi.
 Vẫn đứng sớm vì nó **không đẻ ra SQL nào** mà chứng minh được cả khung — sai
 thì sai lúc chưa có gì xây lên trên.
 
-### b102 — ⚠⚠ Tầng quyền cấp hệ thống
+### ~~b102~~ — ⚠⚠ Tầng quyền cấp hệ thống · ✓ **MÃ XONG 07/09/2026 · CHƯA DÁN**
 
 **Bước nguy hiểm nhất của cả dự án cho tới nay.** Nó sửa `vai_tro()`.
 
+> **Đã làm:** rà bản AGY rồi tích hợp — `luoc-do/11-quyen-he-thong.sql`
+> **0.2.0** *(vào repo, vá hai lỗ hổng)* · `kiem-thu/ban-thu-sql/do-b102.mjs`
+> *(ngoài repo, **29/29 ĐẠT**, có 3 phép kiểm chứng ngược)* · bàn thử
+> `chay.mjs` nay tự chạy `11` ở bước cuối · `DU-LIEU.md` mục **2a** mới.
+>
+> ⚠⚠ **PHÉP ĐO BẮT ĐƯỢC HAI LỖ HỔNG mà bảng tự kiểm 12/12 và kịch bản kiểm
+> của AGY đều báo xanh.** Đây là phần đáng giữ nhất của bước:
+>
+> 1. **Ai cũng tự đặt mình thành Quản trị hệ thống.** Luật `rieng_tai_khoan`
+>    viết `for all`, tức gồm cả `update`. Một lệnh `PATCH` vào dòng của chính
+>    mình là xong. Đo được: người lạ tự bật cờ rồi đọc **59 người** và **5
+>    dòng `tree_members`** — email cả họ. Nguyên nhân không phải viết ẩu: đó
+>    là khuôn `rieng_user_settings` **đúng ở chỗ nó đứng**, chép sang bảng giữ
+>    cờ quyền thì đổi hẳn nghĩa. Đọc mã không thấy — hai luật giống hệt nhau.
+> 2. **Sao lưu đêm sẽ ra file rỗng, không báo lỗi.** `la_thanh_vien()` bị viết
+>    gọn thành `and approved = true`, làm mất mệnh đề ba vai đi tắt của `07`
+>    (`quan_tri_he_thong` · `quan_tri` · `sao_luu`). Đo được: tài khoản
+>    `sao_luu` với `approved = false` đọc **0 dòng**.
+>
+> **Vì sao cả hai lớp kiểm cũ không thấy:** bảng tự kiểm chỉ hỏi *"thứ này có
+> tồn tại không"*, không hỏi *"nó có chặn được không"*; còn kịch bản kiểm chạy
+> bằng `postgres` — **superuser đi vòng qua mọi RLS** — nên nó hỏi HÀM
+> (`co_the_xem_cay()` trả `false`, đúng) chứ không hỏi BẢNG (`select … from
+> persons` vẫn ra 59 dòng). Một câu để nhớ: **hỏi hàm quyết quyền không phải
+> là đo hàng rào.** Đúng bài học của H9 ngày 04/09, lặp lại y hệt.
+>
+> ⚠ Và **bàn thử đang nói dối một chỗ**: `00-gia-supabase.sql` không cấp quyền
+> bảng cho vai `authenticated`, còn Supabase thật thì có. Nên luật ghi hớ hênh
+> trên bàn thử vẫn "an toàn" nhờ thiếu `grant` chặn hộ. `do-b102.mjs` bước 1
+> dựng lại đúng thế cấp quyền ấy trước khi đo.
+>
+> ✓ **Câu "phải chốt trước" hoá ra đã chốt từ 05/09.** `THIET-KE-NHIEU-CAY.md`
+> mục 11 mở đầu bằng "✓ ĐÃ CHỐT", và chốt luôn: **không đẻ thêm mã
+> `quan_tri_toan_he_thong`**. Tên hàm đúng là `la_quan_tri_he_thong()` — dòng
+> "Làm" dưới đây trước ghi sai, đã sửa.
+>
+> ⏳ **CÒN LẠI, và là việc của chủ dự án:** dán `11-quyen-he-thong.sql`.
+> Máy chủ thật **chưa có gì**; Staging đang giữ bản **0.1.0 mang cả hai lỗ
+> hổng**, dán đè bản 0.2.0 lên là vá được. Chưa dán thì b103 chưa bắt đầu được.
+
 | | |
 |---|---|
-| **Làm** | `luoc-do/11-quyen-he-thong.sql` — bảng `tai_khoan` *(+ trigger trên `auth.users`)* · bảng `cau_hinh` · `trees.chu_so_huu` · `trees.cho_nguoi_la_thay_ten` · `unique` trên `tree_code` · hàm `la_quan_tri_toan_he_thong` · `cay_mac_dinh` · `co_the_xem_cay` · `duoc_tao_cay` · `ma_tai_khoan_cua_toi` · `dat_cay_mac_dinh` · **sửa `vai_tro()` và `la_thanh_vien()`** · 6 luật RLS đọc đổi sang `co_the_xem_cay` |
-| **Sản phẩm** | File SQL + `kiem-thu/kiem-quyen-he-thong.mjs` có **kiểm chứng ngược** + **một phép thử gọi thẳng REST** kiểu H9 |
-| **Điểm dừng** | Bốn hàng rào đo được bằng REST: ① quản trị toàn hệ thống đọc **và ghi** được cây mình không có chân · ② người lạ **không** đọc được cây không phải cây mặc định · ③ người vào bằng cửa cây mặc định **đọc được `persons` nhưng KHÔNG đọc được `tree_members`** *(đúng chỗ rò rỉ email ở mục 3 thiết kế)* · ④ người vào bằng cửa ấy ghi bị từ chối |
+| **Làm** | `luoc-do/11-quyen-he-thong.sql` — bảng `tai_khoan` *(+ trigger trên `auth.users`)* · bảng `cau_hinh` · `trees.chu_so_huu` · `trees.cho_nguoi_la_thay_ten` · hàm `la_quan_tri_he_thong` · `cay_mac_dinh` · `co_the_xem_cay` · `duoc_tao_cay` · `ma_tai_khoan_cua_toi` · `dat_cay_mac_dinh` · `ds_gia_pha` · **sửa `vai_tro()` và `la_thanh_vien()`** · 6 luật RLS đọc đổi sang `co_the_xem_cay` |
+| **Sản phẩm** | File SQL + phép đo có **kiểm chứng ngược** và **mượn danh nghĩa tài khoản** kiểu H9 |
+| **Điểm dừng** | Bốn hàng rào đo được: ① quản trị toàn hệ thống đọc **và ghi** được cây mình không có chân · ② người lạ **không** đọc được cây không phải cây mặc định · ③ người vào bằng cửa cây mặc định **đọc được `persons` nhưng KHÔNG đọc được `tree_members`** · ④ người vào bằng cửa ấy ghi bị từ chối — **đạt cả bốn, 16/16 phép** |
 | **⚠ Bẫy 1** | Quên sửa `la_thanh_vien()` → quản trị toàn hệ thống **sửa được mà không đọc được**. Triệu chứng: *"Lưu báo thành công mà màn hình trống"* |
-| **⚠ Bẫy 2** | `la_quan_tri_toan_he_thong()` phải viết dạng **khẳng định** + `coalesce(…, false)`. Đúng bẫy `null` đã mở lỗ leo quyền 04/09 mà 57 phép kiểm báo xanh |
+| **⚠ Bẫy 2** | `la_quan_tri_he_thong()` phải viết dạng **khẳng định** + `coalesce(…, false)`. Đúng bẫy `null` đã mở lỗ leo quyền 04/09 mà 57 phép kiểm báo xanh |
 | **⚠ Bẫy 3** | Đổi nhầm luật RLS của `tree_members` sang `co_the_xem_cay` là **lộ email cả họ** cho mọi tài khoản |
-| **Phải chốt trước** | Tên gọi — `THIET-KE-NHIEU-CAY.md` mục 11 |
+| **⚠ Bẫy 4** *(mới, đo mới ra)* | Bảng `tai_khoan` giữ **cờ quyền**, nên nó **chỉ được có luật ĐỌC**. Đừng chép khuôn `rieng_user_settings` sang đây |
+| **Không phải lỗ hổng** | `ds_gia_pha()` trả `email_chu` cho cả người lạ là **cố ý** — `THIET-KE-NHIEU-CAY.md` mục *Ba tầng nhìn thấy*: email là đường liên hệ để xin quyền. Đừng "vá" |
 
 ### b103 — Khu Gia phả, và Cài đặt gọn lại
 
@@ -809,11 +875,12 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⚠⚠ **b102 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`. Chủ dự án đã dán SQL cả bốn lên **Staging** (`uheeqpjfpprxjdqgcevf`) và xác nhận đạt; **máy chủ thật chưa có gì**, repo chính chưa nhận một dòng nào. Việc lớn nhất đang chờ | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
+| ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |
+| ⚠ **b103 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`, mới chỉ dán lên Staging. Đã soi lướt: `12` và `13` **không thêm luật ghi nào**, nên lỗ hổng loại b102 không lặp ở đó — nhưng chưa rà kỹ, chưa đo | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
 | ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b105 · b106** *(sửa 07/09: dòng cũ ghi b101 · b102, sai — b101 chỉ dựng khung)* | `THIET-KE-QUAN-TRI.md` khu 2 |
-| ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b102**, bằng chính màn hình mới | `nhat-ky/b94-phep-thu-h9.md` |
-| ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b102** | `luoc-do/08-kiem-duyet.sql` mục 3 |
+| ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b106**, bằng chính màn hình mới *(sửa 07/09: dòng cũ ghi b102, sai — b102 chỉ đụng SQL)* | `nhat-ky/b94-phep-thu-h9.md` |
+| ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b106** *(sửa 07/09: dòng cũ ghi b102)* | `luoc-do/08-kiem-duyet.sql` mục 3 |
 | ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b107** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
 | ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
 | ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |

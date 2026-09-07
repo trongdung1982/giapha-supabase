@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 07/09/2026*
+*Nhánh Supabase · cập nhật 07/09/2026 (b102)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -15,7 +15,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Mới vào nhánh này lần đầu | + `KIEN-TRUC.md` **cả file** |
 | Đụng `services/` | `KIEN-TRUC.md` mục 1, 3 · `DU-LIEU.md` mục 1, 6 |
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
-| Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 + **2b** · `luoc-do/06-quyen-truc-he.sql` · `07-duyet-dang-ky.sql` · `02-rls.sql` |
+| Đụng phân quyền, RLS | `DU-LIEU.md` mục 2 + **2a** + **2b** · `luoc-do/11-quyen-he-thong.sql` ⚠ *(cờ quyền: CHỈ luật đọc)* · `06-quyen-truc-he.sql` · `07-duyet-dang-ky.sql` · `02-rls.sql` |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
 | **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* |
@@ -46,9 +46,9 @@ nó chính là thứ nó sinh ra để tránh.
    hàng chờ duyệt dán chiều 04/09, người đang chờ đọc được **0 dòng** (b96).
    Cả hai đo bằng cách gọi thẳng REST, không qua trình duyệt. `KIEN-TRUC.md`
    mục 6 kể những gì còn dở.
-   ⚠ **Máy chủ thật nay có HAI cây** (b100), và trang Quản trị là khung bốn
-   khu (b101). Nhưng **b102 → b105 do AGY dựng còn nằm ngoài repo, trong
-   `codex/`, mới chỉ dán lên Staging** — đừng viết như thể máy chủ đã có.
+   ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101).
+   `11-quyen-he-thong.sql` **đã vào repo (b102) nhưng CHƯA AI DÁN** — máy chủ
+   thật lẫn Staging đều chưa có bản 0.2.0. **b103 → b105 vẫn ở `codex/`.**
 
 ## Quy ước khung tài liệu này
 

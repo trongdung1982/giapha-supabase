@@ -1,6 +1,6 @@
 # DỮ LIỆU — bảng Postgres và những luật hay bị làm sai
 
-*Lập 03/09/2026 · Nhánh Supabase*
+*Lập 03/09/2026 · cập nhật 07/09/2026 (mục 2a — hai bảng tầng người) · Nhánh Supabase*
 
 > **Đọc file này khi**: đụng vào lược đồ bảng, thêm/bớt trường, viết truy vấn,
 > hoặc sắp sửa `services/hinh-dang.js`.
@@ -55,6 +55,30 @@ lại từng cột.
 | `change_log` | Nhật ký thay đổi — **và hàng chờ kiểm duyệt** | Không ai ghi thẳng được, chỉ `luu_cay()` · xem mục 2c |
 | `imports` | Sổ nhập GEDCOM / Excel | Chỉ mọc thêm |
 | `user_settings` | Cài đặt riêng từng người | Bảng DUY NHẤT trình duyệt ghi thẳng |
+
+### 2a. Hai bảng TẦNG NGƯỜI — thêm 07/09/2026, `luoc-do/11-quyen-he-thong.sql`
+
+Mười hai bảng trên đều thuộc **một cây**. Ba câu hỏi dưới đây không thuộc cây
+nào, nên `tree_members` không trả lời được: *ai là Quản trị hệ thống · ai được
+tạo cây mới · mã ngắn của tài khoản là gì*.
+
+| Bảng | Vai | Ghi chú |
+|---|---|---|
+| `tai_khoan` | Một dòng một tài khoản. `ma_ngan` (6 ký tự, `unique`) · `la_quan_tri_he_thong` · `duoc_tao_cay` | Trigger `sau_khi_tao_user` trên `auth.users` tự sinh dòng. ⚠ xem cảnh báo dưới |
+| `cau_hinh` | **Đúng một dòng** (mẹo `boolean primary key check`). Giữ `cay_mac_dinh` | Ghi chỉ qua `dat_cay_mac_dinh()` |
+
+Và hai cột mới trên `trees`: `chu_so_huu` (người dựng cây) ·
+`cho_nguoi_la_thay_ten` (công tắc tầng 1, **mặc định TẮT**).
+
+> ⚠⚠ **`tai_khoan` giữ CỜ QUYỀN, nên nó CHỈ có luật ĐỌC.**
+>
+> Đừng chép khuôn `rieng_user_settings` sang đây. Khuôn ấy (`for all` … `using
+> (user_id = auth.uid())`) đúng ở `user_settings` vì bảng ấy giữ cỡ chữ với
+> màu nền; ở `tai_khoan` nó nghĩa là **ai cũng tự đặt mình thành Quản trị hệ
+> thống bằng một lệnh `PATCH`**. Bản 0.1.0 của file `11` mắc đúng lỗi ấy và
+> đo được (b102): người lạ tự bật cờ rồi đọc 59 người cùng email cả họ.
+>
+> Đổi cờ quyền chỉ qua hàm `security definer` — cùng nguyên tắc với `luu_cay()`.
 
 ### 2b. Phân quyền sửa: luật TRỰC HỆ *(chốt 04/09/2026)*
 
