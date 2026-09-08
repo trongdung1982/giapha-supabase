@@ -5,12 +5,15 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 15:25
+// Phiên bản: 0.3.1 · Cập nhật: 08/09/2026 15:40
 //            0.2.0 bỏ nút "Chọn" — chủ dự án đo bằng mắt trên app thật và
 //            nói chữ ấy mơ hồ. Thay bằng cột dấu tích.
 //            0.2.1 đổi cây xong thì Ở LẠI trang Quản trị, không hất sang sơ đồ.
 //            0.3.0 cột tên là *Cây làm việc*, và dấu tích HỎI trước khi đổi —
 //            hộp Đổi / Huỷ bỏ. Bấm nhầm ô tròn không còn đổi được cây.
+//            0.3.1 sửa chữ trong hộp: "mọi quyền quản trị" thay cho "mọi màn
+//            hình" — đúng chuyện thật (RLS xét theo cây đang mở), và ĐO ĐẠT
+//            trên app thật (chủ dự án bấm thử, cả Đổi lẫn Huỷ bỏ).
 // ============================================================
 //
 // ═══ KHU NÀY LÀ CHỖ DUY NHẤT NGƯỜI LẠ CÓ VIỆC ═══
@@ -370,7 +373,7 @@ function hoiRoiDoiCay(c, phien) {
   const chu = document.createElement('div');
   chu.textContent =
     'Bạn sắp chuyển sang làm việc với “' + tenCay + '”. Trang sẽ nạp lại, và ' +
-    'từ đó mọi màn hình tính theo gia phả này.';
+    'từ đó mọi quyền quản trị tính theo gia phả này.';
   chu.style.cssText =
     'font-size:13px;line-height:1.55;color:#8a8078;margin-top:6px';
 
