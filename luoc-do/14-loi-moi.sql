@@ -601,8 +601,29 @@ $$;
 -- ⚠⚠ NGUY HIỂM THẬT NẰM CHỖ KHÁC, VÀ NÓ IM LẶNG: `trees.chu_so_huu` khai
 --    `on delete set null` (`11` mục 15). Xoá một tài khoản đang làm CHỦ CÂY
 --    thì cây ấy mất chủ — không báo lỗi, không ai biết — và từ b105 chỉ còn
---    Quản trị hệ thống động vào được. Nên hàm này **từ chối** cho tới khi bàn
---    giao cây đi bằng `doi_chu_cay()`.
+--    Quản trị hệ thống động vào được.
+--
+-- ⚠ BẢN ĐẦU CHỮA SAI CHỖ NÀY, chủ dự án bác bỏ ngay 08/09/2026. Bản ấy **từ
+--   chối** xoá cho tới khi tài khoản kia tự bàn giao cây đi. Nguyên văn:
+--
+--     *"tài khoản bị xóa thường có vi phạm nhất định, yêu cầu họ bàn giao là
+--     không khả thi. vì vậy xoá thì chỉ định người làm chủ cây, mặc định tài
+--     khoản quản trị hệ thống thực hiện thao tác xoá sẽ là chủ cây."*
+--
+--   Đúng, và chỗ sai đáng ghi lại: **một hàng rào mà lối đi qua nó nằm trong
+--   tay chính người đang bị đuổi thì không phải hàng rào.** Nó chỉ đổi "cây
+--   mất chủ" thành "không xoá được tài khoản hỏng", tức dời cái kẹt sang chỗ
+--   khác rồi gọi đó là an toàn.
+--
+--   Nay hàm **chuyển chủ trong cùng một giao dịch với lệnh xoá**: mặc định là
+--   chính người bấm nút, hoặc một tài khoản khác nếu họ chỉ định. Cây không
+--   bao giờ tồn tại ở trạng thái không chủ, dù chỉ một khoảnh khắc.
+--
+-- ⚠ Việc người bấm nút tự nhận cây KHÔNG phá luật *"không ai đặt quyền cho
+--   chính mình"*: chỉ Quản trị hệ thống gọi được hàm này, mà họ **đã** có mọi
+--   quyền ở mọi cây qua cờ `tai_khoan` (`co_the_quan_tri()` trả `true` khắp
+--   nơi). Nhận cột `chu_so_huu` không thêm cho họ khả năng nào chưa có —
+--   đúng lý lẽ b105 đã dùng để chặn họ tự trỏ vào mình mà không mất gì.
 --
 -- Bảy cửa gác cùng một câu, và hai cửa cuối là loại "hỏng trong im lặng" mà
 -- b102 đã dạy phải canh: tài khoản `sao_luu` bị xoá thì bản sao lưu đêm vẫn
@@ -613,9 +634,17 @@ $$;
 --   trông na ná nhau. Nút hai nhịp gác được cái bấm nhầm, không gác được cái
 --   bấm nhầm DÒNG. Gõ lại email thì gác được cả hai.
 
+-- ⚠ `drop` bản HAI THAM SỐ trước. `create or replace` với một tham số mới có
+--   giá trị mặc định KHÔNG thay bản cũ — nó đẻ thêm một bản nạp chồng, và mọi
+--   lời gọi hai tham số sau đó ném `function ... is not unique`. Máy chủ thật
+--   chưa dán bản nào nên dòng này chỉ là vô hại ở đó; bàn thử thì đã có bản
+--   cũ, và không có dòng này thì phép đo hỏng ở chỗ chẳng liên quan gì.
+drop function if exists public.xoa_tai_khoan(uuid, text);
+
 create or replace function public.xoa_tai_khoan(
   p_user           uuid,
-  p_email_xac_nhan text
+  p_email_xac_nhan text,
+  p_chu_moi        uuid default null   -- để trống = chính người bấm nút
 )
 returns jsonb
 language plpgsql
@@ -624,12 +653,14 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_email  text;
-  v_cay    int;
-  v_chan   int;
-  v_saoluu int;
-  v_con    int;
-  v_co_co  boolean;
+  v_email      text;
+  v_email_chu  text;
+  v_chu_moi    uuid;
+  v_cay        int;
+  v_chan       int;
+  v_saoluu     int;
+  v_con        int;
+  v_co_co      boolean;
 begin
   if not public.la_quan_tri_he_thong() then
     return jsonb_build_object('ok', false, 'loi',
@@ -651,12 +682,28 @@ begin
       'Email gõ lại không khớp với tài khoản định xoá.');
   end if;
 
-  select count(*) into v_cay from public.trees t where t.chu_so_huu = p_user;
-  if v_cay > 0 then
+  -- Ai nhận những cây người này đang làm chủ.
+  v_chu_moi := coalesce(p_chu_moi, auth.uid());
+
+  if v_chu_moi = p_user then
     return jsonb_build_object('ok', false, 'loi',
-      'Tài khoản này đang là chủ của ' || v_cay || ' gia phả. Bàn giao gia phả ' ||
-      'cho người khác trước đã — xoá bây giờ thì cây mất chủ mà không báo gì.');
+      'Không giao cây cho chính tài khoản sắp bị xoá được.');
   end if;
+
+  -- ⚠ Hỏi `tai_khoan` chứ không hỏi `auth.users`, chép đúng `doi_chu_cay()`
+  --   của `13` mục 12: `11` mục 3 đặt luật mọi tài khoản đều có một dòng ở đó.
+  --   Tài khoản thiếu dòng ấy là tài khoản hỏng — giao cây cho nó là giấu lỗi.
+  select u.email::text into v_email_chu
+    from auth.users u
+    join public.tai_khoan k on k.user_id = u.id
+   where u.id = v_chu_moi;
+
+  if v_email_chu is null then
+    return jsonb_build_object('ok', false, 'loi',
+      'Tài khoản định giao cây cho không có trong phần mềm.');
+  end if;
+
+  select count(*) into v_cay from public.trees t where t.chu_so_huu = p_user;
 
   select count(*) into v_saoluu from public.tree_members m
    where m.user_id = p_user and m.role = 'sao_luu';
@@ -681,12 +728,38 @@ begin
   -- Đếm TRƯỚC khi xoá, để câu báo trên màn hình nói đúng cái vừa mất.
   select count(*) into v_chan from public.tree_members m where m.user_id = p_user;
 
+  -- ⚠⚠ CHUYỂN CHỦ TRƯỚC, XOÁ SAU, TRONG CÙNG MỘT GIAO DỊCH. Cả hàm nằm trong
+  --    một transaction ngầm của Postgres, nên cây không bao giờ tồn tại ở
+  --    trạng thái không chủ — kể cả khi lệnh xoá vấp ở giữa.
+  --
+  --    Thứ tự ngược lại (xoá trước) thì `on delete set null` kịp quét qua và
+  --    ta phải đi dò lại xem cây nào vừa mất chủ — dò bằng cái gì thì không
+  --    còn, vì hàng đã trắng.
+  if v_cay > 0 then
+    update public.trees set chu_so_huu = v_chu_moi where chu_so_huu = p_user;
+
+    -- Chủ mới phải ĐỌC được cây vừa nhận. Bài học `doi_chu_cay()`: thiếu dòng
+    -- `tree_members` là chủ mới *sửa được mà không đọc được*.
+    insert into public.tree_members (tree_id, user_id, role, email, approved)
+    select t.id, v_chu_moi, 'quan_tri', v_email_chu, true
+      from public.trees t where t.chu_so_huu = v_chu_moi
+    on conflict (tree_id, user_id) do update
+       set approved = true,
+           -- ⚠ Không đụng vai `sao_luu`: nâng nó lên `quan_tri` là làm hỏng
+           --   bản sao lưu đêm trong im lặng, đúng lỗ hổng b102.
+           role = case when public.tree_members.role = 'sao_luu'
+                       then public.tree_members.role else 'quan_tri' end;
+  end if;
+
   -- `tree_members`, `tai_khoan`, `user_settings`, `branch_access` đều khai
   -- `on delete cascade` nên đi theo. `change_log` KHÔNG — cố ý, xem đầu mục.
   delete from auth.users where id = p_user;
 
   return jsonb_build_object('ok', true, 'email', v_email,
-                            'soChanDaGo', v_chan);
+                            'soChanDaGo', v_chan,
+                            'soCayDaChuyen', v_cay,
+                            'chuMoi', v_chu_moi,
+                            'emailChuMoi', v_email_chu);
 end;
 $$;
 
@@ -706,7 +779,7 @@ revoke all on function public.dat_quan_tri_he_thong(uuid, boolean) from public, 
 revoke all on function public.ds_tai_khoan_he_thong()             from public, anon;
 revoke all on function public.ds_cay_cua_tai_khoan(uuid)          from public, anon;
 revoke all on function public.ds_gia_pha()                        from public, anon;
-revoke all on function public.xoa_tai_khoan(uuid, text)           from public, anon;
+revoke all on function public.xoa_tai_khoan(uuid, text, uuid)     from public, anon;
 
 grant execute on function public.moi_vao_cay(uuid, text, text, text) to authenticated;
 grant execute on function public.loi_moi_cua_toi()                   to authenticated;
@@ -716,7 +789,7 @@ grant execute on function public.dat_quan_tri_he_thong(uuid, boolean) to authent
 grant execute on function public.ds_tai_khoan_he_thong()             to authenticated;
 grant execute on function public.ds_cay_cua_tai_khoan(uuid)          to authenticated;
 grant execute on function public.ds_gia_pha()                        to authenticated;
-grant execute on function public.xoa_tai_khoan(uuid, text)            to authenticated;
+grant execute on function public.xoa_tai_khoan(uuid, text, uuid)      to authenticated;
 
 commit;
 
