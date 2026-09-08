@@ -1,11 +1,13 @@
 // ============================================================
 // giapha-supabase · js/pages/quan-tri/khu-gia-pha.js
 // Vai trò  : Khu 1 của trang Quản trị — danh sách mọi gia phả người này THẤY
-//            được, nút Chọn / Xin quyền, công tắc "cho người lạ thấy tên",
-//            và ô đặt cây mặc định của hệ thống.
+//            được, dấu tích "cây hiển thị" / nút Xin quyền, công tắc "cho
+//            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.1.0 · Cập nhật: 08/09/2026 11:20
+// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 14:05
+//            0.2.0 bỏ nút "Chọn" — chủ dự án đo bằng mắt trên app thật và
+//            nói chữ ấy mơ hồ. Thay bằng cột *Cây hiển thị* với dấu tích.
 // ============================================================
 //
 // ═══ KHU NÀY LÀ CHỖ DUY NHẤT NGƯỜI LẠ CÓ VIỆC ═══
@@ -51,7 +53,8 @@ export async function mountKhuGiaPha(el, phien) {
 
   const dan = document.createElement('p');
   dan.textContent =
-    'Những gia phả bạn thấy được trên hệ thống. Bấm Chọn để mở, hoặc ' +
+    'Những gia phả bạn thấy được trên hệ thống. Mỗi lúc app chỉ mở một gia ' +
+    'phả — tích vào cột Cây hiển thị để chuyển sang gia phả khác, hoặc bấm ' +
     'Xin quyền nếu bạn chưa có chân trong gia phả ấy.';
   dan.style.cssText = 'margin:0 0 16px;color:#6a625a;line-height:1.5';
 
@@ -131,7 +134,9 @@ function veDauBang() {
     ['Số người', 'text-align:right'],
     ['Vai của tôi', ''],
     ['Người lạ thấy tên', 'text-align:center'],
-    ['', 'text-align:right'],
+    // ⚠ Tiêu đề cột này là lời giải thích DUY NHẤT của ô tích bên dưới — ô
+    //   tròn không mang chữ nào. Đổi nó là làm cột ấy câm.
+    ['Cây hiển thị', 'text-align:center'],
   ];
   for (const [chu, them] of cot) {
     const th = document.createElement('th');
@@ -158,7 +163,12 @@ function veDong(c, cayMacDinh, phien, napLai) {
   // — Tên cây, kèm hai huy hiệu trạng thái —
   const oTen = o('', 'padding:10px;font-weight:600;color:#2a2622');
   oTen.textContent = c.ten || '(chưa đặt tên)';
-  if (c.fileId === phien.treeId) oTen.append(huyHieu('Đang mở', true));
+  // ⚠ KHÔNG gắn huy hiệu "Đang mở" ở đây nữa (bỏ 08/09/2026). Dấu tích ở cột
+  //   *Cây hiển thị* đã nói đúng điều ấy, và nói ở chỗ người ta bấm để đổi.
+  //   Hai chỗ cùng nói một tin trên một hàng thì người đọc phải dừng lại hỏi
+  //   "hai cái này có khác nhau không" — mà chúng không khác.
+  //   Huy hiệu "Mặc định" thì Ở LẠI: nó nói chuyện khác hẳn — cây mà NGƯỜI LẠ
+  //   vào được khi chưa có chân ở đâu — và không cột nào khác nói điều đó.
   if (c.fileId === cayMacDinh) oTen.append(huyHieu('Mặc định', false));
 
   const oMa = o(c.tenFile || '',
@@ -230,36 +240,12 @@ function veOCongTac(c, phien) {
   return td;
 }
 
-/** Cột cuối: Chọn · Xin quyền · Đã nộp đơn · Đang mở. */
+/** Cột *Cây hiển thị*: dấu tích · Xin quyền · Đã nộp đơn. */
 function veOThaoTac(c, phien, napLai) {
-  const td = o('', 'padding:10px;text-align:right');
-
-  if (c.fileId === phien.treeId) {
-    const d = document.createElement('span');
-    d.textContent = 'đang mở';
-    d.style.cssText = 'font-size:12px;color:#8a8078;font-style:italic';
-    td.append(d);
-    return td;
-  }
+  const td = o('', 'padding:10px;text-align:center');
 
   if (c.coTheXem) {
-    const b = nut('Chọn', true);
-    b.addEventListener('click', async () => {
-      b.disabled = true;
-      b.textContent = 'Đang chuyển…';
-      const kq = await chonGiaPha(c.fileId);
-      if (kq.ok) {
-        // ⚠ Về thẳng sơ đồ, không ở lại đây. `state.tree` của trang kia đang
-        //   giữ cây cũ, và nạp lại cả trang là cách chắc chắn nhất để không
-        //   có hai cây lẫn nhau trong bộ nhớ — đúng cảnh báo ở `sb.chonGiaPha`.
-        window.location.href = 'index.html';
-        return;
-      }
-      b.disabled = false;
-      b.textContent = 'Chọn';
-      td.append(dongLoi(kq.loi || 'Không đổi được gia phả.'));
-    });
-    td.append(b);
+    td.append(veDauTich(c, phien, td));
     return td;
   }
 
@@ -275,6 +261,79 @@ function veOThaoTac(c, phien, napLai) {
   b.addEventListener('click', () => veFormXin(td, c, napLai));
   td.append(b);
   return td;
+}
+
+/**
+ * Dấu tích *cây hiển thị* — một ô tròn cho mỗi cây người này mở được.
+ *
+ * ⚠ Vì sao là `input type=radio` thật, không phải một dấu ✓ vẽ bằng chữ:
+ *   app **chỉ mở được một gia phả tại một lúc**, và đó đúng là ngữ nghĩa sẵn
+ *   có của một nhóm radio. Đổi lại được: đi bằng phím Tab, mũi tên lên xuống
+ *   chuyển cây, trình đọc màn hình đọc thành *"chọn một trong nhiều"*, và
+ *   trình duyệt tự lo việc bỏ tích ở dòng cũ. Vẽ tay thì mất cả bốn thứ và
+ *   phải viết lại từng thứ một.
+ *
+ * ⚠ Ô này KHÔNG tự nói lên nó làm gì như một cái nút có chữ. Cái nói thay nó
+ *   là **tiêu đề cột** (*Cây hiển thị*) cộng câu dẫn đầu khu. Đổi tiêu đề cột
+ *   thành chữ khác là lấy mất lời giải thích duy nhất của ô này.
+ */
+function veDauTich(c, phien, td) {
+  const dangHien = c.fileId === phien.treeId;
+
+  const nhan = document.createElement('label');
+  nhan.style.cssText =
+    'display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:4px';
+  nhan.title = dangHien
+    ? 'Gia phả này đang hiển thị'
+    : 'Bấm để hiển thị gia phả này';
+
+  const oTron = document.createElement('input');
+  oTron.type = 'radio';
+  oTron.name = 'cay-hien-thi';
+  oTron.checked = dangHien;
+  oTron.dataset.cay = c.fileId;
+  oTron.setAttribute('aria-label', 'Hiển thị ' + (c.ten || 'gia phả này'));
+  oTron.style.cssText =
+    'width:17px;height:17px;margin:0;accent-color:#2a2622;cursor:pointer';
+
+  oTron.addEventListener('change', async () => {
+    if (!oTron.checked) return;
+
+    const cho = document.createElement('div');
+    cho.textContent = 'Đang chuyển…';
+    cho.style.cssText = 'font-size:11px;color:#8a8078;margin-top:4px';
+    td.append(cho);
+    doiKhoaDauTich(true);
+
+    const kq = await chonGiaPha(c.fileId);
+    if (kq.ok) {
+      // ⚠ Về thẳng sơ đồ, không ở lại đây. `state.tree` của trang kia đang
+      //   giữ cây cũ, và nạp lại cả trang là cách chắc chắn nhất để không
+      //   có hai cây lẫn nhau trong bộ nhớ — đúng cảnh báo ở `sb.chonGiaPha`.
+      window.location.href = 'index.html';
+      return;
+    }
+
+    // Hỏng thì trả dấu tích về đúng cây ĐANG hiển thị, đừng để nó nằm ở cây
+    // vừa bấm — ô tích nói *"cây nào đang hiện"*, không phải *"tôi vừa bấm gì"*.
+    cho.remove();
+    doiKhoaDauTich(false);
+    const cu = document.querySelector(
+      'input[name="cay-hien-thi"][data-cay="' + phien.treeId + '"]');
+    if (cu) cu.checked = true;
+    else oTron.checked = false;
+    td.append(dongLoi(kq.loi || 'Không đổi được gia phả.'));
+  });
+
+  nhan.append(oTron);
+  return nhan;
+}
+
+/** Khoá/mở mọi dấu tích trong lúc chờ máy chủ, để không bấm được cây thứ hai. */
+function doiKhoaDauTich(khoa) {
+  for (const r of document.querySelectorAll('input[name="cay-hien-thi"]')) {
+    r.disabled = khoa;
+  }
 }
 
 /** Ô nhập lời nhắn, mở ngay tại dòng ấy — không lớp phủ, không hộp thoại. */
