@@ -5,7 +5,9 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.6.0 · Cập nhật: 08/09/2026 15:01
+// Phiên bản: 0.7.0 · Cập nhật: 08/09/2026 20:05
+//            0.7.0 (b106) bảy cửa của `luoc-do/13-quan-ly-thanh-vien.sql` —
+//            xem khối *QUẢN LÝ TÀI KHOẢN CỦA MỘT CÂY* ở cuối file.
 //            0.6.0 (b104) thêm `taoGiaPhaMoi()` — cửa dựng gia phả mới.
 // ============================================================
 //
@@ -867,6 +869,194 @@ export async function tuChoiThayDoi(treeId, id, lyDo = '') {
   });
   if (error) return { ok: false, loi: cauLoi(error) };
   return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+// ============================================================
+// QUẢN LÝ TÀI KHOẢN CỦA MỘT CÂY — `luoc-do/13-quan-ly-thanh-vien.sql`
+// ============================================================
+//
+// ⚠ **HAI BỘ CHỮ, CỐ Ý.** Tên hàm ở đây chép ĐÚNG tên hàm SQL
+//   (`ds_thanh_vien` → `dsThanhVien`), còn màn hình gọi thứ này là **tài
+//   khoản**. Không phải quên thống nhất:
+//     · Trong mã, một cái tên khớp 1–1 với máy chủ thì đọc lời gọi RPC là biết
+//       nó chạm hàm nào — bẫy số 1 của `kiem-trang-quan-tri.mjs` (tên tham số
+//       lệch chữ ký) chỉ bắt được nhờ cặp tên ấy đứng cạnh nhau.
+//     · Trên màn hình, chữ *"thành viên"* nói sai chuyện: vai gắn cho **tài
+//       khoản đăng nhập**, không gắn cho người trong sơ đồ. Chủ dự án nhắc
+//       thẳng chỗ này 08/09/2026, và `13` mục 7 ghi lại nguyên văn.
+//
+// ⚠ **Bảy hàm này KHÔNG phải hàng rào.** Hàng rào nằm trong thân từng hàm SQL,
+//   và luật *"không ai đặt quyền cho chính mình"* gác **năm cửa** ở đó —
+//   `THIET-KE-NHIEU-CAY.md` mục 11.3. Chỗ này chỉ chuyển lời từ chối về đúng
+//   nguyên văn máy chủ viết.
+//
+// ⚠ **`13` trả khoá `loi`, không phải `lyDo`.** Khác `dat_cay_mac_dinh()` và
+//   `dat_cho_nguoi_la_thay_ten()` ở trên — hai hàm ấy của `11` dùng `lyDo`.
+//   Đọc nhầm khoá thì màn hình hiện câu chung chung *"Không đổi được"* trong
+//   khi máy chủ vừa nói rõ vì sao, và đó đúng là loại hỏng câm: có chữ, chỉ
+//   sai chữ. Hàm `noiTuChoi()` dưới đây đọc cả hai để không ai phải nhớ.
+
+/** Đọc câu từ chối của máy chủ, chấp cả hai khoá `loi` và `lyDo`. */
+function noiTuChoi(data, macDinh) {
+  if (!data) return macDinh;
+  return data.loi || data.lyDo || macDinh;
+}
+
+/**
+ * Máy chủ trả lời: người đang đăng nhập có **đổi được quyền** trong cây này
+ * không — tức Quản trị hệ thống, hoặc chủ của chính cây ấy.
+ *
+ * ⚠ Khác hẳn `coTheKiemDuyet()` ngay trên, và đây là chỗ dễ lẫn nhất của cả
+ *   b105: người mang vai `quan_tri` **được phong** kiểm duyệt được nội dung
+ *   nhưng KHÔNG đổi được quyền của ai. Hai câu hỏi khác nhau, hai hàm khác
+ *   nhau ở máy chủ (`co_the_kiem_duyet` · `co_the_quan_tri`).
+ *
+ * ⚠ Và vẫn đúng luật cũ: **hỏi máy chủ, đừng suy từ `vaiTro`**. Suy ở trình
+ *   duyệt thì chủ cây — người nhận quyền qua cột `trees.chu_so_huu` chứ không
+ *   qua mã vai — sẽ bị chính màn hình của mình khoá tay.
+ */
+export async function coTheQuanTri(treeId) {
+  const k = layKhach();
+  if (!k || !treeId) return false;
+  const { data, error } = await k.rpc('co_the_quan_tri', { p_tree: treeId });
+  return !error && data === true;
+}
+
+/**
+ * Danh sách TÀI KHOẢN có tên trong một gia phả — cả người đã duyệt lẫn người
+ * đang xếp hàng chờ. Không đủ quyền thì máy chủ trả mảng rỗng.
+ *
+ * ⚠ **`laChinhToi` tính ở ĐÂY, không tính ở màn hình.** Năm cửa đổi quyền đều
+ *   từ chối khi người bị tác động chính là người đang gọi, nên màn hình phải
+ *   mờ sẵn nút trên dòng của mình — mà muốn thế thì phải biết "mình" là dòng
+ *   nào. So bằng `user_id` của phiên đăng nhập, KHÔNG so bằng email: email là
+ *   thứ đổi được và thứ trùng nhau được, `user_id` thì không.
+ *
+ * ⚠ `laChuCay` là **cột của máy chủ**, không phải phép so ở đây. Cùng lý lẽ đã
+ *   trả giá ở b103 với `toiLaChu`: cây chưa gán `chu_so_huu` thì mọi phép suy
+ *   trong trình duyệt đều ra "không ai là chủ", lặng lẽ.
+ */
+export async function dsThanhVien(treeId) {
+  const k = layKhach();
+  if (!k || !treeId) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
+
+  const [{ data, error }, nguoi] = await Promise.all([
+    k.rpc('ds_thanh_vien', { p_tree: treeId }),
+    nguoiDangNhap(),
+  ]);
+  if (error) return { ok: false, loi: cauLoi(error), ds: [] };
+
+  const toi = (nguoi && nguoi.id) || null;
+  const ds = (data || []).map((r) => ({
+    userId: r.user_id,
+    email: r.email || '',
+    maNgan: r.ma_ngan || '',
+    vai: r.vai || '',
+    daDuyet: Boolean(r.approved),
+    maNguoi: r.person_id || '',
+    tenNguoi: r.ten_nguoi || '',
+    tinCay: Boolean(r.tin_cay),
+    laChuCay: Boolean(r.la_chu_cay),
+    laChinhToi: Boolean(toi && r.user_id === toi),
+    xinLuc: r.xin_luc || null,
+    loiNhan: r.loi_nhan || '',
+    thamGia: r.added_at || null,
+  }));
+  return { ok: true, loi: null, ds };
+}
+
+/**
+ * Đổi vai của một tài khoản trong cây. Trần quyền cấp được là `quan_tri` —
+ * máy chủ chặn, không phải danh sách ở màn hình chặn.
+ */
+export async function doiVaiThanhVien(treeId, userId, vai) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('doi_vai_thanh_vien', {
+    p_tree: treeId, p_user: userId, p_vai: String(vai || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không đổi được vai trò.') };
+  }
+  return { ok: true, loi: null, vaiCu: data.vaiCu || '', vaiMoi: data.vaiMoi || '' };
+}
+
+/**
+ * Gắn mã người trong sơ đồ cho một tài khoản. `maNguoi` rỗng là **gỡ gắn**.
+ *
+ * ⚠ Đây là cửa leo thang không ai nghĩ tới khi nghe chữ "đổi quyền": gắn một
+ *   tài khoản vào cụ tổ đời trên cùng là mở `pham_vi_sua()` ra cả cây, không
+ *   đổi một chữ vai nào. `13` mục 9 chặn "tự làm cho mình" đúng vì thế.
+ */
+export async function ganNguoiChoThanhVien(treeId, userId, maNguoi) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const ma = String(maNguoi == null ? '' : maNguoi).trim();
+  const { data, error } = await k.rpc('gan_nguoi_cho_thanh_vien', {
+    p_tree: treeId, p_user: userId, p_person: ma || null,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không gắn được mã người.') };
+  }
+  return { ok: true, loi: null, maNguoi: data.maNguoi || '' };
+}
+
+/**
+ * Bật/tắt **ghi thẳng** (`tin_cay`) cho một tài khoản: lần Lưu của họ thành
+ * chính thức ngay, không qua hàng chờ kiểm duyệt.
+ */
+export async function datTinCayThanhVien(treeId, userId, bat) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_tin_cay_thanh_vien', {
+    p_tree: treeId, p_user: userId, p_bat: !!bat,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không đổi được chế độ ghi thẳng.') };
+  }
+  return { ok: true, loi: null, tinCay: Boolean(data.tinCay) };
+}
+
+/**
+ * Gỡ một tài khoản khỏi gia phả. Chỉ xoá dòng `tree_members` — **không đụng
+ * `auth.users`**, tài khoản ấy vẫn đăng nhập được và vẫn xin vào lại được.
+ */
+export async function goThanhVien(treeId, userId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('go_thanh_vien', {
+    p_tree: treeId, p_user: userId,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không gỡ được tài khoản.') };
+  }
+  return { ok: true, loi: null, email: data.email || '' };
+}
+
+/**
+ * **Bàn giao gia phả** — chuyển cột `trees.chu_so_huu` sang một tài khoản
+ * khác. Chủ cũ ở lại làm `quan_tri`, chủ mới nhận cả cột ấy lẫn một dòng
+ * `tree_members`, cả ba câu trong cùng một giao dịch ở máy chủ.
+ *
+ * ⚠ Đây là việc **không có nút hoàn tác**: sau khi bàn giao, người vừa giao
+ *   không còn quyền giao ngược lại — chỉ chủ mới (hoặc Quản trị hệ thống)
+ *   làm được. Nơi gọi phải nói rõ điều ấy TRƯỚC khi bấm nhịp thứ hai.
+ */
+export async function doiChuCay(treeId, userIdMoi) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('doi_chu_cay', {
+    p_tree: treeId, p_user_moi: userIdMoi,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không bàn giao được gia phả.') };
+  }
+  return { ok: true, loi: null, emailMoi: data.emailMoi || '' };
 }
 
 // ============================================================

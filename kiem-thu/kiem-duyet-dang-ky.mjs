@@ -3,7 +3,8 @@
 // Vai trò  : Kiểm cơ chế XẾP HÀNG CHỜ DUYỆT — `luoc-do/07-duyet-dang-ky.sql`
 //            và ba file JS đi kèm.
 // Chạy     : cd supabase/kiem-thu && node kiem-duyet-dang-ky.mjs
-// Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 16:35
+// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 20:50
+//            0.2.0 (b106) màn hình duyệt đơn dời khỏi Cài đặt sang khu 2.
 // ============================================================
 //
 // ═══ BÀI KIỂM NÀY CHỨNG MINH ĐƯỢC GÌ ═══
@@ -38,6 +39,8 @@ const SQL_07 = doc('../luoc-do/07-duyet-dang-ky.sql');
 const JS_SB = doc('../js/services/sb.js');
 const JS_KD = doc('../js/pages/khoi-dong.js');
 const JS_ST = doc('../js/pages/settings.js');
+// b106: màn hình duyệt đơn dời sang khu 2 của trang Quản trị.
+const JS_TK = doc('../js/pages/quan-tri/khu-thanh-vien.js');
 
 let dat = 0, hong = 0;
 
@@ -197,8 +200,19 @@ kiem('layPhien() trả trangThai cho màn hình từ chối',
 kiem("khoi-dong.js phân biệt 'đang chờ' với 'chưa nộp đơn'",
      /trangThai\s*===\s*'cho'/.test(JS_KD), 'không phân biệt hai trạng thái');
 
-kiem('settings.js có khối hàng chờ cho quản trị',
-     /veKhoiChoDuyet/.test(JS_ST) && /dsChoDuyet/.test(JS_ST), 'thiếu khối');
+// ⚠ PHÉP NÀY ĐỔI CHỖ 08/09/2026 (b106). Trước đó nó canh khối hàng chờ trong
+//   `settings.js`; khối ấy nay là khu 2 của trang Quản trị
+//   (`QuanTri.html#thanh-vien`), gộp chung với danh sách tài khoản vì cả hai
+//   đọc cùng bảng `tree_members`, khác nhau đúng một cột `approved`.
+//
+//   Điều phép này thật sự gác **không đổi**: phải còn ĐÚNG MỘT màn hình duyệt
+//   đơn ở đâu đó. Dời một cửa đi mà quên mở cửa mới là mất hẳn chức năng, và
+//   không có gì báo lỗi — chính vì thế phép này không được xoá đi, chỉ đổi
+//   chỗ nó nhìn.
+kiem('có đúng một màn hình duyệt đơn, và nó nằm ở khu Tài khoản',
+     /dsThanhVien/.test(JS_TK) && /duyetThanhVien/.test(JS_TK) &&
+     /tuChoiThanhVien/.test(JS_TK) && !/veKhoiChoDuyet/.test(JS_ST),
+     'thiếu màn hình duyệt đơn, hoặc còn hai màn hình cùng làm một việc');
 
 // Điều kiện vai trong settings.js chỉ để khỏi vẽ khối trống — nhưng nếu nó là
 // phép kiểm quyền DUY NHẤT thì hỏng. Máy chủ phải tự lọc.

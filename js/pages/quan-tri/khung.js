@@ -4,8 +4,10 @@
 //            máy tính, hàng thẻ ngang trên điện thoại. Mỗi lần vẽ một khu.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, pages/dang-nhap,
-//            pages/quan-tri/khu-kiem-duyet · khu-gia-pha
-// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 11:35
+//            pages/quan-tri/khu-kiem-duyet · khu-gia-pha · khu-thanh-vien
+// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 20:25
+//            0.3.0 (b106) nối khu 2. Tên trên thanh là **Tài khoản**, còn `ma`
+//            vẫn là `thanh-vien` — xem ghi chú ở danh sách `KHU` bên dưới.
 // ============================================================
 //
 // ═══ BA LUẬT CỦA KHUNG NÀY, VÀ VÌ SAO ═══
@@ -44,6 +46,7 @@ import { layPhien, dsChoDuyet, demChoKiemDuyet } from '../../services/sb.js';
 import { mountDangNhap } from '../dang-nhap.js';
 import { mountKhuKiemDuyet } from './khu-kiem-duyet.js';
 import { mountKhuGiaPha } from './khu-gia-pha.js';
+import { mountKhuThanhVien } from './khu-thanh-vien.js';
 
 /**
  * Bốn khu, đúng thứ tự trên thanh. `ma` là chuỗi đi vào `#` của địa chỉ nên
@@ -51,12 +54,18 @@ import { mountKhuGiaPha } from './khu-gia-pha.js';
  *
  * `chuaLam` là câu nói thẳng khu ấy làm ở bước nào. Không vẽ bảng trống: bảng
  * trống nói "không có dữ liệu", mà sự thật là "chưa ai viết màn hình này".
+ *
+ * ⚠ **Khu 2 mang HAI cái tên, và đó là chủ ý** (b106). Chữ trên thanh là
+ *   *Tài khoản* vì thứ khu ấy liệt kê là **tài khoản đăng nhập**, không phải
+ *   người trong sơ đồ — chủ dự án nhắc thẳng chỗ này 08/09/2026. Còn `ma` vẫn
+ *   là `thanh-vien` vì nó nằm trong `#` của địa chỉ: đổi nó là làm hỏng mọi
+ *   link `QuanTri.html#thanh-vien` đã gửi đi, để lấy về đúng một chữ không ai
+ *   nhìn thấy. Tên file `khu-thanh-vien.js` giữ cùng lý do — đổi tên file mã
+ *   là việc phải hỏi chủ dự án (`CLAUDE.md` mục 9).
  */
 const KHU = [
   { ma: 'gia-pha',    chu: 'Gia phả' },
-  { ma: 'thanh-vien', chu: 'Thành viên',
-    chuaLam: 'Khu này làm ở bước b105 và b106 — đổi vai, gắn mã người, ' +
-             'duyệt đơn xin vào cây.' },
+  { ma: 'thanh-vien', chu: 'Tài khoản' },
   { ma: 'kiem-duyet', chu: 'Kiểm duyệt' },
   { ma: 'sao-luu',    chu: 'Sao lưu',
     chuaLam: 'Khu này làm ở bước b108 — xem bản sao lưu và số đếm đối chiếu.' },
@@ -172,10 +181,15 @@ function veKhu(than, nutTheoMa, phien) {
   }
 
   than.innerHTML = '';
-  // ⚠ Khu Gia phả nhận `phien` vì nó phải biết ba điều mà chỉ phiên có: cây
-  //   nào đang mở, người này có phải Quản trị hệ thống không, và email của
-  //   họ. Ba khu kia tự hỏi máy chủ lấy dữ liệu của mình nên không cần.
+  // ⚠ Hai khu nhận `phien` vì chúng phải biết những thứ chỉ phiên có: cây nào
+  //   đang mở, người này có phải Quản trị hệ thống không, email của họ. Truyền
+  //   sẵn cũng để khỏi hỏi máy chủ lần thứ hai đúng câu khung vừa hỏi.
+  //
+  //   ⚠ Nhưng cả hai vẫn **hỏi lại máy chủ câu QUYỀN** của riêng chúng
+  //   (`coTheQuanTri`, `ds_gia_pha`); `phien` chỉ mang danh tính và cây đang
+  //   mở. Suy quyền từ `phien.vaiTro` là dựng phân quyền bằng JavaScript.
   if (khu.ma === 'gia-pha') mountKhuGiaPha(than, phien);
+  else if (khu.ma === 'thanh-vien') mountKhuThanhVien(than, phien);
   else if (khu.ma === 'kiem-duyet') mountKhuKiemDuyet(than);
   else veKhuChuaLam(than, khu);
 }

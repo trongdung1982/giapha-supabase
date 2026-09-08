@@ -1,11 +1,13 @@
 // ============================================================
 // giapha-supabase · kiem-thu/kiem-trang-quan-tri.mjs
-// Vai trò  : Kiểm TRANG DUYỆT NỘI DUNG — `QuanTri.html`,
-//            `js/app-quan-tri.js`, `js/pages/quan-tri/khung.js`,
-//            `js/pages/quan-tri/khu-kiem-duyet.js` và năm cửa mới trong
-//            `js/services/sb.js` (b98 + b101).
+// Vai trò  : Kiểm TRANG QUẢN TRỊ — `QuanTri.html`, `js/app-quan-tri.js`,
+//            `js/pages/quan-tri/khung.js` · `khu-kiem-duyet.js` ·
+//            `khu-thanh-vien.js`, và những cửa của chúng trong
+//            `js/services/sb.js` (b98 + b101 + b106).
 // Chạy     : cd supabase/kiem-thu && node kiem-trang-quan-tri.mjs
-// Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
+// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 20:40
+//            0.3.0 (b106) PHẦN H mới — khu Tài khoản & quyền; PHẦN E đổi
+//            chiều lần thứ hai (khối Đơn chờ duyệt nay PHẢI đi).
 // ============================================================
 //
 // ═══ BÀI KIỂM NÀY CHỨNG MINH ĐƯỢC GÌ, VÀ KHÔNG CHỨNG MINH ĐƯỢC GÌ ═══
@@ -62,7 +64,9 @@ const JS_ST = doc('../js/pages/settings.js');
 // Đường vào trang Quản trị chuyển từ Cài đặt sang màn hình sơ đồ (b103).
 const JS_TV = doc('../js/pages/tree-view.js');
 const JS_GP = doc('../js/pages/quan-tri/khu-gia-pha.js');
+const JS_TK = doc('../js/pages/quan-tri/khu-thanh-vien.js');
 const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
+const SQL_13 = boGhiChu(doc('../luoc-do/13-quan-ly-thanh-vien.sql'));
 
 /** Tên file có thật ở gốc repo, giữ nguyên chữ hoa chữ thường. */
 const FILE_GOC = readdirSync(resolve(DAY, '..'));
@@ -231,12 +235,20 @@ kiem('Cài đặt KHÔNG còn khối Duyệt nội dung (đã dời sang khu 3)'
 kiem('  và cũng không còn khối Gia phả (đã dời sang khu 1)',
      !/function veKhoiGiaPha/.test(JS_ST), 'khối cũ còn nằm lại');
 
-// ⚠ Đơn chờ duyệt thì PHẢI CÒN. Khu Thành viên nhận nó là b106, chưa viết;
-//   gỡ trước khi có chỗ nhận là cắt đứt đường duyệt đơn, mà b103 vừa dựng
-//   thêm nút "Xin quyền" tức làm cho đơn nhiều hơn.
-kiem('  nhưng khối Đơn chờ duyệt CÒN LẠI cho tới b106',
-     /veKhoiChoDuyet\(hop\)/.test(JS_ST),
-     'gỡ sớm — từ nay tới b106 không còn đường nào duyệt đơn');
+// ⚠ PHÉP NÀY ĐỔI CHIỀU LẦN THỨ HAI 08/09/2026 (b106). Tới b105 nó canh *"khối
+//   Đơn chờ duyệt PHẢI CÒN"* — gỡ trước khi có chỗ nhận là cắt đứt đường duyệt
+//   đơn. Nay khu 2 đã viết xong, nên chiều đúng là ngược lại: còn lại thì có
+//   HAI đường duyệt đơn, và hai đường thì có ngày lệch nhau.
+kiem('  và khối Đơn chờ duyệt đã dời sang khu 2 (b106)',
+     !/veKhoiChoDuyet/.test(JS_ST),
+     'khối cũ còn nằm lại — nay có hai đường duyệt đơn');
+
+// Gỡ một khối mà quên gỡ hàm nó gọi thì `import` treo lại một cái tên không ai
+// dùng; không hỏng gì, nhưng lần sau đọc file sẽ tưởng khối ấy còn.
+kiem('  Cài đặt thôi import ba cửa duyệt đơn của sb.js',
+     !/\bdsChoDuyet\b/.test(JS_ST) && !/\bduyetThanhVien\b/.test(JS_ST) &&
+     !/\btuChoiThanhVien\b/.test(JS_ST),
+     'còn import hàm của khối đã gỡ');
 
 kiem('đường vào trang Quản trị đúng tên file có thật, đúng cả chữ hoa (bẫy 2)',
      tenFileTrongMaCoThat(JS_TV, FILE_GOC) || tenFileTrongMaCoThat(JS_ST, FILE_GOC),
@@ -293,12 +305,12 @@ kiem('số 0 thì không vẽ huy hiệu',
 
 // Ba khu chưa viết phải nói thẳng chúng làm ở bước nào — bảng trống nói
 // "không có dữ liệu", mà sự thật là "chưa ai viết màn hình này".
-// b103 viết xong khu Gia phả, nên còn HAI khu mang câu `chuaLam` (Thành viên
-// → b106, Sao lưu → b108). Con số này giảm dần theo từng bước, và nó phải
-// giảm ĐÚNG LÚC: một khu đã viết mà vẫn còn `chuaLam` thì `veKhu()` vẽ câu
-// "chưa làm" đè lên màn hình vừa viết xong.
-kiem('hai khu chưa làm đều có câu nói rõ làm ở bước nào',
-     (JS_KH.match(/chuaLam:/g) || []).length === 2, 'thiếu câu chuaLam');
+// b106 viết xong khu Tài khoản, nên chỉ còn MỘT khu mang câu `chuaLam` (Sao
+// lưu → b108). Con số này giảm dần theo từng bước, và nó phải giảm ĐÚNG LÚC:
+// một khu đã viết mà vẫn còn `chuaLam` thì `veKhu()` vẽ câu "chưa làm" đè lên
+// màn hình vừa viết xong.
+kiem('một khu chưa làm còn lại, và nó nói rõ làm ở bước nào',
+     (JS_KH.match(/chuaLam:/g) || []).length === 1, 'sai số khu chưa làm');
 
 // ⚠ Regex phải dừng ở dấu `}` của chính mục ấy. Bản đầu quét 120 ký tự bất
 //   kể ranh giới, nên nó vớ luôn `chuaLam` của MỤC SAU và báo hỏng oan —
@@ -307,6 +319,19 @@ kiem('khu Gia phả đã nối vào khung, không còn câu "chưa làm"',
      /mountKhuGiaPha/.test(JS_KH) &&
      !/'gia-pha'[^}]*chuaLam/.test(JS_KH),
      'khu 1 chưa nối, hoặc còn câu chưa làm đè lên nó');
+
+kiem('khu Tài khoản đã nối vào khung, không còn câu "chưa làm"',
+     /mountKhuThanhVien/.test(JS_KH) &&
+     !/'thanh-vien'[^}]*chuaLam/.test(JS_KH),
+     'khu 2 chưa nối, hoặc còn câu chưa làm đè lên nó');
+
+// ⚠ `ma` là giao kèo trong `#` của địa chỉ, chữ trên thanh là thứ người đọc.
+//   b106 tách hai thứ ấy có chủ ý: `thanh-vien` giữ nguyên để link cũ không
+//   hỏng, còn chữ đổi sang *Tài khoản* vì khu ấy liệt kê tài khoản đăng nhập,
+//   không liệt kê người trong sơ đồ. Phép này canh đúng cặp ấy đứng cùng nhau.
+kiem('khu 2 mang mã thanh-vien nhưng hiện chữ "Tài khoản"',
+     /ma:\s*'thanh-vien',\s*chu:\s*'Tài khoản'/.test(JS_KH),
+     'chữ trên thanh lệch khỏi thoả thuận b106');
 
 // Luật "một danh sách khu, hai cách vẽ": chỗ biết bề ngang màn hình nằm
 // TRỌN trong @media của QuanTri.html.
@@ -328,6 +353,120 @@ kiem('khu Kiểm duyệt được nhúng vào khung, không còn là cả trang'
      /mountKhuKiemDuyet/.test(JS_KH) &&
      /export\s+async\s+function\s+mountKhuKiemDuyet/.test(JS_QT),
      'khung không gọi được khu Kiểm duyệt');
+
+// ============================================================
+// PHẦN H — khu Tài khoản & quyền (b106)
+// ============================================================
+console.log('\nPHẦN H — khu Tài khoản js/pages/quan-tri/khu-thanh-vien.js');
+
+kiem('khu Tài khoản có khối ghi chú đầu file đúng khuôn',
+     ghiChuDauFile(JS_TK), 'thiếu Vai trò / Lớp / Phụ thuộc / Phiên bản');
+
+kiem('khu Tài khoản không chạm window.supabase — luật MỘT CỬA',
+     motCua(JS_TK), 'khu gọi thẳng máy chủ');
+
+kiem('khu Tài khoản KHÔNG kéo theo bộ vẽ sơ đồ',
+     !/from\s+'\.\.\/(tree-view|khoi-dong)\.js'/.test(boGhiChuJs(JS_TK)),
+     'khu import bộ vẽ — trang này cố ý không nạp cây');
+
+kiem('khu Tài khoản không dùng alert/confirm',
+     !/\b(alert|confirm)\s*\(/.test(boGhiChuJs(JS_TK)),
+     'app này không dùng hộp thoại của trình duyệt ở đâu cả');
+
+// ⚠ ĐÂY LÀ PHÉP ĐÁNG TIỀN NHẤT CỦA PHẦN NÀY. `vai_tro()` trong trình duyệt
+//   KHÔNG trả lời được câu "ai đổi được quyền": chủ cây nhận quyền qua CỘT
+//   `trees.chu_so_huu`, không qua mã vai (`13` mục 4, và cả bài học b105 —
+//   *khi phải nâng quyền cho một thứ để nó chạy được, hãy nghi ngờ hàng rào
+//   chứ đừng nghi ngờ cái quyền*). Suy ở đây là khoá tay đúng người có quyền
+//   nhất, và không có gì báo lỗi.
+kiem('khu Tài khoản hỏi máy chủ ai đổi được quyền, không suy từ vaiTro',
+     /coTheQuanTri\s*\(/.test(boGhiChuJs(JS_TK)) &&
+     !/vaiTro\s*===/.test(boGhiChuJs(JS_TK)),
+     'khu tự quyết quyền bằng JavaScript');
+
+// Bảy cửa của `13`, đối chiếu CHỮ KÝ SQL — đúng bẫy số 1: sai một chữ trong
+// tên tham số thì Supabase trả "function not found", `sb.js` nuốt gọn thành
+// mảng rỗng, và màn hình hiện y hệt lúc không có dữ liệu.
+const CUA_13 = [
+  { js: 'coTheQuanTri',          sql: 'co_the_quan_tri' },
+  { js: 'dsThanhVien',           sql: 'ds_thanh_vien' },
+  { js: 'doiVaiThanhVien',       sql: 'doi_vai_thanh_vien' },
+  { js: 'ganNguoiChoThanhVien',  sql: 'gan_nguoi_cho_thanh_vien' },
+  { js: 'datTinCayThanhVien',    sql: 'dat_tin_cay_thanh_vien' },
+  { js: 'goThanhVien',           sql: 'go_thanh_vien' },
+  { js: 'doiChuCay',             sql: 'doi_chu_cay' },
+];
+
+for (const c of CUA_13) {
+  kiem('sb.js xuất hàm ' + c.js + '()',
+       new RegExp('export\\s+async\\s+function\\s+' + c.js + '\\b').test(JS_SB),
+       'không thấy');
+
+  const lech = lechThamSo(JS_SB, SQL_13, c.sql);
+  kiem('  ' + c.sql + '() — tên tham số khớp chữ ký SQL',
+       lech !== null && lech.length === 0,
+       lech === null ? 'không tìm thấy lời gọi hoặc chữ ký' : lech.join('; '));
+
+  kiem('  ' + c.sql + '() được cấp cho authenticated',
+       coCapQuyen(SQL_13, c.sql), 'thiếu grant execute … to authenticated');
+}
+
+// `ds_thanh_vien` là hàm trả BẢNG, và `13` đã học bài 42P13: phải `drop` trước.
+// Phép này canh chính chỗ đã làm hỏng lần dán sáng 08/09.
+kiem('ds_thanh_vien() có drop function trước create (bài học 42P13)',
+     /drop\s+function\s+if\s+exists\s+public\.ds_thanh_vien/i.test(SQL_13),
+     'create or replace không đổi được danh sách cột trả về');
+
+// Năm việc đổi quyền + hai việc xét đơn, tất cả đều phải đi qua `sb.js`.
+for (const ten of ['doiVaiThanhVien', 'ganNguoiChoThanhVien',
+                   'datTinCayThanhVien', 'goThanhVien', 'doiChuCay',
+                   'duyetThanhVien', 'tuChoiThanhVien']) {
+  kiem('  khu Tài khoản gọi ' + ten + '()',
+       new RegExp('\\b' + ten + '\\s*\\(').test(boGhiChuJs(JS_TK)),
+       'thiếu việc này trên màn hình');
+}
+
+// Ba tấm lọc của thiết kế: Đang chờ · Đã duyệt · Tất cả.
+for (const ma of ['cho', 'duyet', 'tatca']) {
+  kiem('  có tấm lọc ' + ma, new RegExp("ma: '" + ma + "'").test(JS_TK),
+       'thiếu tấm lọc này');
+}
+
+// ⚠ Hai nhịp, không `confirm()`. Cả bảy việc ở đây đổi thứ người dùng không
+//   nhìn thấy hậu quả ngay, và ba trong số đó không cứu lại được bằng một cú
+//   bấm (gỡ · bàn giao · gắn mã người vào cụ tổ).
+kiem('mọi việc đều đi qua nút HAI NHỊP',
+     /function nutHaiNhip\(/.test(JS_TK) &&
+     !/\bnut\('Đổi vai'/.test(JS_TK),
+     'có việc chạy ngay từ nhịp đầu');
+
+// ⚠ Luật "không ai đặt quyền cho chính mình" gác NĂM cửa ở máy chủ. Màn hình
+//   phải mờ sẵn nút trên dòng của chính mình — bấm rồi mới nhận câu từ chối là
+//   dạy người dùng rằng phần mềm hay hỏng.
+kiem('dòng của chính mình bị khoá tay (laChinhToi)',
+     (boGhiChuJs(JS_TK).match(/laChinhToi/g) || []).length >= 5,
+     'chưa mờ đủ năm cửa trên dòng của chính mình');
+
+// `laChinhToi` phải tính bằng `user_id` của phiên, KHÔNG bằng email: email đổi
+// được và trùng được, `user_id` thì không. Phép tính ấy nằm ở `sb.js` để chỉ
+// có một chỗ trả lời.
+kiem('laChinhToi tính bằng user_id trong sb.js, không so email ở màn hình',
+     /laChinhToi:\s*Boolean\(toi && r\.user_id === toi\)/.test(JS_SB) &&
+     !/laChinhToi\s*=/.test(boGhiChuJs(JS_TK)),
+     'màn hình tự suy "đây là tôi"');
+
+// Chủ cây không hạ vai và không gỡ được — kể cả Quản trị hệ thống. Muốn đổi
+// thì đi đường Bàn giao.
+kiem('chủ cây được mờ nút Đổi vai và Gỡ (laChuCay)',
+     (boGhiChuJs(JS_TK).match(/laChuCay/g) || []).length >= 3,
+     'chưa chặn hạ vai / gỡ chủ cây');
+
+// Chỗ hỏng câm 7 vẫn nguyên giá trị ở khu mới.
+{
+  const thieu = classThieuTrongCss(JS_TK, CSS);
+  kiem('mọi class qt- dùng trong khu Tài khoản đều có trong quan-tri.css',
+       thieu.length === 0, 'thiếu định nghĩa: ' + thieu.join(', '));
+}
 
 // ============================================================
 // PHẦN G — KIỂM CHỨNG NGƯỢC: bẻ gãy mã rồi xem bài kiểm có bắt được không
@@ -396,6 +535,32 @@ console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
                               "window.location.hash = khu.ma;");
   kiem('bắt được # lạ bị sửa bằng cách gán lại location.hash',
        !suaHashBangReplaceState(hong8), 'không bắt được');
+}
+
+// G9 — khu Tài khoản tự quyết quyền bằng `vaiTro` thay vì hỏi máy chủ. Đây là
+// chỗ hỏng câm số 5, và ở khu này nó khoá tay đúng CHỦ CÂY — người nhận quyền
+// qua một cột, không qua mã vai.
+{
+  const hong9 = JS_TK + "\nconst duoc = phien.vaiTro === 'quan_tri';\n";
+  kiem('bắt được khu Tài khoản tự suy quyền từ vaiTro',
+       /vaiTro\s*===/.test(boGhiChuJs(hong9)), 'không bắt được');
+}
+
+// G10 — sai một chữ trong tên tham số của một cửa `13`. Cùng bẫy G1, khác file.
+{
+  const hong10 = JS_SB.replace('p_user_moi:', 'p_usermoi:');
+  const lech = lechThamSo(hong10, SQL_13, 'doi_chu_cay');
+  kiem('bắt được tên tham số sai một chữ ở cửa doi_chu_cay',
+       lech !== null && lech.length > 0, 'không bắt được — phép ở PHẦN H vô dụng');
+}
+
+// G11 — quên mờ nút trên dòng của chính mình. Máy chủ vẫn chặn, nên KHÔNG phải
+// lỗ hổng; nhưng người dùng bấm năm nút và nhận năm câu từ chối liên tiếp.
+{
+  const hong11 = JS_TK.replace(/laChinhToi/g, 'laKhachLa');
+  kiem('bắt được việc bỏ mờ nút trên dòng của chính mình',
+       (boGhiChuJs(hong11).match(/laChinhToi/g) || []).length < 5,
+       'không bắt được');
 }
 
 // ------------------------------------------------------------
