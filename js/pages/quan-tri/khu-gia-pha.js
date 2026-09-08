@@ -280,9 +280,14 @@ function veOThaoTac(c, phien, napLai) {
 function veDauTich(c, phien, td) {
   const dangHien = c.fileId === phien.treeId;
 
+  // ⚠ `padding:12px` không phải để cho thoáng — nó là VÙNG BẤM. Bản thân ô
+  //   tròn chỉ 17px, nhỏ hơn đầu ngón tay; thẻ `label` bọc ngoài nhận cú bấm
+  //   thay nó, nên vùng bấm thật thành ~41px. Khu này phải chạy trên điện
+  //   thoại (`THIET-KE-QUAN-TRI.md` bảng cuối), và ở đó bấm trượt nghĩa là
+  //   không có gì xảy ra mà không ai hiểu vì sao.
   const nhan = document.createElement('label');
   nhan.style.cssText =
-    'display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:4px';
+    'display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:12px';
   nhan.title = dangHien
     ? 'Gia phả này đang hiển thị'
     : 'Bấm để hiển thị gia phả này';
