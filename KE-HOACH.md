@@ -1,8 +1,10 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 08/09/2026 23:55 · Bước gần nhất: **b106** (mã xong, chủ dự án đang
-nghiệm thu bằng mắt) · Việc kế tiếp: **b107** — tầng máy chủ đã viết và đã đo
-46/46 trên bàn thử, **chờ chủ dự án dán `luoc-do/14-loi-moi.sql`***
+*Cập nhật 09/09/2026 06:55 · Bước gần nhất: **b107** · Việc kế tiếp: **b108***
+
+> ⏳ **ĐANG CHẶN b108: chủ dự án chưa dán `luoc-do/14-loi-moi.sql`.** Tầng máy
+> chủ của b107 đã viết xong và đo **59/59** trên bàn thử tại chỗ, gồm 3 phép bẻ
+> gãy có chủ ý — nhưng chưa chạm máy chủ thật lần nào.
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -588,7 +590,7 @@ thì sai lúc chưa có gì xây lên trên.
 Bước này **xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md`** — chỗ hôm nay bảo chủ
 dự án gõ `update` trong SQL Editor.
 
-### b107 — Mời vào gia phả, tầng máy chủ · ✓ **VIẾT XONG 08/09/2026, CHỜ DÁN**
+### ~~b107~~ — Mời vào gia phả, tầng máy chủ · ✓ **XONG 09/09/2026, CHỜ DÁN**
 
 Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy về một luật —
 `THIET-KE-NHIEU-CAY.md` mục **11.4** và **11.5**, đọc trước khi động vào:
@@ -1104,14 +1106,21 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 ## Còn treo — không chặn gì, nhưng đừng quên
 
+*Đếm ngày 09/09/2026: bảng có **31 dòng**, trong đó **10 đã đóng** (gạch
+ngang, giữ làm chứng) — còn **21 việc treo thật**. Đếm lại bằng số dòng mỗi
+lần `/ket-thuc`, đừng chép con số của lần trước.*
+
 | Việc | Ghi ở đâu |
 |---|---|
+| ⏳ **`14-loi-moi.sql` CHƯA DÁN** — bảng tự kiểm cuối file phải ra **8 dòng ĐẠT**. Dán lại `11` thì bắt buộc dán lại `14` | `nhat-ky/b107-moi-vao-gia-pha.md` |
+| ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |
+| ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b109 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
 | ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |
 | ⚠ **b103 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`, mới chỉ dán lên Staging. Đã soi lướt: `12` và `13` **không thêm luật ghi nào**, nên lỗ hổng loại b102 không lặp ở đó — nhưng chưa rà kỹ, chưa đo | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
-| ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b105 · b106** *(sửa 07/09: dòng cũ ghi b101 · b102, sai — b101 chỉ dựng khung)* | `THIET-KE-QUAN-TRI.md` khu 2 |
-| ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b106**, bằng chính màn hình mới *(sửa 07/09: dòng cũ ghi b102, sai — b102 chỉ đụng SQL)* | `nhat-ky/b94-phep-thu-h9.md` |
-| ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b106** *(sửa 07/09: dòng cũ ghi b102)* | `luoc-do/08-kiem-duyet.sql` mục 3 |
+| ~~Chưa có màn hình quản lý thành viên~~ — ✓ **XONG b106 (09/09/2026)**: khu Tài khoản làm cả năm việc, xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md` | `nhat-ky/b106-khu-tai-khoan.md` |
+| ~~Tài khoản thử `thu-h9@…` chưa dọn~~ — ✓ **XONG 08/09/2026**, chủ dự án gỡ bằng chính màn hình mới | `nhat-ky/b106-khu-tai-khoan.md` |
+| ~~Cờ `tin_cay` chưa có màn hình~~ — ✓ **XONG b106**; trên màn hình gọi là **Tin cậy**, không phải "Ghi thẳng" | `nhat-ky/b106-khu-tai-khoan.md` |
 | ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b110** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
 | ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
 | ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
