@@ -218,7 +218,7 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 app thật (`nguyentrongbac.io.vn/QuanTri.html`): bấm qua lại bốn mục, `F5` về
 đúng khu, nút Back đi ngược đúng thứ tự, điện thoại thành hàng thẻ ngang —
 **đạt cả bốn**. Ba khu chưa viết nói thẳng chúng làm ở bước nào, không vẽ bảng
-trống. Đây là nền cho b103 → b110, nên nó đứng trước mọi khu.
+trống. Đây là nền cho b103 → b111, nên nó đứng trước mọi khu.
 
 ⚠ **Antigravity đã dựng sẵn b102 → b105 trong `codex/`, NGOÀI repo.** Chủ dự
 án đã dán SQL cả bốn lên **Supabase Staging** và xác nhận đạt. Nhưng **máy chủ
@@ -299,7 +299,7 @@ Làm đúng chữ của b103 thì từ hôm nay tới b106 không còn đường
 
 ---
 
-## Việc kế tiếp — b100 → b111, MỘT PHIÊN MỘT BƯỚC
+## Việc kế tiếp — b100 → b112, MỘT PHIÊN MỘT BƯỚC
 
 ⚠ **Chuỗi này viết lại 05/09/2026** sau khi chủ dự án chốt ba câu về **nhiều
 gia phả**. Chuỗi cũ (b100→b105, chỉ nói trang Quản trị) vẫn còn nguyên trong
@@ -458,7 +458,7 @@ thì sai lúc chưa có gì xây lên trên.
 >    Khu Thành viên nhận nó là b106, chưa viết — gỡ bây giờ là cắt đường duyệt
 >    đơn đúng lúc b103 vừa dựng thêm nút Xin quyền, tức làm đơn nhiều hơn.
 >    **Luật rút ra: khối chỉ được gỡ khi khu bên kia đã viết xong, không phải
->    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b110.
+>    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b111.
 > 3. **Thêm nút *Mở trang Quản trị*.** Gỡ khối Duyệt nội dung đã lấy đi lối vào
 >    DUY NHẤT của trang ấy; phép kiểm PHẦN E bắt được tại chỗ.
 > 4. **`vaiTroBangChu()` xuống `config.js`.** Bản AGY chép nó thành bản thứ
@@ -619,7 +619,22 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **Điểm dừng** | Mời một tài khoản thật → tài khoản ấy đăng nhập, **thấy lời mời**, và **chưa đọc được cây**; bấm Nhận thì đọc được, vai đúng bằng vai được mời |
 | **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
 
-### b109 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
+### b109 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
+
+Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** trước.
+*"chủ cây có quyền yêu cầu xoá cây do mình tạo ra"* — chữ **yêu cầu** là nghĩa
+đen: chủ cây xin, Quản trị hệ thống duyệt.
+
+| | |
+|---|---|
+| **Làm** | `luoc-do/15-thung-rac-cay.sql` — 4 cột trên `trees` + 5 hàm: `xin_xoa_cay` · `huy_xin_xoa_cay` · `duyet_xoa_cay` · `phuc_hoi_cay` · `don_thung_rac`. Cộng màn hình: nút *Xin xoá* ở khu Gia phả, hàng chờ + **Thùng rác** ở khu Gia phả của Quản trị hệ thống |
+| **Điểm dừng** | Xin xoá một cây thử → cây **vẫn dùng được bình thường** trong lúc chờ → duyệt → không ai đọc được nữa → phục hồi → đọc lại được đủ 59 người |
+| **⚠ Đơn xin xoá KHÔNG khoá cây** | Đơn còn có thể bị từ chối, và trong lúc chờ thì cả dòng họ vẫn đang dùng. Khoá sớm là biến một lá đơn thành một lệnh |
+| **⚠⚠ Chỗ khó nằm ở tầng nền móng** | Thêm điều kiện *"chưa vào thùng rác"* vào **`co_the_xem_cay()`** — an toàn. **KHÔNG động vào `la_thanh_vien()`**: sửa gọn một dòng ở đó chính là lỗ hổng b102 (sao lưu đêm ra file rỗng, không báo lỗi). Và có lý do thứ hai mạnh hơn: **bản sao lưu PHẢI tiếp tục chép cây trong thùng rác**, không thì 30 ngày ấy là 30 ngày không có bản sao nào. *Thùng rác đóng cửa với người, không đóng cửa với máy sao lưu* |
+| **Vì sao không xoá cứng ngay** | `CLAUDE.md` mục 7 — *"Không xoá cứng"*. Và **chưa ai từng thử KHÔI PHỤC từ bản sao lưu đêm** (treo từ 04/09), nên hôm nay sao lưu chưa phải đường lùi đã kiểm chứng |
+| **Phải hỏi chủ dự án** | Ai gọi `don_thung_rac()` — nút bấm tay trong khu Sao lưu, hay nối vào trigger Apps Script chạy đêm? Đừng tự chọn: đường thứ hai cho một việc phá dữ liệu chạy tự động lúc không ai ngồi xem |
+
+### b110 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
 | | |
 |---|---|
@@ -629,7 +644,7 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại |
 | **⚠ Giữ nguyên** | Xem theo **ô**, duyệt theo **lần Lưu**. Không cho nhận từng ô |
 
-### b110 — Khu Sao lưu + Số đếm đối chiếu
+### b111 — Khu Sao lưu + Số đếm đối chiếu
 
 | | |
 |---|---|
@@ -638,7 +653,7 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **Điểm dừng** | Số trên màn hình khớp với số đếm được trong file sao lưu đêm gần nhất |
 | **⚠ Không làm** | **Không vẽ nút Khôi phục.** Máy chủ chưa khôi phục được, vẽ nút là giả vờ giải quyết bằng giao diện |
 
-### b111 — Mã người xuyên cây
+### b112 — Mã người xuyên cây
 
 | | |
 |---|---|
@@ -648,7 +663,7 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **⚠ Bẫy** | Cột không có tên trong `TEN_PERSON` thì mỗi lần lưu ghi `null` đè lên, **và không có gì báo lỗi** — `DU-LIEU.md` mục 3 điều 7 |
 | **Đứng cuối vì** | Chưa ai dựng cây thứ ba. Cột này chỉ có việc khi có người dựng cây cho bên nhà họ |
 
-### Sau b111 — chưa đặt số, chưa chốt
+### Sau b112 — chưa đặt số, chưa chốt
 
 Nhập GEDCOM/Excel qua máy chủ · **khôi phục thật** *(việc nguy hiểm nhất, và
 phải kiểm chứng bằng vòng `sao lưu → đổi dữ liệu → khôi phục → dữ liệu quay
@@ -1097,7 +1112,7 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b105 · b106** *(sửa 07/09: dòng cũ ghi b101 · b102, sai — b101 chỉ dựng khung)* | `THIET-KE-QUAN-TRI.md` khu 2 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b106**, bằng chính màn hình mới *(sửa 07/09: dòng cũ ghi b102, sai — b102 chỉ đụng SQL)* | `nhat-ky/b94-phep-thu-h9.md` |
 | ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b106** *(sửa 07/09: dòng cũ ghi b102)* | `luoc-do/08-kiem-duyet.sql` mục 3 |
-| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b109** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
+| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b110** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
 | ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
 | ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
 | ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |

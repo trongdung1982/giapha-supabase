@@ -15,7 +15,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Mới vào nhánh này lần đầu | + `KIEN-TRUC.md` **cả file** |
 | Đụng `services/` | `KIEN-TRUC.md` mục 1, 3 · `DU-LIEU.md` mục 1, 6 |
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
-| **Mời vào cây · nhận lời mời · cờ Quản trị hệ thống** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký — không ai bị đưa vào)* + **11.5** *(cờ QTHT là cửa thứ SÁU của luật không-tự-đặt-quyền, và không tắt được người cuối cùng)* · `luoc-do/14-loi-moi.sql` |
+| **Mời vào cây · cờ QT hệ thống · xoá tài khoản · xoá gia phả** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký)* · **11.5** *(cờ QTHT: cửa thứ SÁU của luật không-tự-đặt-quyền)* · **11.6** *(xoá cây: chủ xin — QTHT duyệt — thùng rác 30 ngày; ⚠ ĐỪNG sửa `la_thanh_vien()`, sao lưu phải chép được cây trong thùng rác)* · `luoc-do/14-loi-moi.sql` |
 | Đụng phân quyền, RLS | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.3** *(bảng 5 hạng — chốt 08/09)* · `luoc-do/13-quan-ly-thanh-vien.sql` *(ai đổi được quyền · luật KHÔNG tự đặt quyền cho mình)* · `DU-LIEU.md` mục 2 + **2a** + **2b** · `11-quyen-he-thong.sql` ⚠ *(cờ quyền: CHỈ luật đọc)* · `06` · `07` · `02-rls.sql` |
 | **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |

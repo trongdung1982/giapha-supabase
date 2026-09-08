@@ -578,3 +578,61 @@ Quản trị hệ thống, người ấy không tự tắt cờ mình được (
 người thì tắt lẫn nhau về không được. Phép đo b107 phải có một phép cho chuyện
 ấy, và câu trả lời là **đếm trước khi tắt**: còn đúng một cờ đang bật thì hàm
 từ chối. Khoá cả nhà rồi vứt chìa là hỏng theo kiểu chỉ sửa được bằng SQL tay.
+
+### 6. ✓ CHỐT 09/09/2026 (b108) — XOÁ GIA PHẢ: HAI CHỮ KÝ + THÙNG RÁC 30 NGÀY
+
+Chủ dự án chốt: *"chủ cây có quyền yêu cầu xoá cây do mình tạo ra"* — và chữ
+**yêu cầu** là nghĩa đen: **chủ cây xin, Quản trị hệ thống duyệt.** Cùng khuôn
+hai chữ ký đã dùng cho việc vào cây (mục 11.4), và dùng ở đây vì đây là việc
+phá nhiều dữ liệu nhất trong cả hệ thống.
+
+Xoá là **đánh dấu, không xoá cứng** — giữ 30 ngày rồi mới dọn. Đúng luật nhà
+đã có từ đầu: `CLAUDE.md` mục 7, *"Không xoá cứng. Xoá là đặt cờ `deleted` và
+ghi `changeLog`"*. Luật ấy viết cho một người trong sơ đồ; một cây 681 người
+thì lý do còn mạnh hơn, và mạnh nhất ở chỗ này: **chưa ai từng thử KHÔI PHỤC
+từ bản sao lưu đêm** (`KE-HOACH.md`, còn treo từ 04/09). Nghĩa là hôm nay bản
+sao lưu **chưa phải** đường lùi đã kiểm chứng, nên thùng rác phải là đường lùi
+thật sự.
+
+**Bốn trạng thái của một cây:**
+
+| `xin_xoa_luc` | `da_xoa_luc` | Nghĩa | Ai đọc được cây |
+|---|---|---|---|
+| trống | trống | bình thường | như hôm nay |
+| **có** | trống | **đang xin xoá** | ⚠ **vẫn như hôm nay** |
+| có | **có** | **trong thùng rác** | không ai |
+| — | có, quá 30 ngày | dọn được | không ai |
+
+⚠ **Dòng thứ hai là chỗ dễ làm sai nhất.** Một lá đơn xin xoá **không được**
+khoá cây lại: đơn còn chờ duyệt, có thể bị từ chối, và trong lúc chờ thì cả
+dòng họ vẫn đang dùng. Khoá sớm là biến một lá đơn thành một lệnh.
+
+⚠⚠ **CHỖ KHÓ THẬT SỰ, VÀ NÓ NẰM Ở TẦNG NỀN MÓNG — đọc trước khi viết dòng đầu.**
+
+Cây trong thùng rác phải **không ai đọc được**, và việc ấy phải do máy chủ thi
+hành, không phải do màn hình giấu đi (`THIET-KE-QUAN-TRI.md` mục 7 điều 5).
+Tức phải sửa hàm quyết quyền. Nhưng có **hai** hàm, và chúng không giống nhau:
+
+- **`co_the_xem_cay()`** — gác nội dung gia phả (`persons`, `unions`…).
+  Thêm điều kiện *"chưa vào thùng rác"* vào đây. An toàn.
+- **`la_thanh_vien()`** — gác `tree_members`, `change_log`, `imports`,
+  `user_settings`. ⚠ **ĐỪNG ĐỘNG VÀO.** Sửa gọn một dòng ở hàm này chính là
+  lỗ hổng b102: bản sao lưu đêm ra file rỗng, **không báo lỗi**, và mất nửa
+  buổi mới lần ra. Và ở đây còn một lý do thứ hai, mạnh hơn: **bản sao lưu
+  PHẢI tiếp tục chép cây đang nằm trong thùng rác** — nếu không thì đúng 30
+  ngày ấy là 30 ngày dữ liệu không có bản sao nào, ngay lúc nó mong manh nhất.
+
+Nói cách khác: **thùng rác đóng cửa với người, không đóng cửa với máy sao lưu.**
+
+**Năm việc phải viết** (`luoc-do/15-thung-rac-cay.sql`):
+`xin_xoa_cay(p_tree, p_ly_do)` · `huy_xin_xoa_cay(p_tree)` ·
+`duyet_xoa_cay(p_tree)` *(Quản trị hệ thống — đặt `da_xoa_luc`)* ·
+`phuc_hoi_cay(p_tree)` *(lấy khỏi thùng rác)* ·
+`don_thung_rac()` *(xoá cứng cây quá 30 ngày — và đây là chỗ DUY NHẤT trong cả
+phần mềm được phép `delete from public.trees`)*.
+
+⚠ Ai gọi `don_thung_rac()` thì **chưa chốt**. Không có cron trong Supabase gói
+đang dùng; hai đường: nút trong khu Sao lưu để bấm tay, hoặc nối vào trigger
+Apps Script chạy đêm đã có (`sao-luu/SaoLuu.gs`). Hỏi chủ dự án ở b108, đừng
+tự chọn — đường thứ hai làm một việc phá dữ liệu chạy tự động lúc không ai
+ngồi xem.
