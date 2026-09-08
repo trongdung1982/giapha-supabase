@@ -95,8 +95,13 @@ kiem('hai câu insert nằm trong CÙNG thân hàm (một giao dịch)',
      /insert\s+into\s+public\.trees[\s\S]*insert\s+into\s+public\.tree_members/i.test(thanTao || ''),
      'hai câu insert tách rời — có đường đẻ ra cây thiếu thành viên');
 
+// ⚠ ĐỔI 08/09/2026 (b105): vai cấp cho người dựng cây là `quan_tri`, không
+//   còn là `quan_tri_he_thong`. Chủ dự án bác bỏ bản 0.1.0 ngay chiều hôm
+//   dán — *"không ai được chỉ định quyền cho chính mình"* — và quyền quản trị
+//   của chủ cây nay đọc ở cột `trees.chu_so_huu`, không đọc ở mã vai.
+//   Xem `luoc-do/13-quan-ly-thanh-vien.sql` mục 4.
 kiem('người tạo được duyệt sẵn (không xếp hàng chờ chính mình)',
-     /'quan_tri_he_thong'[\s\S]{0,80}true/i.test(thanTao || ''),
+     /'quan_tri'[\s\S]{0,80}true/i.test(thanTao || ''),
      'approved không bật — người dựng cây bị chính cây mình chặn');
 
 kiem('bắt được unique_violation để trả câu tiếng Việt',

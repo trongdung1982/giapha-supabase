@@ -52,6 +52,7 @@ thường, không phải thiếu sót.
 | 102 | 07/09/2026 | Tầng quyền hệ thống: rà bản AGY, đo ra 2 lỗ hổng (leo quyền · sao lưu rỗng), vá, đã dán | `b102-tang-quyen-he-thong.md` |
 | 103 | 08/09/2026 | Khu Gia phả chạy: thấy cả cây mình chưa có chân, xin quyền, công tắc cho người lạ thấy tên | `b103-khu-gia-pha.md` |
 | 104 | 08/09/2026 | Tạo gia phả mới chạy thật; đổi mã cây sang 3 chữ số; vá khe hở khuôn mã cây | `b104-tao-gia-pha-moi.md` |
+| 105 | 08/09/2026 | 6 hàm quản lý tài khoản của một cây, gồm bàn giao cây; luật không ai tự đặt quyền cho mình | `b105-quan-ly-thanh-vien.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
@@ -79,6 +80,8 @@ mục lục** — cắt cụt là mất đúng phần khiến nó có giá trị
 | `11-quyen-he-thong.sql` 0.1.0: bảng tự kiểm 12/12 ĐẠT, và `kich-ban-kiem-b102.sql` 12/12 ĐẠT | *(AGY, 07/09/2026)* | b102 | Cả hai **đo sai vật**. Bảng tự kiểm chỉ hỏi *"thứ này có tồn tại không"*, không hỏi *"nó có chặn được không"*. Kịch bản kiểm tự định nghĩa lại lược đồ trong chính nó, và chạy bằng `postgres` — superuser đi vòng qua mọi RLS. Bản 0.1.0 mang **hai lỗ hổng**: ai cũng tự đặt mình thành Quản trị hệ thống, và sao lưu đêm ra file rỗng |
 | `THIET-KE-NHIEU-CAY.md` mục 7: người dựng cây nhận vai **`quan_tri`** | b100 | b104 | Đo mới ra: `co_the_quan_tri()` của `08-kiem-duyet.sql` chỉ nhận đúng vai `quan_tri_he_thong`, mà `duyet_thanh_vien()`/`tu_choi_thanh_vien()` đều gác bằng hàm ấy — cấp `quan_tri` thì người dựng cây **không duyệt được đơn xin vào cây của chính mình**. `12-tao-cay.sql` cấp `quan_tri_he_thong`; không phải lỗ hổng vì vai ấy trong `tree_members` là quyền THEO CÂY, khác hẳn cờ `tai_khoan.la_quan_tri_he_thong` (toàn hệ thống) |
 | `KE-HOACH.md` b103: *"máy đang dùng chưa cài PostgreSQL, bàn thử nằm ở máy kia"* | b103 | b104 | Sai — bàn thử SQL tại chỗ CÓ trên máy này (PostgreSQL 17.11, cổng 5433). Chỉ chưa ai kiểm lại trước khi viết câu ấy. Nhờ đo lại mà b104 chứng minh được đường nâng cấp thật (0.2.0 → 0.3.1, dựng nền bằng `git show`) và đường nửa vời do lần dán sáng 08/09 vấp giữa chừng |
+| `12-tao-cay.sql` 0.1.0 + `THIET-KE-NHIEU-CAY.md` mục 7: *"vai cấp cho người dựng cây là `quan_tri_he_thong`, đo mới ra chứ không phải đổi ý"* | b104 | **b105** | Sai, và chủ dự án bác bỏ ngay chiều cùng ngày: *"không ai được chỉ định quyền cho chính mình; mặc định người tạo cây thì có quyền quản trị với cây đó."* Triệu chứng b104 mô tả là thật (chủ cây không duyệt được đơn của cây mình) nhưng **chỗ chữa thì sai**: nguyên nhân là `co_the_quan_tri()` hỏi MÃ VAI, trong khi thứ nó cần biết là AI LÀ CHỦ CÂY. b105 neo hàm ấy vào cột `trees.chu_so_huu`; vai cấp cho người dựng cây trở lại đúng `quan_tri`, và ràng buộc bảng nay TỪ CHỐI mã `quan_tri_he_thong` nên chuyện một chữ hai nghĩa không tái hiện được |
+| `08-kiem-duyet.sql` mục 4: bảng hai hạng quản trị ngụ ý `quan_tri` là hạng bị *thu hẹp* | b97 | b105 | Bảng ấy **vốn đúng** — `quan_tri` chỉ sửa + duyệt nội dung, không đổi quyền. Chỗ thiếu là nó không nói ai mới đổi được quyền: hồi b97 hệ thống có một cây nên "chủ cây" ẩn trong mã vai. b105 tách ra thành cột `trees.chu_so_huu`. ⚠ Và `08` vẫn giữ `co_the_quan_tri()` bản CŨ (cố ý, để chạy đúng trên máy chủ chưa có `13`) — **dán lại `08` thì bắt buộc dán lại `13`** |
 
 ---
 

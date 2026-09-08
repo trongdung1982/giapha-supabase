@@ -335,18 +335,30 @@ duoc_tao_cay()  →  tao_gia_pha_moi(p_ten, p_ma_cay, p_note)
                             ── TRONG CÙNG MỘT GIAO DỊCH
 ```
 
-⚠ **Vai ấy sửa 08/09/2026 (b104), từ `quan_tri` thành `quan_tri_he_thong`** —
-đo mới ra, không phải đổi ý. `co_the_quan_tri()` của `08-kiem-duyet.sql` mục 8
-chỉ nhận đúng một vai là `quan_tri_he_thong`, mà `duyet_thanh_vien()` và
-`tu_choi_thanh_vien()` đều gác bằng hàm ấy. Cấp `quan_tri` thì **người dựng
-cây không duyệt được đơn xin vào cây của chính mình** — hỏng đúng chỗ việc này
-sinh ra để mở. Thêm nữa, hai cây đang chạy lẫn bộ sinh SQL di dời đều cấp
-`quan_tri_he_thong`, nên cấp khác đi là đẻ ra hạng chủ cây thứ hai.
+⚠⚠ **CHỖ NÀY ĐÃ SAI MỘT LẦN, VÀ CÁCH SAI ĐÁNG GIỮ LẠI.**
+
+Bản b104 (sáng 08/09/2026) đổi vai ấy từ `quan_tri` thành `quan_tri_he_thong`,
+lý do ghi là *"`co_the_quan_tri()` chỉ nhận một vai, cấp `quan_tri` thì người
+dựng cây không duyệt được đơn của cây mình"*. **Chủ dự án bác bỏ ngay chiều
+hôm ấy**, và câu bác nói là câu đúng:
+
+> *"không ai được chỉ định quyền cho chính mình. mặc định người tạo cây thì có
+> quyền quản trị với cây đó."*
+
+Cái sai không nằm ở kết luận mà ở **chỗ chữa**: tôi chữa triệu chứng (nâng
+vai) thay vì chữa nguyên nhân (hàm hỏi nhầm chỗ). b105 chữa nguyên nhân —
+`co_the_quan_tri()` nay neo vào **cột `trees.chu_so_huu`**, không neo vào mã
+vai. Chủ cây vì thế mang vai `quan_tri` mà vẫn duyệt được đơn của cây mình.
+
+**Vai cấp cho người dựng cây là `quan_tri`.** Xem `luoc-do/13-quan-ly-thanh-vien.sql`.
 
 Nhắc lại cho khỏi hiểu nhầm: vai trong `tree_members` là quyền **theo cây**
 (mọi nơi hỏi nó đều qua `vai_tro(p_tree)`). Quản trị **toàn hệ thống** đọc ở
-chỗ khác hẳn — cờ `tai_khoan.la_quan_tri_he_thong`. Đã đo: `do-b104.mjs` HR4,
-người vừa dựng cây riêng đọc cây `NTB` ra **0 dòng**.
+chỗ khác hẳn — cờ `tai_khoan.la_quan_tri_he_thong`. Bản b104 không phải lỗ
+hổng rò rỉ (đã đo: `do-b104.mjs` HR4, người dựng cây riêng đọc cây `NTB` ra
+**0 dòng**); nó sai vì **một chữ mang hai nghĩa**. Từ b105 mã
+`quan_tri_he_thong` **không đặt vào `tree_members` được nữa** — ràng buộc của
+bảng từ chối nó, nên chuyện ấy không tái hiện được.
 
 ⚠ **Hai câu `insert` ấy không được tách rời.** Đẻ ra một `trees` mà không có
 dòng `tree_members` là đẻ ra một cây **không ai vào được, kể cả người vừa tạo**
@@ -454,4 +466,55 @@ Chỉ đổi chữ tiếng Việt hiển thị trên giao diện (trong `setting
   + Tài khoản Quản trị hệ thống (`quan_tri_he_thong`) là vai trò quản trị tối cao của toàn hệ thống phần mềm.
   + Quyền thao tác dữ liệu gia phả gắn liền với từng cây: Người tạo cây nào thì có vai Quản trị gia phả (`quan_tri`) của cây đó; sang cây khác của người khác thì không mặc nhiên có quyền can thiệp nếu không được chủ cây kia phân quyền.
 - Thiết kế chi tiết cấu trúc bảng tài khoản cấp hệ thống ở b102 do Claude Code quyết định kỹ thuật ở phiên sau, bám sát đúng nguyên tắc này.
+
+### 3. ✓ CHỐT THÊM 08/09/2026 (b105) — ai đổi được quyền, và luật không ngoại lệ
+
+Chủ dự án chốt dứt điểm sau khi bác bỏ chỗ lệch của b104:
+
+| Hạng | Nhận ra bằng | Sửa dữ liệu | Duyệt nội dung | Đổi vai · gắn mã người · bật tin cậy · **duyệt đơn xin vào cây** |
+|---|---|---|---|---|
+| **Quản trị hệ thống** | cờ `tai_khoan.la_quan_tri_he_thong` | ✓ mọi cây | ✓ | ✓ mọi cây |
+| **Chủ cây** *(người tạo)* | cột `trees.chu_so_huu` | ✓ cây mình | ✓ | ✓ **chỉ cây mình**, cấp tối đa `quan_tri` |
+| **Quản trị gia phả** (`quan_tri`) | `tree_members.role` | ✓ | ✓ | **✗** |
+| **Thành viên họ tộc** (`sua`) | `tree_members.role` | trực hệ, qua hàng chờ | ✗ | ✗ |
+| **Khách** (`xem`) | `tree_members.role` | ✗ | ✗ | ✗ |
+
+Nguyên văn chủ dự án:
+
+> *"vai trò quản trị, mặc định người tạo cây thì có quyền quản trị với cây đó,
+> có đủ các quyền sửa dữ liệu, duyệt nội dung, đổi vai và gắn thành viên cho
+> tài khoản trong hệ thống. việc đổi vai thì quyền tối đa cấp cho tài khoản
+> khác là quản trị và áp dụng cho cây mình tạo. quy tắc không được đặt quyền
+> cho chính bản thân để không bao giờ có thể leo thang quyền, chiếm quyền cao
+> hơn trong hệ thống."*
+>
+> *"người quản trị được chủ cây gán, chỉ có quyền sửa, duyệt nội dung, không
+> có quyền thay đổi quyền của người khác."*
+
+**Ba điều rút ra, và cả ba đều đã thành mã ở `luoc-do/13`:**
+
+1. **Duyệt ĐƠN XIN VÀO CÂY nằm ở cột phải, không nằm ở "duyệt nội dung".**
+   Nhận một người vào cây là **cấp quyền đọc**, không phải kiểm một lần sửa.
+   Nên `quan_tri` được mời phụ việc duyệt nội dung nhưng **không** duyệt đơn.
+
+2. **Mỗi cây chỉ ĐÚNG MỘT người đổi được quyền, và người ấy không đổi được
+   quyền của chính mình.** Nhờ vậy không có cảnh hai quản trị hạ vai lẫn nhau,
+   cũng không có cảnh người được mời phụ việc chiếm cây. Chủ cây
+   (`trees.chu_so_huu`) **không ai hạ vai hay gỡ được**, kể cả Quản trị hệ thống.
+
+3. **Luật "không tự đặt quyền cho mình" phải gác NĂM cửa, không riêng cửa vai.**
+   Hai cửa ngầm, không ai nghĩ tới khi nghe chữ *"đổi quyền"*:
+   - **gắn mã người** cho mình vào một cụ tổ → `pham_vi_sua()` mở ra **cả cây**;
+   - **bật `tin_cay`** cho mình → ghi thẳng, **bỏ qua hàng chờ kiểm duyệt**.
+
+   Luật **không có ngoại lệ**, kể cả cho Quản trị hệ thống — họ đã có mọi quyền
+   ở mọi cây qua cờ `tai_khoan`, nên chặn họ tự trỏ vào mình không lấy đi khả
+   năng nào. *Một luật không ngoại lệ thì kiểm được; một luật có một ngoại lệ
+   thì phải kiểm cả ngoại lệ, và ngoại lệ là chỗ lỗ hổng hay nằm.*
+
+**Và một chức năng bị bỏ sót, chủ dự án bổ sung cùng ngày: BÀN GIAO GIA PHẢ.**
+Trước b105 `chu_so_huu` là vĩnh viễn — chỉ `tao_gia_pha_moi()` đặt một lần,
+không hàm nào đổi. Nay có `doi_chu_cay(p_tree, p_user_moi)`: chủ cũ ở lại làm
+`quan_tri`, chủ mới nhận cột `chu_so_huu` **và** một dòng `tree_members` trong
+cùng một giao dịch — thiếu dòng ấy là chủ mới *sửa được mà không đọc được*.
 

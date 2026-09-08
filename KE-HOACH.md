@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 08/09/2026 · Bước gần nhất: **b104** (đã dán, đã đẩy) · Việc kế tiếp: **b105***
+*Cập nhật 08/09/2026 · Bước gần nhất: **b105** (đã dán) · Việc kế tiếp: **b106***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -138,7 +138,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Bốn mươi bảy việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Năm mươi mốt việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -191,6 +191,10 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Bàn thử SQL tại chỗ đo lại đường nâng cấp `11` (0.2.0→0.3.1) và đường nửa vời** | **b104** | ✓ **08/09/2026** |
 | **Phép đo `do-b104.mjs` — 38/38 ĐẠT, 3 kiểm chứng ngược** | **b104** | ✓ **08/09/2026** |
 | **Quy tắc mã cây đổi sang 3 chữ số, vá lỗ hổng bộ đếm mã** | **b104** | ✓ **08/09/2026** |
+| **Quản lý tài khoản của một cây — `13`, 6 hàm; luật KHÔNG ai tự đặt quyền cho mình (5 cửa)** | **b105** | ✓ **08/09/2026** — đã dán |
+| **Vai chủ cây neo vào cột `trees.chu_so_huu`; mã `quan_tri_he_thong` bị cấm khỏi `tree_members`** | **b105** | ✓ **08/09/2026** — đã dán |
+| **Bàn giao gia phả (`doi_chu_cay`) — chức năng bị bỏ sót, chủ dự án bổ sung** | **b105** | ✓ **08/09/2026** — đã dán |
+| **Phép đo `do-b105.mjs` — 53/53 ĐẠT, 4 kiểm chứng ngược · bộ kiểm `kiem-quan-ly-thanh-vien.mjs` 55/55** | **b105** | ✓ **08/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -507,22 +511,77 @@ thì sai lúc chưa có gì xây lên trên.
 > ⚠ **Chưa ai bấm thử trên app.** Đo bằng bàn thử SQL, chưa ai bấm nút *+ Dựng
 > gia phả mới* trên `nguyentrongbac.io.vn`.
 
-### b105 — Thành viên & quyền, tầng máy chủ
+### ~~b105~~ — Thành viên & quyền, tầng máy chủ · ✓ **XONG 08/09/2026, ĐÃ DÁN**
+
+> **Đã làm:** `luoc-do/13-quan-ly-thanh-vien.sql` *(mới, 885 dòng — **SÁU**
+> hàm, không phải năm: thêm `doi_chu_cay`)* · `12-tao-cay.sql` **0.2.0** ·
+> `08-kiem-duyet.sql` *(thêm cảnh báo, mã không đổi)* ·
+> `di-doi/sinh-sql-di-doi.mjs` **0.2.0** ·
+> `kiem-thu/kiem-quan-ly-thanh-vien.mjs` *(mới, **55/55**, 6 kiểm chứng ngược)* ·
+> `kiem-thu/ban-thu-sql/do-b105.mjs` *(ngoài repo, **53/53**, 4 kiểm chứng ngược)*.
+>
+> ⚠⚠ **BƯỚC NÀY MỞ ĐẦU BẰNG VIỆC CHỦ DỰ ÁN BÁC BỎ b104**, và đó là phần đáng
+> giữ nhất. b104 cấp người dựng cây vai `quan_tri_he_thong`; chủ dự án chốt
+> lại: *"không ai được chỉ định quyền cho chính mình. mặc định người tạo cây
+> thì có quyền quản trị với cây đó."*
+>
+> Triệu chứng b104 mô tả là thật, nhưng **chỗ chữa thì sai**: nguyên nhân
+> không phải vai quá thấp, mà là `co_the_quan_tri()` **hỏi MÃ VAI trong khi
+> thứ nó cần biết là AI LÀ CHỦ CÂY**. Một câu để nhớ: *khi phải nâng quyền cho
+> một thứ để nó chạy được, hãy nghi ngờ cái hàng rào chứ đừng nghi ngờ cái
+> quyền.*
+>
+> **Luật chốt** *(bảng đầy đủ ở `THIET-KE-NHIEU-CAY.md` mục 11.3)*: Quản trị
+> hệ thống = cờ `tai_khoan` · **Chủ cây = cột `trees.chu_so_huu`** · Quản trị
+> gia phả (`quan_tri`) **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Duyệt
+> **đơn xin vào cây** thuộc nhóm "đổi quyền", không thuộc "duyệt nội dung" —
+> nhận một người vào cây là cấp quyền ĐỌC.
+>
+> ⚠ **Luật "không tự đặt quyền cho mình" gác NĂM cửa, không một cửa.** Hai cửa
+> ngầm không ai gọi là "quyền": tự **gắn mã người** cho mình vào một cụ tổ →
+> `pham_vi_sua()` mở ra cả cây; tự bật **`tin_cay`** → ghi thẳng, bỏ qua kiểm
+> duyệt. **Không ngoại lệ, kể cả Quản trị hệ thống.**
+>
+> ⚠ **Ràng buộc `tree_members.role` nay TỪ CHỐI mã `quan_tri_he_thong`** — nên
+> chuyện một chữ hai nghĩa (chủ MỘT cây · quản trị TOÀN hệ thống) không tái
+> hiện được. **Dán lại `08`, `09` hoặc `12` thì phải dán lại `13` ngay sau.**
+>
+> ⚠ **Bàn thử bắt được `chu_so_huu` RỖNG trước khi ai kịp dán.** `11` gán cột
+> ấy theo email **cắm cứng** `trongdung1982@gmail.com`; máy chủ nào email khác
+> thì cột đứng `null` **không một câu lỗi nào**, và neo hàng rào vào đó là
+> *"không ai duyệt được đơn nữa"*. → `13` suy chủ cây từ chính `tree_members`
+> và **DỪNG HẲN** nếu còn cây không chủ.
+>
+> ⚠ **Ba lỗi trong chính phép đo**, cả ba đều *"đỏ vì lý do sai"* — nguy hiểm
+> hơn *"xanh oan"*, vì đỏ trông như đã bắt được cái gì đó nên người đọc đi sửa
+> MÃ thay vì sửa PHÉP ĐO. Nối tiếp hai câu cũ: b102 *hỏi hàm không phải là đo
+> hàng rào* · b104 *chạy lại không phải là nâng cấp* · **b105 mã thoát của
+> công cụ không phải câu trả lời của máy chủ**, và **một phép kiểm chứng ngược
+> bị hàng rào KHÁC che thì nó không chứng minh gì cả**.
+>
+> ⚠ **`13` CỐ Ý không nằm trong `chay.mjs`** — chạy nó ở đó là bàn thử luôn ở
+> trạng thái đã di dời, và phép đo sẽ đo *chạy lại* thay vì đo *di dời*. Đúng
+> bẫy b103. `do-b105.mjs` mục 0 còn **ĐÒI** nền trước khi di dời phải đúng
+> trạng thái máy chủ thật, và thoát ngay nếu không.
+>
+> ⚠ **Chưa ai bấm thử trên app** — bước này không đẻ ra màn hình nào để bấm.
+> Và **đổi quyền không để lại vết**: `change_log` chỉ ghi thay đổi nội dung gia
+> phả. Cần một bảng nhật ký riêng, chưa ai xin.
 
 | | |
 |---|---|
-| **Làm** | `luoc-do/13-quan-ly-thanh-vien.sql` — 5 hàm: `ds_thanh_vien` · `doi_vai_thanh_vien` · `gan_nguoi_cho_thanh_vien` · `dat_tin_cay_thanh_vien` · `go_thanh_vien`. `ds_thanh_vien` trả thêm **mã ngắn tài khoản** |
-| **Sản phẩm** | File SQL + `kiem-thu/kiem-quan-ly-thanh-vien.mjs`, có **kiểm chứng ngược** |
-| **Điểm dừng** | Bộ kiểm xanh **và** chủ dự án đã dán file, bảng tự kiểm cuối file khớp. Chạy qua bàn thử SQL tại chỗ trước khi đưa dán |
-| **⚠ Bẫy** | `null not in (…)` cho ra `null`, không cho ra `true`. Mọi phép kiểm vai hỏi `null` trước |
+| **Làm** | `luoc-do/13-quan-ly-thanh-vien.sql` — **6** hàm: `ds_thanh_vien` · `doi_vai_thanh_vien` · `gan_nguoi_cho_thanh_vien` · `dat_tin_cay_thanh_vien` · `go_thanh_vien` · **`doi_chu_cay`** *(bàn giao — chủ dự án bổ sung 08/09)*. Cộng 2 hàm hỏi nhỏ `la_chinh_minh` · `la_chu_cay` |
+| **Điểm dừng** | ✓ Bộ kiểm xanh, chạy qua bàn thử SQL tại chỗ, **và chủ dự án đã dán, xác nhận đạt 08/09/2026** |
 
 ### b106 — Thành viên & quyền, màn hình
 
 | | |
 |---|---|
-| **Làm** | `khu-thanh-vien.js` — bảng, ba tấm lọc *(Đang chờ · Đã duyệt · Tất cả)*, bốn thao tác hai nhịp. Cột **Mã tài khoản** để chỉ đúng người khi tên trùng · màn Cài đặt hiện *"Mã tài khoản của bạn"* |
+| **Làm** | `khu-thanh-vien.js` — bảng, ba tấm lọc *(Đang chờ · Đã duyệt · Tất cả)*, **năm** thao tác hai nhịp *(thêm **Bàn giao gia phả**)*. Cột **Mã tài khoản** để chỉ đúng người khi tên trùng · màn Cài đặt hiện *"Mã tài khoản của bạn"* |
 | **Sản phẩm** | Khu 2 chạy thật, **và tài khoản thử `thu-h9@…` được dọn bằng chính màn hình ấy** |
 | **Điểm dừng** | Sáu việc đo được: thấy tài khoản · thấy `P0012` · đổi được vai · gắn được mã khác · bật/tắt `tin_cay` · gỡ được. Rồi đăng nhập lại bằng một tài khoản `sua` và xác nhận `pham_vi_sua()` phản ánh đúng |
+| **⚠ Nợ b105 phải trả ở đây** | Người mang vai `quan_tri` **được phong** vẫn THẤY khối *Đơn chờ duyệt* trong Cài đặt, bấm Duyệt thì máy chủ từ chối — **giấu nút đi**. *(Không phải lỗi mới: trước b105 họ cũng không duyệt được.)* Và dùng chữ **"tài khoản"**, đừng dùng "thành viên" — vai gắn cho tài khoản đăng nhập, không gắn cho người trong sơ đồ |
+| **⚠ Bẫy** | Năm cửa đổi quyền đều từ chối khi người bị tác động **chính là người đang gọi**. Màn hình phải mờ sẵn nút trên dòng của chính mình, đừng để bấm rồi mới nhận câu từ chối |
 
 Bước này **xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md`** — chỗ hôm nay bảo chủ
 dự án gõ `update` trong SQL Editor.

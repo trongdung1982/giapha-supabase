@@ -5,7 +5,8 @@
 --            CÙNG MỘT giao dịch.
 -- Chạy ở   : Supabase → SQL Editor → dán → Run.
 --            Chạy SAU 11-quyen-he-thong.sql (bản 0.3.1 trở lên).
--- Phiên bản: 0.1.0 · Cập nhật: 08/09/2026 15:01
+-- Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 17:21 — người dựng cây nhận vai
+--            `quan_tri` (b105), thôi nhận `quan_tri_he_thong`
 --
 -- ⚠ File này DÁN LẠI ĐƯỢC: ràng buộc kiểm sự tồn tại trước khi thêm, hàm dùng
 --   `create or replace`. Danh sách cột trả về không có (hàm trả `jsonb`), nên
@@ -18,38 +19,35 @@
 --          hai lỗ hổng mà bảng tự kiểm 12/12 báo xanh.
 -- ============================================================
 --
--- ═══ MỘT CHỖ LỆCH KHỎI TÀI LIỆU THIẾT KẾ, VÀ LÝ DO ĐO ĐƯỢC ═══
+-- ═══ CHỖ LỆCH CỦA BẢN 0.1.0 ĐÃ VÁ — ĐỌC TRƯỚC KHI SỬA FILE NÀY ═══
 --
--- `THIET-KE-NHIEU-CAY.md` mục 7 viết người tạo cây nhận vai **`quan_tri`**.
--- File này cấp **`quan_tri_he_thong`** trong `tree_members`. Ba phép đo dẫn
--- tới chỗ lệch ấy:
+-- Bản 0.1.0 (b104, sáng 08/09) cấp người dựng cây vai **`quan_tri_he_thong`**,
+-- lệch khỏi `THIET-KE-NHIEU-CAY.md` mục 7 và mục 11. Chủ dự án bác bỏ ngay
+-- chiều hôm ấy, và câu bác nói là câu đúng:
 --
---   1. Hai cây đang chạy (`NTB`, `NPGQ8C9`) đều gán chủ cây vai
---      `quan_tri_he_thong`. Cấp `quan_tri` là đẻ ra một hạng chủ cây THỨ HAI,
---      yếu hơn hạng đang có, mà không ai giải thích được vì sao.
---   2. `co_the_quan_tri()` của `08-kiem-duyet.sql` mục 8 chỉ nhận **đúng một
---      vai**: `quan_tri_he_thong`. Mà `duyet_thanh_vien()` và
---      `tu_choi_thanh_vien()` đều gác bằng hàm ấy. Nên người dựng cây mà mang
---      vai `quan_tri` thì **không duyệt được đơn xin vào cây của chính mình**
---      — họ phải đi nhờ Quản trị hệ thống từng lần một. Đó là hỏng đúng chỗ
---      b104 sinh ra để mở: cho người trong họ dựng cây riêng, tự đứng được.
---   3. `di-doi/sinh-sql-di-doi.mjs` (b100) — đường tạo cây DUY NHẤT đang có —
---      cấp `quan_tri_he_thong`, và chính nó ghi chú rằng đường đúng về sau là
---      `tao_gia_pha_moi()` của b104. Cấp vai khác đi là hai đường tạo cây cho
---      ra hai loại chủ cây khác nhau.
+--   *"không ai được chỉ định quyền cho chính mình. mặc định người tạo cây thì
+--    có quyền quản trị với cây đó."*
 --
--- ⚠ VÀ VÌ SAO ĐIỀU ẤY KHÔNG PHẢI LỖ HỔNG: `quan_tri_he_thong` trong
---   `tree_members` là quyền **theo cây** — mọi hàm hỏi nó đều hỏi qua
---   `vai_tro(p_tree)`, tức luôn kèm một mã cây. Quản trị **toàn hệ thống** thì
---   đọc ở chỗ khác hẳn: cờ `tai_khoan.la_quan_tri_he_thong`, và
---   `la_quan_tri_he_thong()` không nhìn `tree_members` một dòng nào. Người
---   dựng cây mới vì thế là chủ ở cây họ dựng, và là người lạ ở mọi cây khác.
---   Đã đo: `do-b104.mjs` hàng rào 4.
+-- Lý do tôi đi lệch — chép lại để người sau không đi lại: `co_the_quan_tri()`
+-- hồi ấy chỉ nhận đúng một vai là `quan_tri_he_thong`, nên cấp `quan_tri` thì
+-- người dựng cây không duyệt được đơn xin vào cây của chính mình. Tôi chữa
+-- triệu chứng (nâng vai) thay vì chữa nguyên nhân (hàm hỏi nhầm chỗ).
 --
---   Cái giá còn lại là **tên gọi**: một mã vai mang chữ "hệ thống" mà nghĩa
---   chỉ trong một cây. Đổi tên mã là dán lại năm file như ngày 04/09 (`chu` →
---   `quan_tri_he_thong`, đo được: 11 hàm, 2 luật RLS, 1 ràng buộc, cả dữ
---   liệu). Không đáng, nhưng phải ghi ra để người đọc sau không tưởng là nhầm.
+-- `13-quan-ly-thanh-vien.sql` chữa nguyên nhân: `co_the_quan_tri()` nay neo
+-- vào **cột `trees.chu_so_huu`**, không neo vào mã vai. Chủ cây vì thế mang
+-- vai `quan_tri` mà vẫn duyệt được đơn của cây mình.
+--
+-- ⚠ FILE NÀY KHÔNG CHẠY MỘT MÌNH ĐƯỢC NỮA. `13` mục 3 thu hẹp ràng buộc
+--   `tree_members.role` để nó **từ chối** mã `quan_tri_he_thong`. Dán bản
+--   0.1.0 lên máy chủ đã chạy `13` thì `tao_gia_pha_moi()` ném lỗi ràng buộc
+--   ngay lần dựng cây đầu tiên — ném to, không hỏng lặng lẽ, và đó là chủ ý.
+--
+-- ⚠ Bản 0.1.0 KHÔNG phải lỗ hổng rò rỉ, và ghi lại để không ai hoảng khi đọc
+--   lịch sử git: vai trong `tree_members` luôn hỏi kèm một mã cây, nên người
+--   dựng cây riêng vẫn là người lạ ở mọi cây khác. Đã đo: `do-b104.mjs` hàng
+--   rào 4 — đọc cây `NTB` ra 0 dòng. Cái sai là **tên gọi và kiến trúc**: một
+--   chữ mang hai nghĩa (chủ MỘT cây · quản trị TOÀN hệ thống), và b104 vấp
+--   đúng vào chỗ ấy.
 
 -- ============================================================
 -- 1. RÀNG BUỘC `unique` TRÊN trees.tree_code
@@ -209,14 +207,23 @@ begin
   values (v_ma, v_ten, btrim(coalesce(p_note, '')), auth.uid(), coalesce(v_email, ''))
   returning id into v_tree;
 
-  -- ⚠ VAI `quan_tri_he_thong` LÀ CÓ CHỦ Ý — xem khối đầu file. Nó là quyền
-  --   THEO CÂY (mọi nơi hỏi nó đều hỏi qua `vai_tro(p_tree)`), không phải
-  --   quyền toàn hệ thống — cờ ấy nằm ở `tai_khoan.la_quan_tri_he_thong`.
+  -- ⚠ VAI `quan_tri` — Quản trị gia phả của ĐÚNG cây này. Quyền quản trị của
+  --   chủ cây KHÔNG đọc ở đây: nó đọc ở cột `trees.chu_so_huu` vừa đặt bên
+  --   trên, qua `co_the_quan_tri()` của `13-quan-ly-thanh-vien.sql`.
+  --
+  --   Dòng này vì thế trả lời một câu KHÁC: *"người ấy đọc và sửa được cây
+  --   không"* — `la_thanh_vien()` và `co_the_sua()` đều hỏi `tree_members`.
+  --   Thiếu nó là đẻ ra cây mà chính người dựng **sửa được nhưng không đọc
+  --   được**; xem khối ⚠⚠ ngay trên hai câu `insert` này.
+  --
+  -- ⚠ KHÔNG cấp `quan_tri_he_thong`. Đó là quyền TOÀN hệ thống, và nó không
+  --   sống trong bảng này — cờ ấy nằm ở `tai_khoan.la_quan_tri_he_thong`, chỉ
+  --   đặt được bằng SQL Editor. Ràng buộc của `13` nay cũng từ chối mã ấy.
   --
   -- ⚠ `approved = true`: người dựng cây không xếp hàng chờ chính mình duyệt.
   --   Cùng lẽ với ba vai đi tắt của `07-duyet-dang-ky.sql` mục 3.
   insert into public.tree_members (tree_id, user_id, role, email, approved)
-  values (v_tree, auth.uid(), 'quan_tri_he_thong', coalesce(v_email, ''), true);
+  values (v_tree, auth.uid(), 'quan_tri', coalesce(v_email, ''), true);
 
   return jsonb_build_object(
     'ok', true,
@@ -327,8 +334,23 @@ from (
 
   union all
 
-  -- 7. Số cây đang có — để đối chiếu trước/sau khi bấm thử
+  -- 7. Vai cấp cho người dựng cây phải là `quan_tri`, không phải vai hệ thống
+  -- ⚠ Bản 0.1.0 cấp `quan_tri_he_thong` — xem khối đầu file. Máy chủ đã chạy
+  --   `13` thì ràng buộc từ chối mã ấy, nên bản cũ hỏng ngay lần dựng cây đầu.
   select 7,
+    'tao_gia_pha_moi() cấp vai quan_tri cho người dựng cây',
+    case when (
+      select p.prosrc from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'tao_gia_pha_moi'
+    ) ilike '%''quan_tri'', coalesce(v_email%' then 'ĐẠT'
+    else 'HỎNG — còn bản 0.1.0. Dán lại file này, nếu không nút Tạo sẽ ném '
+         || 'lỗi ràng buộc ngay lần dựng cây đầu tiên.' end
+
+  union all
+
+  -- 8. Số cây đang có — để đối chiếu trước/sau khi bấm thử
+  select 8,
     'Số gia phả đang có: ' || (select count(*)::text from public.trees),
     'ghi nhớ — bấm Tạo xong con số này phải tăng đúng 1'
 

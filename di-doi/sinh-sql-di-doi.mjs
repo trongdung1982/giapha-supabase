@@ -4,7 +4,8 @@
 //            để dán vào Supabase → SQL Editor. Đây là bước di dời dữ liệu
 //            (H5) từ bản Apps Script sang bản Supabase.
 // Chạy     : cd supabase/di-doi && node sinh-sql-di-doi.mjs --file … --ma-cay …
-// Phiên bản: 0.1.0 · Cập nhật: 04/09/2026 09:31
+// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 17:21 — cấp vai `quan_tri` thay
+//            `quan_tri_he_thong`, và đặt `trees.chu_so_huu` (b105)
 // ============================================================
 //
 // ═══ VÌ SAO KHÔNG ĐI ĐƯỜNG GEDCOM ═══
@@ -78,13 +79,23 @@ const RAO = '$giapha$';
 const MUI_GIO = '+07';
 
 // Vai quản trị, viết một lần để không gõ lệch giữa ba chỗ dùng.
-const RAO_VAI = "'quan_tri_he_thong'";
+//
+// ⚠ ĐỔI 08/09/2026 (b105): trước là `quan_tri_he_thong`. Mã ấy nay KHÔNG đặt
+//   vào `tree_members` được nữa — `luoc-do/13` mục 3 thu hẹp ràng buộc để từ
+//   chối nó, vì nó từng mang hai nghĩa (chủ MỘT cây · quản trị TOÀN hệ thống).
+//   Quyền quản trị của chủ cây nay đọc ở cột `trees.chu_so_huu`, xem khối
+//   `update public.trees set chu_so_huu` bên dưới.
+const RAO_VAI = "'quan_tri'";
 
 // Câu lỗi khi dựng được cây mà không gắn được ai vào. Để riêng vì nó dài
 // và phải nối chuỗi trong SQL — nối sai một dấu nháy là hỏng cả file.
 const RAO_LOI = "'Dựng được cây % nhưng không gắn được người quản trị nào. " +
-  "Máy chủ chưa có tài khoản nào mang vai quan_tri_he_thong, cây dựng ra sẽ " +
+  "Máy chủ chưa có tài khoản nào mang vai quan_tri, cây dựng ra sẽ " +
   "không ai mở được, nên dừng lại ở đây.'";
+
+// Câu lỗi khi dựng được cây mà không đặt được chủ. Xem khối chu_so_huu.
+const RAO_LOI_CHU = "'Dựng được cây % nhưng không đặt được chủ cây: máy chủ " +
+  "chưa có tài khoản nào mang cờ la_quan_tri_he_thong. Chạy luoc-do/11 trước.'";
 
 /** Bọc một chuỗi vào dấu nháy đơn của SQL, nhân đôi dấu nháy bên trong. */
 function nhay(s) { return "'" + String(s || '').replace(/'/g, "''") + "'"; }
@@ -317,7 +328,7 @@ export function sinhSql(cay, tuyChon) {
   Number(cay.version) + ')',
 '    returning id into v_tree;',
 '',
-'    -- Ai được vào cây vừa dựng: **mọi tài khoản đang là quản trị hệ thống của',
+'    -- Ai được vào cây vừa dựng: **mọi tài khoản đang là Quản trị gia phả của',
 '    -- một cây nào đó**. Đây là một quy tắc, không phải một danh sách chép tay —',
 '    -- SQL Editor không mang danh nghĩa tài khoản nào (auth.uid() rỗng), nên',
 '    -- không có cách nào hỏi "ai đang dán file này".',
@@ -333,6 +344,29 @@ export function sinhSql(cay, tuyChon) {
 '',
 '    if not exists (select 1 from public.tree_members where tree_id = v_tree) then',
 '      raise exception ' + RAO_LOI + ', v_ma_cay;',
+'    end if;',
+'',
+'    -- ⚠ CHỦ CÂY LÀ BẮT BUỘC TỪ b105. `luoc-do/13` mục 1 DỪNG HẲN nếu còn cây',
+'    --   nào `chu_so_huu` rỗng, vì `co_the_quan_tri()` neo vào đúng cột ấy —',
+'    --   cây không chủ là cây không ai duyệt được đơn xin vào, và triệu chứng',
+'    --   chỉ lộ ra khi đã có người nộp đơn.',
+'    --',
+'    -- Lấy tài khoản mang cờ Quản trị hệ thống, cũ nhất trước. `order by` chứ',
+'    -- không `limit 1` trần: thiếu nó thì hai lần chạy cho hai kết quả khác',
+'    -- nhau, và không có gì báo là đã khác.',
+'    --',
+'    -- ⚠ Sắp thứ tự bằng `tai_khoan.tao_luc`, KHÔNG bằng `auth.users`. File di',
+'    --   dời không được đụng vào lược đồ `auth` — dù chỉ để ĐỌC — và',
+'    --   `kiem-di-doi.mjs` có một phép gác đúng chỗ ấy. Bản nháp đầu 08/09/2026',
+'    --   nối vào `auth.users` để lấy `created_at`, và phép ấy bắt được.',
+'    update public.trees set chu_so_huu = (',
+'      select tk.user_id from public.tai_khoan tk',
+'       where tk.la_quan_tri_he_thong',
+'       order by tk.tao_luc, tk.user_id limit 1',
+'    ) where id = v_tree;',
+'',
+'    if (select chu_so_huu from public.trees where id = v_tree) is null then',
+'      raise exception ' + RAO_LOI_CHU + ', v_ma_cay;',
 '    end if;',
 '  end if;',
 '',

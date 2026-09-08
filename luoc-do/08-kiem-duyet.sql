@@ -173,6 +173,22 @@ comment on column public.tree_members.tin_cay is
 --   rơi về `else false` — chặn đúng. Viết dạng phủ định (`not in`) là dựng
 --   lại đúng lỗ hổng b94 đã bắt được. Đừng "gọn hoá" theo hướng ấy.
 
+-- ⚠⚠ BẢN NÀY ĐÃ BỊ `13-quan-ly-thanh-vien.sql` THAY THẾ (b105, 08/09/2026).
+--
+--   Nó hỏi MÃ VAI `quan_tri_he_thong` — mà từ b105 mã ấy **không còn nằm
+--   trong `tree_members`** (ràng buộc của bảng từ chối nó). Quyền quản trị
+--   của chủ cây nay đọc ở **cột `trees.chu_so_huu`**.
+--
+--   Nên: **dán lại file `08` này thì BẮT BUỘC dán lại `13` ngay sau đó.**
+--   Không dán lại `13` thì `co_the_quan_tri()` trả `false` cho mọi chủ cây, và
+--   triệu chứng là *"không ai duyệt được đơn xin vào cây nữa"* — chỉ lộ ra khi
+--   đã có người nộp đơn, tức có thể hàng tuần sau.
+--
+--   Cùng đúng cái bẫy khối mục 4 bên trên đã cảnh báo cho `06`/`07`: thứ tự
+--   dán là một phần của lược đồ, không phải chi tiết thao tác.
+--
+--   Giữ nguyên câu cũ ở đây chứ không sửa, vì file này còn phải chạy đúng
+--   trên máy chủ CHƯA có `13` — `chay.mjs` dựng bàn thử theo đúng đường ấy.
 create or replace function public.co_the_quan_tri(p_tree uuid)
 returns boolean
 language sql

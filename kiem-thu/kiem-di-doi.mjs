@@ -331,8 +331,16 @@ function chayHet() {
        'persons=' + dem.persons + ' children=' + dem.union_children);
 
   // Bốn thứ file này TUYỆT ĐỐI không được đụng vào.
+  //
+  // ⚠ SOI TRÊN BẢN ĐÃ BỎ CHÚ THÍCH, và đây là chỗ đã trả giá 08/09/2026: một
+  //   câu chú thích viết *"sắp thứ tự bằng tai_khoan.tao_luc, KHÔNG bằng
+  //   auth.users"* — tức một lời giải thích rằng luật ĐANG được tuân thủ — làm
+  //   phép này báo đỏ. Bài kiểm hỏng vì chính lời giải thích của mã là bài
+  //   kiểm đo VĂN BẢN chứ không đo MÃ. Cùng lý lẽ đã ghi ở đầu
+  //   `kiem-tao-cay.mjs` cho phía JS.
+  const sqlMa = sql.split('\n').filter((d) => !/^\s*--/.test(d)).join('\n');
   for (const cam of ['auth.users', 'storage.', 'set name =', 'drop ']) {
-    kiem('không đụng tới ' + cam.trim(), !sql.includes(cam));
+    kiem('không đụng tới ' + cam.trim(), !sqlMa.includes(cam));
   }
 
   // ⚠ `tree_members` là ngoại lệ CÓ ĐIỀU KIỆN, mở 05/09/2026 — và điều kiện
