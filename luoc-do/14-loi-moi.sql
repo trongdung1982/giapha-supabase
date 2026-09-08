@@ -587,7 +587,111 @@ as $$
 $$;
 
 -- ============================================================
--- 10. QUYỀN GỌI
+-- 10. xoa_tai_khoan(p_user, p_email_xac_nhan) — CỬA THỨ BẢY, KHÔNG HOÀN TÁC
+-- ============================================================
+-- Chủ dự án chốt 08/09/2026: bảng sâu của khu Tài khoản có nút xoá hẳn tài
+-- khoản khỏi ứng dụng, không chỉ gỡ khỏi một cây.
+--
+-- ⚠ ĐÍNH CHÍNH MỘT CÂU TÔI ĐÃ NÓI SAI cùng ngày: *"xoá tài khoản thì xoá cả
+--   dấu vết người ấy trong nhật ký thay đổi"* — **không đúng**. `change_log`
+--   giữ `by_email` là CHỮ và `user_id` là uuid rời, **không có khoá ngoại** tới
+--   `auth.users` (`01-bang.sql` mục change_log). Xoá tài khoản thì lịch sử ai
+--   sửa gì vẫn còn nguyên. Đo bằng `grep "references auth.users"`, không đoán.
+--
+-- ⚠⚠ NGUY HIỂM THẬT NẰM CHỖ KHÁC, VÀ NÓ IM LẶNG: `trees.chu_so_huu` khai
+--    `on delete set null` (`11` mục 15). Xoá một tài khoản đang làm CHỦ CÂY
+--    thì cây ấy mất chủ — không báo lỗi, không ai biết — và từ b105 chỉ còn
+--    Quản trị hệ thống động vào được. Nên hàm này **từ chối** cho tới khi bàn
+--    giao cây đi bằng `doi_chu_cay()`.
+--
+-- Bảy cửa gác cùng một câu, và hai cửa cuối là loại "hỏng trong im lặng" mà
+-- b102 đã dạy phải canh: tài khoản `sao_luu` bị xoá thì bản sao lưu đêm vẫn
+-- chạy, vẫn sinh file, chỉ là file rỗng.
+--
+-- ⚠ VÌ SAO ĐÒI GÕ LẠI EMAIL. Đây là việc duy nhất trong cả hệ thống phá huỷ
+--   một lối đăng nhập, và nó bấm từ một danh sách TOÀN HỆ THỐNG nơi hai dòng
+--   trông na ná nhau. Nút hai nhịp gác được cái bấm nhầm, không gác được cái
+--   bấm nhầm DÒNG. Gõ lại email thì gác được cả hai.
+
+create or replace function public.xoa_tai_khoan(
+  p_user           uuid,
+  p_email_xac_nhan text
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_email  text;
+  v_cay    int;
+  v_chan   int;
+  v_saoluu int;
+  v_con    int;
+  v_co_co  boolean;
+begin
+  if not public.la_quan_tri_he_thong() then
+    return jsonb_build_object('ok', false, 'loi',
+      'Chỉ Quản trị hệ thống mới xoá được tài khoản.');
+  end if;
+
+  if public.la_chinh_minh(p_user) then
+    return jsonb_build_object('ok', false, 'loi',
+      'Không ai tự xoá tài khoản của chính mình ở đây được.');
+  end if;
+
+  select u.email::text into v_email from auth.users u where u.id = p_user;
+  if v_email is null then
+    return jsonb_build_object('ok', false, 'loi', 'Không có tài khoản này.');
+  end if;
+
+  if lower(trim(coalesce(p_email_xac_nhan, ''))) <> lower(v_email) then
+    return jsonb_build_object('ok', false, 'loi',
+      'Email gõ lại không khớp với tài khoản định xoá.');
+  end if;
+
+  select count(*) into v_cay from public.trees t where t.chu_so_huu = p_user;
+  if v_cay > 0 then
+    return jsonb_build_object('ok', false, 'loi',
+      'Tài khoản này đang là chủ của ' || v_cay || ' gia phả. Bàn giao gia phả ' ||
+      'cho người khác trước đã — xoá bây giờ thì cây mất chủ mà không báo gì.');
+  end if;
+
+  select count(*) into v_saoluu from public.tree_members m
+   where m.user_id = p_user and m.role = 'sao_luu';
+  if v_saoluu > 0 then
+    return jsonb_build_object('ok', false, 'loi',
+      'Đây là tài khoản sao lưu tự động — xoá nó thì bản sao lưu đêm vẫn chạy ' ||
+      'và vẫn sinh file, chỉ là file rỗng.');
+  end if;
+
+  select coalesce(k.la_quan_tri_he_thong, false) into v_co_co
+    from public.tai_khoan k where k.user_id = p_user;
+  if coalesce(v_co_co, false) then
+    select count(*) into v_con from public.tai_khoan
+     where la_quan_tri_he_thong = true;
+    if v_con <= 1 then
+      return jsonb_build_object('ok', false, 'loi',
+        'Đây là Quản trị hệ thống cuối cùng — xoá nốt thì không ai quản trị ' ||
+        'hệ thống được nữa.');
+    end if;
+  end if;
+
+  -- Đếm TRƯỚC khi xoá, để câu báo trên màn hình nói đúng cái vừa mất.
+  select count(*) into v_chan from public.tree_members m where m.user_id = p_user;
+
+  -- `tree_members`, `tai_khoan`, `user_settings`, `branch_access` đều khai
+  -- `on delete cascade` nên đi theo. `change_log` KHÔNG — cố ý, xem đầu mục.
+  delete from auth.users where id = p_user;
+
+  return jsonb_build_object('ok', true, 'email', v_email,
+                            'soChanDaGo', v_chan);
+end;
+$$;
+
+-- ============================================================
+-- 11. QUYỀN GỌI
 -- ============================================================
 -- ⚠ `revoke … from public, anon` trước mỗi `grant`, đúng khuôn `07` mục 8:
 --   mặc định của Postgres là **mọi vai đều gọi được**, kể cả `anon` — tức
@@ -602,6 +706,7 @@ revoke all on function public.dat_quan_tri_he_thong(uuid, boolean) from public, 
 revoke all on function public.ds_tai_khoan_he_thong()             from public, anon;
 revoke all on function public.ds_cay_cua_tai_khoan(uuid)          from public, anon;
 revoke all on function public.ds_gia_pha()                        from public, anon;
+revoke all on function public.xoa_tai_khoan(uuid, text)           from public, anon;
 
 grant execute on function public.moi_vao_cay(uuid, text, text, text) to authenticated;
 grant execute on function public.loi_moi_cua_toi()                   to authenticated;
@@ -611,11 +716,12 @@ grant execute on function public.dat_quan_tri_he_thong(uuid, boolean) to authent
 grant execute on function public.ds_tai_khoan_he_thong()             to authenticated;
 grant execute on function public.ds_cay_cua_tai_khoan(uuid)          to authenticated;
 grant execute on function public.ds_gia_pha()                        to authenticated;
+grant execute on function public.xoa_tai_khoan(uuid, text)            to authenticated;
 
 commit;
 
 -- ============================================================
--- 11. BẢNG TỰ KIỂM — đọc sau khi dán
+-- 12. BẢNG TỰ KIỂM — đọc sau khi dán
 -- ============================================================
 -- ⚠ Bảng này chỉ hỏi *"thứ này có tồn tại không"*, KHÔNG hỏi *"nó có chặn
 --   được không"*. Bài học b102: một bảng tự kiểm 12/12 ĐẠT đứng cạnh hai lỗ
@@ -630,11 +736,12 @@ from (
                   and column_name in ('moi_boi','moi_luc','moi_vai')) = 3
          then 'ĐẠT' else 'HỎNG — thiếu cột' end as ket_qua
   union all
-  select 2, 'Bảy hàm mới đã có',
+  select 2, 'Tám hàm mới đã có',
     case when (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                 where n.nspname='public' and p.proname in
                   ('moi_vao_cay','loi_moi_cua_toi','nhan_loi_moi','tu_choi_loi_moi',
-                   'dat_quan_tri_he_thong','ds_tai_khoan_he_thong','ds_cay_cua_tai_khoan')) = 7
+                   'dat_quan_tri_he_thong','ds_tai_khoan_he_thong','ds_cay_cua_tai_khoan',
+                   'xoa_tai_khoan')) = 8
          then 'ĐẠT' else 'HỎNG — thiếu hàm' end
   union all
   select 3, 'ds_gia_pha() đã có cột duoc_moi',

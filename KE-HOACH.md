@@ -599,8 +599,10 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 
 | | |
 |---|---|
-| **Làm** | `luoc-do/14-loi-moi.sql` — 3 cột (`moi_boi` · `moi_luc` · `moi_vai`) + **7 hàm**: `moi_vao_cay` · `loi_moi_cua_toi` · `nhan_loi_moi` · `tu_choi_loi_moi` · `dat_quan_tri_he_thong` · `ds_tai_khoan_he_thong` · `ds_cay_cua_tai_khoan`. Và dán đè `ds_gia_pha()` để thêm 3 cột lời mời |
-| **Điểm dừng** | ✓ `kiem-thu/ban-thu-sql/do-b107.mjs` **46/46 ĐẠT**, gồm 3 phép bẻ gãy có chủ ý. ⏳ Còn chờ chủ dự án dán vào máy chủ thật |
+| **Làm** | `luoc-do/14-loi-moi.sql` — 3 cột (`moi_boi` · `moi_luc` · `moi_vai`) + **8 hàm**: `moi_vao_cay` · `loi_moi_cua_toi` · `nhan_loi_moi` · `tu_choi_loi_moi` · `dat_quan_tri_he_thong` · `ds_tai_khoan_he_thong` · `ds_cay_cua_tai_khoan` · **`xoa_tai_khoan`**. Và dán đè `ds_gia_pha()` để thêm 3 cột lời mời |
+| **Điểm dừng** | ✓ `kiem-thu/ban-thu-sql/do-b107.mjs` **55/55 ĐẠT**, gồm 3 phép bẻ gãy có chủ ý. ⏳ Còn chờ chủ dự án dán vào máy chủ thật |
+| **Xoá tài khoản — 7 cửa gác** | Không phải mình · gõ lại đúng email · **không xoá người đang LÀM CHỦ một cây** *(`trees.chu_so_huu` khai `on delete set null` → cây mất chủ trong im lặng)* · không xoá tài khoản `sao_luu` · không xoá Quản trị hệ thống cuối cùng. ⚠ **Đính chính**: `change_log` KHÔNG có khoá ngoại tới `auth.users`, nên nhật ký ai sửa gì **vẫn còn** sau khi xoá — câu ngược lại nói hôm 08/09 là sai |
+| **⚠ Bàn thử nói dối ở đây** | Supabase thật còn `auth.identities` · `sessions` · `refresh_tokens` trỏ về `auth.users`; bàn thử chỉ dựng mỗi `auth.users`. Phép HR15 chứng minh **luật gác đúng**, KHÔNG chứng minh lệnh xoá chạy trót lọt trên máy chủ thật. Lần dán thật là lần đầu biết điều đó |
 | **⚠ Cái bẫy đã đo được** | `la_thanh_vien()` cho vào cây khi `approved` **hoặc** vai ∈ (`quan_tri_he_thong`,`quan_tri`,`sao_luu`). Ghi vai được mời thẳng vào `role` là **mở cây ra ngay lúc mời**. Nên có cột `moi_vai` riêng; `role` giữ `xem` tới lúc nhận. Phép KC2 tái hiện đúng cái bẫy ấy để chứng minh HR5 đo thật |
 | **⚠ Bẫy của phép ĐO, không phải của mã** | Câu `select id from trees where tree_code='NTB'` lồng trong khối mượn danh nghĩa **cũng đi qua RLS** — người ngoài không thấy cây nên hàm nhận `p_tree = null`. 5 phép HỎNG bịa ở lần chạy đầu. Mã cây phải hỏi một lần bằng `postgres` rồi cắm hằng số |
 | **Còn hở, cố ý** | `trang_thai_cua_toi()` của `07` chưa biết trạng thái *"được mời"* — người được mời mà bấm *Xin quyền* sẽ nhận câu "đơn đang chờ". Không sai nguy hiểm, nhưng nói không đúng chuyện; sửa ở b108 cùng lúc với màn hình |
@@ -611,7 +613,7 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 |---|---|
 | **Làm** | Khu Gia phả: cột **Mời** *(chủ cây và Quản trị hệ thống thấy)* + dòng cây mình **được mời** hiện *Nhận · Từ chối* thay cho *Xin quyền*. Khu Tài khoản: tấm lọc thứ tư **Toàn hệ thống** *(chỉ Quản trị hệ thống)* — mọi tài khoản đã đăng ký, cột **Số cây**, bấm vào mở bảng sâu theo từng cây |
 | **Bảng sâu làm được gì** | Đúng năm việc đã có của `13` *(đổi vai · gắn mã người · tin cậy · gỡ · bàn giao)*, chỉ khác là chọn cây theo dòng — **không hàm việc nào phải viết mới**. Cộng nút bật/tắt cờ **Quản trị hệ thống**, và nút **Mời thẳng vào một cây** |
-| **Chưa làm** | **Xoá hẳn tài khoản khỏi ứng dụng.** Không hoàn tác được và xoá cả dấu vết người ấy trong `change_log` — đáng một bước riêng có phép đo riêng. Chủ dự án chưa chốt |
+| **Bốn việc chủ dự án chốt cho bảng sâu** | ① xem từng cây + năm việc của `13` · ② mời thẳng vào một cây · ③ **xoá hẳn tài khoản** *(gõ lại email để xác nhận)* · ④ cột chỉ đọc: đăng ký lúc nào, đăng nhập gần nhất, email đã xác nhận chưa |
 | **Điểm dừng** | Mời một tài khoản thật → tài khoản ấy đăng nhập, **thấy lời mời**, và **chưa đọc được cây**; bấm Nhận thì đọc được, vai đúng bằng vai được mời |
 | **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
 
