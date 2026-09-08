@@ -4,7 +4,11 @@
 //            phả đang mở, cộng năm việc đổi quyền và hai việc duyệt đơn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.1.0 · Cập nhật: 08/09/2026 20:20
+// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 22:25
+//            0.2.0 sau lần chủ dự án bấm thử đầu tiên: bảng việc ra NGOÀI
+//            bảng (trước nó nằm trong khung 860px nên việc thứ ba trở đi rơi
+//            khỏi mép màn hình) · nút *Sửa quyền* khoá sẵn ở dòng không đổi
+//            được gì · cờ `tin_cay` trên màn hình gọi đúng là **Tin cậy**.
 // ============================================================
 //
 // ═══ CHỮ "TÀI KHOẢN", KHÔNG PHẢI "THÀNH VIÊN" ═══
@@ -199,9 +203,13 @@ async function nap(than, phien) {
   //   mọi câu giải thích bị cắt, và muốn đọc phải kéo ngang từng dòng một.
   //   Đúng loại lỗi bất biến văn bản không bắt được — hợp lệ, mà không dùng
   //   được. Đứng ngoài thì nó rộng đúng bằng khu, ở cả hai bề ngang màn hình.
+  //   ⚠ Một chỗ đứng chung thì **mỗi lúc chỉ một dòng mở được**, và đó là chủ
+  //   ý: hai bảng việc cùng mở là hai ô nhập mã người nằm cạnh nhau không nói
+  //   rõ ô nào của ai.
   const oViec = document.createElement('div');
+  const boMoRong = { oViec, dangMo: null, nut: [] };
 
-  const khung = veBang(hienRa, phien, duocDoiQuyen, napLai, oViec);
+  const khung = veBang(hienRa, phien, duocDoiQuyen, napLai, boMoRong);
   than.append(khung);
 
   // ⚠ Nói ra CHỈ KHI nó đúng, và ĐO để biết nó đúng — chép đúng cách
@@ -282,7 +290,7 @@ function veThanhLoc(ds, _napLai, doiLoc) {
 // Bảng
 // ============================================================
 
-function veBang(ds, phien, duocDoiQuyen, napLai, oViec) {
+function veBang(ds, phien, duocDoiQuyen, napLai, bo) {
   // Bảng rộng phải tự cuộn TRONG khung của nó, không kéo phình cả lưới hai cột
   // của trang. Cùng cách hai khu kia làm.
   const khung = document.createElement('div');
@@ -296,7 +304,7 @@ function veBang(ds, phien, duocDoiQuyen, napLai, oViec) {
   bang.append(veDauBang());
 
   const ruot = document.createElement('tbody');
-  for (const t of ds) veMotDong(ruot, t, phien, duocDoiQuyen, napLai);
+  for (const t of ds) veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo);
   bang.append(ruot);
 
   khung.append(bang);
@@ -317,7 +325,12 @@ function veDauBang() {
     ['Mã tài khoản', ''],
     ['Người được gắn', ''],
     ['Vai trò', ''],
-    ['Ghi thẳng', 'text-align:center'],
+    // ⚠ Trên màn hình gọi là **Tin cậy**, đúng tên cột `tree_members.tin_cay`
+    //   và đúng chữ chủ dự án dùng khi hỏi. Bản đầu b106 gọi nó là *Ghi thẳng*
+    //   — mô tả đúng cái nó làm, nhưng chủ dự án đi tìm chữ "tin cậy" và không
+    //   thấy (08/09/2026). Chữ "ghi thẳng" vẫn ở nguyên trong câu giải thích,
+    //   nơi nó có việc: nói ra HẬU QUẢ của việc bật.
+    ['Tin cậy', 'text-align:center'],
     ['Tham gia', ''],
     ['', 'text-align:right'],
   ];
@@ -334,14 +347,14 @@ function veDauBang() {
 }
 
 /**
- * Một dòng, cộng một dòng thứ hai **ẩn sẵn** ngay dưới nó để mở bảng việc.
+ * Một dòng của bảng, cộng một cái nút mở bảng việc **ở dưới bảng** (`bo`).
  *
- * ⚠ Vì sao mở rộng xuống dưới chứ không nhồi năm nút vào cột cuối: ba trong
+ * ⚠ Vì sao bảng việc đứng riêng chứ không nhồi năm nút vào cột cuối: ba trong
  *   năm việc cần một ô nhập hoặc một ô chọn đứng cạnh nút. Nhồi hết vào một ô
  *   bảng thì trên điện thoại chúng xếp chồng thành một cột hẹp không đọc nổi,
  *   còn trên máy tính thì bảng phình ngang tới mức phải cuộn mới thấy cột đầu.
  */
-function veMotDong(ruot, t, phien, duocDoiQuyen, napLai) {
+function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
   const tr = document.createElement('tr');
   tr.style.cssText = 'border-bottom:1px solid #f2eee8;vertical-align:top';
 
@@ -398,29 +411,106 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai) {
   tr.append(oTk, oMa, oNguoi, oVai, oTin, oLuc, oThao);
   ruot.append(tr);
 
-  // — Dòng mở rộng —
-  const trPhu = document.createElement('tr');
-  trPhu.style.display = 'none';
-  const oPhu = document.createElement('td');
-  oPhu.colSpan = 7;
-  oPhu.style.cssText = 'padding:0 10px 14px;background:#faf8f5';
-  trPhu.append(oPhu);
-  ruot.append(trPhu);
+  // — Nút mở bảng việc —
+  //
+  // ⚠ **Khoá sẵn, không mở ra rồi mới giải thích.** Chủ dự án bảo thẳng
+  //   08/09/2026, sau khi bấm vào dòng của chính mình: *"nút chuyển sang màu
+  //   xám và ở trạng thái khoá, không cần cho bấm vào rồi đi giải thích."*
+  //
+  //   Hai trường hợp khoá, và cả hai đều là *mọi việc bên trong đều bị máy chủ
+  //   từ chối*, chứ không phải *phần lớn*:
+  //     · dòng của chính mình — cả năm cửa của `luoc-do/13` đều từ chối khi
+  //       người bị tác động là người đang gọi;
+  //     · người chỉ xem được (`quan_tri` được phong) — không cửa nào mở.
+  //
+  //   Lý do vì sao khoá đã nằm sẵn trên màn hình mà không phải bấm gì: huy
+  //   hiệu *Bạn* ngay cột đầu, và câu nhắc `veNhacChiXem()` ở đầu khu. `title`
+  //   chỉ là lớp thứ hai cho người dùng chuột — đừng để nó thành chỗ DUY NHẤT
+  //   nói ra lý do, điện thoại không có chuột.
+  const chuDong = t.daDuyet ? 'Sửa quyền' : 'Xét đơn';
+  const khoaMo = !duocDoiQuyen || t.laChinhToi;
 
-  const bMo = nut(t.daDuyet ? 'Sửa quyền' : 'Xét đơn', false);
-  bMo.addEventListener('click', () => {
-    const dangMo = trPhu.style.display !== 'none';
-    trPhu.style.display = dangMo ? 'none' : '';
-    bMo.textContent = dangMo
-      ? (t.daDuyet ? 'Sửa quyền' : 'Xét đơn')
-      : 'Thu lại';
-    if (!dangMo && !oPhu.childNodes.length) {
-      oPhu.append(t.daDuyet
-        ? veBangViec(t, phien, duocDoiQuyen, napLai)
-        : veXetDon(t, phien, duocDoiQuyen, napLai));
-    }
-  });
+  const bMo = nut(chuDong, false);
+  bMo.dataset.chuDong = chuDong;
+
+  if (khoaMo) {
+    bMo.disabled = true;
+    bMo.style.opacity = '0.45';
+    bMo.style.cursor = 'not-allowed';
+    bMo.title = t.laChinhToi
+      ? 'Dòng của chính bạn — không ai đặt quyền cho chính mình được.'
+      : 'Bạn xem được danh sách này nhưng không đổi được quyền của ai.';
+  } else {
+    bo.nut.push(bMo);
+    bMo.addEventListener('click', () => moBangViec(bo, t, bMo, () => (t.daDuyet
+      ? veBangViec(t, phien, duocDoiQuyen, napLai)
+      : veXetDon(t, phien, duocDoiQuyen, napLai))));
+  }
+
   oThao.append(bMo);
+}
+
+/**
+ * Mở bảng việc của một dòng, **bên NGOÀI bảng** — không phải một `<tr>` ẩn
+ * ngay dưới dòng vừa bấm.
+ *
+ * ⚠ Bản đầu của b106 làm đúng kiểu `<tr>` ẩn ấy, và nó **hỏng thật**: ô mở
+ *   rộng nằm TRONG cái bảng `min-width:860px`, nên việc thứ ba trở đi rơi ra
+ *   ngoài mép màn hình. Chủ dự án sửa được vai (việc 1) và gỡ được tài khoản
+ *   (việc 4) rồi vẫn hỏi *"bật tắt tin cậy ở đâu?"* — việc 3 nằm ngay đó, chỉ
+ *   là không nhìn thấy. Đứng ngoài bảng thì bảng việc rộng đúng bằng khu.
+ *
+ * ⚠ Loại lỗi này bất biến văn bản không bắt được: 121 phép của
+ *   `kiem-trang-quan-tri.mjs` đều xanh trong khi màn hình không dùng được.
+ *   Phải nhìn bằng mắt, hoặc chụp ảnh ở đúng bề ngang thật.
+ */
+function moBangViec(bo, t, bMo, veNoiDung) {
+  const dangMoDongNay = bo.dangMo === t.userId;
+
+  // Đóng hết trước, kể cả khi sắp mở dòng khác: một chỗ đứng chung thì trả
+  // mọi nút về chữ cũ là cách duy nhất để không còn cái nút nào ghi "Thu lại"
+  // mà chẳng thu cái gì.
+  bo.oViec.innerHTML = '';
+  for (const n of bo.nut) n.textContent = n.dataset.chuDong;
+
+  if (dangMoDongNay) {
+    bo.dangMo = null;
+    return;
+  }
+
+  bo.dangMo = t.userId;
+  bMo.textContent = 'Thu lại';
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:14px;padding:0 14px 14px;border:1px solid #e6e0d8;' +
+    'border-radius:10px;background:#faf8f5';
+
+  // Bảng việc nay đứng tách khỏi dòng nên nó phải TỰ NÓI nó của ai — cột
+  // *Mã tài khoản* có mặt ở đây đúng vì lý do ấy: hai người trùng tên trong
+  // họ là chuyện thường.
+  const tieu = document.createElement('div');
+  tieu.style.cssText = 'padding:12px 0 0;font-size:13px;color:#2a2622';
+  tieu.append(document.createTextNode(t.daDuyet ? 'Sửa quyền của ' : 'Xét đơn của '));
+
+  const ai = document.createElement('span');
+  ai.textContent = t.email || '(không rõ email)';
+  ai.style.cssText = 'font-weight:600;word-break:break-all';
+  tieu.append(ai);
+
+  if (t.maNgan) {
+    const m = document.createElement('span');
+    m.textContent = ' · ' + t.maNgan;
+    m.style.cssText = 'font-family:ui-monospace,monospace;font-size:12px;color:#5b4533';
+    tieu.append(m);
+  }
+
+  hop.append(tieu, veNoiDung());
+  bo.oViec.append(hop);
+
+  // `nearest` chứ không phải `start`: cuộn vừa đủ để thấy, không hất cái bảng
+  // ra khỏi màn hình — người đang so mấy dòng với nhau thì cần thấy cả hai.
+  hop.scrollIntoView({ block: 'nearest' });
 }
 
 // ============================================================
@@ -522,24 +612,25 @@ function viecGanNguoi(t, phien, duocDoiQuyen, napLai) {
     'Một mã chỉ gắn cho MỘT tài khoản.', bao);
 }
 
-/** Bật / tắt ghi thẳng — cửa leo thang sắc nhất, nên nói thẳng nó làm gì. */
+/** Bật / tắt **tin cậy** — cửa leo thang sắc nhất, nên nói thẳng nó làm gì. */
 function viecTinCay(t, phien, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi;
   const bat = !t.tinCay;
 
   const bao = dongBao();
   const b = nutHaiNhip(
-    bat ? 'Bật ghi thẳng' : 'Tắt ghi thẳng',
+    bat ? 'Bật tin cậy' : 'Tắt tin cậy',
     'Bấm lần nữa để ' + (bat ? 'bật' : 'tắt'),
     khoa,
     async () => {
       const kq = await datTinCayThanhVien(phien.treeId, t.userId, bat);
-      return xong(kq, bao, napLai, 'Không đổi được chế độ ghi thẳng.');
+      return xong(kq, bao, napLai, 'Không đổi được chế độ tin cậy.');
     });
 
-  return hangViec('Ghi thẳng', [b],
-    'Đang ' + (t.tinCay ? 'BẬT' : 'TẮT') + '. Bật thì mỗi lần người này bấm ' +
-    'Lưu là thành chính thức ngay, không qua hàng chờ kiểm duyệt.', bao);
+  return hangViec('Tin cậy', [b],
+    'Đang ' + (t.tinCay ? 'BẬT' : 'TẮT') + '. Bật là cho người này ghi thẳng: ' +
+    'mỗi lần họ bấm Lưu là thành chính thức ngay, không qua hàng chờ kiểm duyệt.',
+    bao);
 }
 
 /** Gỡ khỏi gia phả — chỉ xoá dòng trong cây, không xoá tài khoản. */
