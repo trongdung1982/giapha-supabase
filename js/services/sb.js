@@ -5,7 +5,7 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.4.0 · Cập nhật: 05/09/2026 11:09
+// Phiên bản: 0.5.0 · Cập nhật: 08/09/2026 10:40
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -143,6 +143,7 @@ export async function nguoiDangNhap() {
  *
  * @returns {Promise<{daDangNhap:boolean, email:string, vaiTro:string|null,
  *   docDuoc:boolean, suaDuoc:boolean, treeId:string|null,
+ *   laQuanTriHeThong:boolean, maNgan:string,
  *   nguoiTrungTamMacDinh:string|null, hienNgayGio:boolean,
  *   tenHo:string, nguoiQuanLy:string,
  *   loi:string|null}>}
@@ -151,6 +152,7 @@ export async function layPhien() {
   const nen = {
     daDangNhap: false, email: '', vaiTro: null,
     docDuoc: false, suaDuoc: false, treeId: null,
+    laQuanTriHeThong: false, maNgan: '',
     nguoiTrungTamMacDinh: null, hienNgayGio: false,
     tenHo: TEN_HO, nguoiQuanLy: NGUOI_QUAN_LY, loi: null,
   };
@@ -168,15 +170,68 @@ export async function layPhien() {
   // câu truy vấn này KHÔNG có `where user_id = …` mà vẫn chỉ trả về phần của
   // người đang gọi. Đó là cả điểm của cuộc chuyển nhà — app không tự lọc, và
   // vì thế app không thể lọc sai.
-  const { data: ds, error } = await k
-    .from('tree_members')
-    .select('tree_id, role')
-    .eq('user_id', nguoi.id);
+  //
+  // ⚠ Ba câu hỏi đi CÙNG MỘT LƯỢT (b103). Hai câu sau thuộc tầng người, không
+  //   thuộc cây nào: có phải Quản trị hệ thống không, và mã ngắn của tài khoản
+  //   là gì. Hỏi nối tiếp thì mỗi lần mở app tốn thêm hai vòng mạng cho hai
+  //   con số nhỏ xíu — mà `layPhien()` chạy ở đầu MỌI trang.
+  const [{ data: ds, error }, { data: coQuyenHT }, { data: maTk }] = await Promise.all([
+    k.from('tree_members').select('tree_id, role').eq('user_id', nguoi.id),
+    k.rpc('la_quan_tri_he_thong'),
+    k.rpc('ma_tai_khoan_cua_toi'),
+  ]);
+
+  const laQuanTriHeThong = Boolean(coQuyenHT);
+  const maNgan = maTk || '';
+  const nenNguoi = { ...nen, laQuanTriHeThong, maNgan };
 
   if (error) {
-    return { ...nen, daDangNhap: true, email: nguoi.email, loi: cauLoi(error) };
+    return { ...nenNguoi, daDangNhap: true, email: nguoi.email, loi: cauLoi(error) };
   }
+
+  // ⚠ QUẢN TRỊ HỆ THỐNG ĐI TRƯỚC, và phải đứng trước nhánh "không có chân"
+  //   ngay dưới. Từ 05/09/2026 vai ấy **đọc và sửa được mọi cây**, kể cả cây
+  //   họ không có một dòng `tree_members` nào — mà đúng cảnh ấy lại rơi thẳng
+  //   vào nhánh "chưa được duyệt" bên dưới nếu để thứ tự ngược lại. Triệu
+  //   chứng khi sai: người có quyền cao nhất hệ thống nhìn thấy màn hình
+  //   *"bạn đang chờ được duyệt"*.
+  if (laQuanTriHeThong) {
+    const treeId = (ds && ds.length)
+      ? await cayDangChon(k, nguoi.id, ds)
+      : await cayDauTien(k);
+    return {
+      ...nenNguoi,
+      daDangNhap: true,
+      email: nguoi.email || '',
+      vaiTro: 'quan_tri_he_thong',
+      docDuoc: true,
+      suaDuoc: true,
+      trangThai: 'daduyet',
+      treeId,
+      ...(treeId ? await caiDatCay(k, nguoi.id, treeId) : {}),
+    };
+  }
+
   if (!ds || !ds.length) {
+    // ⚠ CỬA CÂY MẶC ĐỊNH (b102, dùng thật từ b103). Hệ thống có thể mở sẵn
+    //   MỘT cây cho người chưa có chân ở đâu cả — họ vào xem được, không sửa
+    //   được, và không thấy danh sách thành viên. Hàng rào nằm ở Postgres
+    //   (`co_the_xem_cay()`), câu này chỉ hỏi máy chủ xem cửa ấy có mở không.
+    const { data: cayMacDinh } = await k.rpc('cay_mac_dinh');
+    if (cayMacDinh) {
+      return {
+        ...nenNguoi,
+        daDangNhap: true,
+        email: nguoi.email || '',
+        vaiTro: 'xem',
+        docDuoc: true,
+        suaDuoc: false,
+        trangThai: 'daduyet',
+        treeId: cayMacDinh,
+        ...(await caiDatCay(k, nguoi.id, cayMacDinh)),
+      };
+    }
+
     // Đăng nhập được nhưng chưa đọc được cây nào. Đây là ca thường gặp nhất
     // với người mới, và phải nói rõ phải làm gì — không hiện lỗi thô.
     //
@@ -192,7 +247,7 @@ export async function layPhien() {
     //   nào khác để biết mã cây.
     const tt = await trangThaiCuaToi();
     return {
-      ...nen,
+      ...nenNguoi,
       daDangNhap: true,
       email: nguoi.email,
       trangThai: tt.trangThai,
@@ -205,7 +260,7 @@ export async function layPhien() {
   const vaiTro = (ds.find((m) => m.tree_id === treeId) || ds[0]).role;
 
   return {
-    ...nen,
+    ...nenNguoi,
     daDangNhap: true,
     email:   nguoi.email || '',
     vaiTro,
@@ -253,6 +308,19 @@ async function cayDangChon(k, userId, ds) {
   // Không có lựa chọn nào còn hợp lệ thì lấy cây đầu tiên, để màn hình không
   // trắng trơn. Cùng lý lẽ với `repo.chonNguoiTrungTam` của bản cũ.
   return hop ? hop.tree_id : ds[0].tree_id;
+}
+
+/**
+ * Cây đầu tiên theo tên, dành riêng cho Quản trị hệ thống KHÔNG có chân ở cây
+ * nào — họ đọc và sửa được mọi cây, nên "cây đang mở" của họ không suy ra
+ * được từ `tree_members` như mọi người khác.
+ *
+ * ⚠ Trả `null` khi hệ thống chưa có cây nào. Nơi gọi phải chịu được `null`:
+ *   một hệ thống mới dựng thì đúng là chưa có cây, và đó không phải lỗi.
+ */
+async function cayDauTien(k) {
+  const { data } = await k.from('trees').select('id').order('name').limit(1);
+  return (data && data[0] && data[0].id) || null;
 }
 
 /**
@@ -400,46 +468,93 @@ export async function luuCay(treeId, revision, ops, moTa) {
 // ============================================================
 
 /**
- * Những gia phả người đang đăng nhập mở được.
+ * Những gia phả người đang đăng nhập THẤY được — không phải chỉ những cây họ
+ * có chân. Ba tầng nhìn thấy của `THIET-KE-NHIEU-CAY.md` đều ra ở đây:
+ * cây mình là thành viên · cây chủ nó đã bật công tắc cho người lạ thấy tên ·
+ * cây mình đã nộp đơn và đang chờ.
  *
- * Số người và số cặp đếm bằng một lần gọi riêng cho mỗi cây (`head: true` —
- * chỉ xin con số, không tải dòng nào). Với vài cây thì rẻ; ngày nào danh sách
- * dài tới hàng chục thì đổi sang một khung nhìn (view) trong cơ sở dữ liệu,
- * đừng nhân số lần gọi lên.
+ * ⚠ **MỘT lời gọi RPC, không phải một vòng lặp gọi mạng.** Bản trước (tới
+ *   b102) đọc `tree_members` rồi đếm `persons` và `unions` cho TỪNG cây —
+ *   với hai cây là năm vòng mạng, và nó lớn dần theo số cây. Nay `ds_gia_pha()`
+ *   trả về đủ mọi thứ trong một lượt.
+ *
+ * ⚠ Và quan trọng hơn tốc độ: câu cũ **không thể** trả về cây người ta chưa
+ *   có chân, vì nó đi từ `tree_members`. Không có `ds_gia_pha()` thì màn hình
+ *   "Xin quyền" không có gì để vẽ.
+ *
+ * ⚠ Hàm máy chủ là `security definer` và lọc theo CỘT, không mở RLS trên
+ *   `trees`. Nó cố ý trả `email_chu` cho cả người lạ — đó là đường liên hệ để
+ *   xin quyền, không phải chỗ hở. `luoc-do/11-quyen-he-thong.sql` mục 15.
  */
 export async function layDanhSachGiaPha() {
   const k = layKhach();
   if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
 
-  const nguoi = await nguoiDangNhap();
-  if (!nguoi) return { ok: false, loi: 'Chưa đăng nhập.', ds: [] };
-
-  const { data, error } = await k
-    .from('tree_members')
-    .select('role, tree_id, trees(id, name, tree_code, revision, updated_at)')
-    .eq('user_id', nguoi.id);
+  const { data, error } = await k.rpc('ds_gia_pha');
   if (error) return { ok: false, loi: cauLoi(error), ds: [] };
 
-  const ds = [];
-  for (const m of data || []) {
-    const t = m.trees;
-    if (!t) continue;
-    const [sn, sc] = await Promise.all([dem(k, 'persons', t.id), dem(k, 'unions', t.id)]);
-    ds.push({
-      fileId: t.id, ten: t.name, tenFile: t.tree_code,
-      soNguoi: sn, soCap: sc, revision: t.revision,
-      suaDuoc: m.role === 'quan_tri_he_thong' || m.role === 'sua',
-      doiLuc: t.updated_at,
-    });
-  }
+  // `fileId` và `tenFile` là tên cũ từ thời file JSON trên Drive. Giữ nguyên
+  // vì `settings.js` và `repo.js` đang đọc đúng hai tên ấy — đổi tên trường ở
+  // đây là sửa lan sang hai file không liên quan gì tới b103.
+  const ds = (data || []).map((r) => ({
+    fileId: r.id, ten: r.ten, tenFile: r.tree_code,
+    treeCode: r.tree_code,
+    emailChu: r.email_chu || '',
+    soNguoi: Number(r.so_nguoi) || 0,
+    vaiCuaToi: r.vai_cua_toi || null,
+    coTheXem: Boolean(r.co_the_xem),
+    suaDuoc: Boolean(r.co_the_sua_du_lieu),
+    daNopDon: Boolean(r.da_nop_don),
+    choNguoiLaThayTen: Boolean(r.cho_nguoi_la_thay_ten),
+    toiLaChu: Boolean(r.toi_la_chu),
+  }));
   return { ok: true, loi: null, ds };
 }
 
-async function dem(k, bang, treeId) {
-  const { count } = await k.from(bang)
-    .select('id', { count: 'exact', head: true })
-    .eq('tree_id', treeId).eq('deleted', false);
-  return count || 0;
+/**
+ * Mã cây mặc định của cả hệ thống, hoặc `null` khi không đặt cây nào.
+ *
+ * Đây là công tắc CẤP HỆ THỐNG (chỉ Quản trị hệ thống đổi được), khác hẳn
+ * `datChoNguoiLaThayTen()` ngay dưới — cái kia là công tắc của từng chủ cây.
+ */
+export async function layCayMacDinh() {
+  const k = layKhach();
+  if (!k) return null;
+  const { data, error } = await k.rpc('cay_mac_dinh');
+  if (error) return null;
+  return data || null;
+}
+
+/** Đặt (hoặc bỏ, khi `treeId` là `null`) cây mặc định cho người lạ xem. */
+export async function datCayMacDinh(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_cay_mac_dinh', { p_tree: treeId || null });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (data && data.ok === false) {
+    return { ok: false, loi: data.lyDo || 'Không đặt được cây mặc định.' };
+  }
+  return { ok: true, loi: null };
+}
+
+/**
+ * Bật/tắt công tắc "cho người lạ thấy tên cây này".
+ *
+ * ⚠ Bật KHÔNG mở nội dung cây — chỉ mở tên, mã, số người và email chủ cây.
+ *   Đã đo: người lạ thấy tên cây mà đọc `persons` vẫn ra 0 dòng
+ *   (`kiem-thu/ban-thu-sql/do-b103.mjs`, hàng rào 2).
+ */
+export async function datChoNguoiLaThayTen(treeId, cho) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_cho_nguoi_la_thay_ten', {
+    p_tree: treeId, p_cho: !!cho,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (data && data.ok === false) {
+    return { ok: false, loi: data.lyDo || 'Không đổi được công tắc.' };
+  }
+  return { ok: true, loi: null };
 }
 
 /**

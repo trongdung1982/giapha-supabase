@@ -66,6 +66,10 @@ function docCaThuMuc() {
 const SQL_03 = doc('../luoc-do/03-ham-luu-cay.sql');
 const SQL_08 = doc('../luoc-do/08-kiem-duyet.sql');
 const JS_ST = doc('../js/pages/settings.js');
+// ⚠ Bảng tên vai DỜI sang `config.js` ngày 08/09/2026 (b103) — khu Gia phả
+//   của trang Quản trị cũng phải in tên vai, và hai bản chép thì có ngày
+//   lệch nhau. Phần I dưới đây đọc file này, không đọc `settings.js` nữa.
+const JS_CF = doc('../js/config.js');
 const SQL_09 = docNeuCo('../luoc-do/09-doi-ma-vai.sql');
 
 /**
@@ -420,15 +424,20 @@ for (const ten of ['khoa_cua', 'dung_do_sau']) {
 console.log('\nPHẦN I — tên vai hiện ra cho người đọc');
 
 {
-  kiem('settings.js có hàm dịch tên vai',
-       /function vaiTroBangChu/.test(JS_ST), 'thiếu hàm dịch');
+  kiem('config.js có hàm dịch tên vai',
+       /export function vaiTroBangChu/.test(JS_CF), 'thiếu hàm dịch');
+
+  // Và ĐÚNG MỘT bản. Bản chép thứ hai là đường dẫn thẳng tới hai bảng tên
+  // lệch nhau — đúng cái giá đã trả 04/09 khi mã vai nằm rải ở 11 hàm.
+  kiem('  và KHÔNG còn bản chép trong settings.js',
+       !/function vaiTroBangChu/.test(JS_ST), 'còn bản chép thứ hai');
 
   for (const [ten, tenCu] of [
     ['Quản trị hệ thống', 'Quản trị hệ thống'],
     ['Quản trị gia phả', 'Quản trị viên'],
     ['Thành viên họ tộc', 'Thành viên']
   ]) {
-    kiem("  dịch được '" + ten + "'", JS_ST.includes("'" + ten + "'") || JS_ST.includes("'" + tenCu + "'"),
+    kiem("  dịch được '" + ten + "'", JS_CF.includes("'" + ten + "'") || JS_CF.includes("'" + tenCu + "'"),
          'thiếu tên này');
   }
 
@@ -444,7 +453,7 @@ console.log('\nPHẦN I — tên vai hiện ra cho người đọc');
        !/chủ gia phả/.test(SQL_08), 'còn chữ "chủ gia phả" trong câu lỗi');
 
   kiem("dịch được 'Khách' cho vai chỉ xem",
-       /'Khách'/.test(JS_ST), 'thiếu tên Khách');
+       /'Khách'/.test(JS_CF), 'thiếu tên Khách');
 
   // ⚠ Phép quan trọng nhất của phần này. Mã vai đổi 04/09/2026 từ `chu` sang
   //   `quan_tri_he_thong`, và mã ấy nằm rải ở 11 hàm, 2 luật RLS, 1 ràng buộc

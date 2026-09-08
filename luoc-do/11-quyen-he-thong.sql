@@ -5,9 +5,19 @@
 --            sửa vai_tro() và la_thanh_vien(), đổi 6 luật RLS đọc.
 -- Chạy ở   : Supabase → SQL Editor → dán → Run.
 --            Chạy SAU 10-sua-nhieu-cay.sql.
--- Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 21:10
+-- Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 09:40
 --            0.1.0 soạn bởi Antigravity (codex/) · 0.2.0 vá hai lỗ hổng
 --            do phép đo `kiem-thu/ban-thu-sql/do-b102.mjs` bắt được.
+--            0.3.0 (b103) thêm mục 14 — công tắc `cho người lạ thấy tên` —
+--            và mở rộng `ds_gia_pha()` cho người ĐANG CHỜ DUYỆT thấy lại
+--            cây mình đã nộp đơn.
+--
+-- ⚠ File này DÁN LẠI ĐƯỢC. Mọi câu đều `if not exists` / `or replace` /
+--   `drop … if exists`; đã đo trên bàn thử 08/09/2026 bằng cách chạy nó hai
+--   lần liên tiếp — lần hai chỉ ra bốn dòng NOTICE, không một lỗi nào. Nên
+--   sửa file tại chỗ rồi nhờ chủ dự án dán lại cả file là an toàn, và tốt
+--   hơn là đẻ ra một file `12-vá-11.sql` mà sau này ai dán lại `11` sẽ lùi
+--   mất.
 -- ============================================================
 --
 -- ⚠⚠ BƯỚC NGUY HIỂM NHẤT CỦA CẢ DỰ ÁN ⚠⚠
@@ -418,7 +428,70 @@ end;
 $$;
 
 -- ============================================================
--- 14. HÀM ds_gia_pha() — danh sách cây cho màn hình chọn
+-- 14. HÀM dat_cho_nguoi_la_thay_ten(p_tree, p_cho) — công tắc TẦNG 1
+-- ============================================================
+-- Công tắc của CHỦ CÂY, khác hẳn `dat_cay_mac_dinh()` ngay trên — cái kia là
+-- công tắc của cả hệ thống và chỉ Quản trị hệ thống chạm được.
+--
+-- Bật  → tên cây hiện trong danh sách của mọi tài khoản đã đăng nhập, kèm
+--        email chủ cây, để người lạ có đường bấm "Xin quyền".
+-- Tắt  → cây biến mất khỏi danh sách người lạ. `THIET-KE-NHIEU-CAY.md`
+--        mục *Ba tầng nhìn thấy*: đó chính là cách chủ cây rút email mình về.
+--
+-- ⚠ Bật công tắc KHÔNG mở nội dung cây. Nó chỉ mở đúng ba thứ ở mục 15:
+--   tên · mã cây · email chủ · số người. Muốn đọc người trong cây vẫn phải
+--   qua `co_the_xem_cay()`, và hàm ấy không hỏi cột này.
+--
+-- ⚠ Kiểm `p_tree` có thật TRƯỚC khi trả `ok`. Bản đầu (codex/, 07/09) chạy
+--   thẳng `update … where id = p_tree` rồi trả `ok:true` — mã cây gõ sai thì
+--   0 dòng đổi mà màn hình vẫn báo lưu xong. Đó là kiểu hỏng tệ nhất: người
+--   dùng tin là đã bật, và không có gì nói ngược lại.
+
+create or replace function public.dat_cho_nguoi_la_thay_ten(
+  p_tree uuid,
+  p_cho  boolean
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_co boolean;
+begin
+  if auth.uid() is null then
+    return jsonb_build_object('ok', false, 'lyDo', 'Chưa đăng nhập.');
+  end if;
+
+  select exists (select 1 from public.trees where id = p_tree) into v_co;
+  if not v_co then
+    return jsonb_build_object('ok', false, 'lyDo', 'Không có gia phả nào mang mã ấy.');
+  end if;
+
+  -- Chủ cây, hoặc Quản trị hệ thống. Không có nhánh `quan_tri` của cây:
+  -- quản trị một cây kiểm duyệt nội dung, còn quyết định lộ tên cây ra ngoài
+  -- là quyết định của người ĐỨNG TÊN, vì email lộ ra là email của họ.
+  if not (
+    public.la_quan_tri_he_thong()
+    or exists (
+      select 1 from public.trees
+       where id = p_tree and chu_so_huu = auth.uid()
+    )
+  ) then
+    return jsonb_build_object('ok', false,
+      'lyDo', 'Chỉ người đứng tên gia phả hoặc Quản trị hệ thống mới đổi được công tắc này.');
+  end if;
+
+  update public.trees
+     set cho_nguoi_la_thay_ten = coalesce(p_cho, false)
+   where id = p_tree;
+
+  return jsonb_build_object('ok', true, 'choNguoiLaThayTen', coalesce(p_cho, false));
+end;
+$$;
+
+-- ============================================================
+-- 15. HÀM ds_gia_pha() — danh sách cây cho màn hình chọn
 -- ============================================================
 -- PHẢI là security definer và KHÔNG mở RLS trên trees.
 -- Lọc theo CỘT (ẩn root_person_id, note, revision) chứ không theo dòng
@@ -448,7 +521,8 @@ returns table (
   co_the_xem           boolean,
   co_the_sua_du_lieu   boolean,
   da_nop_don           boolean,
-  cho_nguoi_la_thay_ten boolean
+  cho_nguoi_la_thay_ten boolean,
+  toi_la_chu           boolean
 )
 language sql
 stable
@@ -471,7 +545,14 @@ as $$
          and tm.user_id = auth.uid()
          and tm.approved = false
     )                                            as da_nop_don,
-    t.cho_nguoi_la_thay_ten
+    t.cho_nguoi_la_thay_ten,
+    -- ⚠ Câu này để MÀN HÌNH biết có nên vẽ công tắc hay không, và nó phải do
+    --   MÁY CHỦ trả lời. Bản đầu (codex/, 07/09) so sánh `email_chu` với email
+    --   người đang đăng nhập ngay trong trình duyệt — không phải lỗ hổng (máy
+    --   chủ vẫn chặn), nhưng sai theo hướng khó thấy: cây chưa gán `chu_so_huu`
+    --   thì `email_chu` là null, và chủ cây thật KHÔNG thấy công tắc của chính
+    --   mình mà không hiểu vì sao.
+    coalesce(t.chu_so_huu = auth.uid(), false)   as toi_la_chu
   from public.trees t
   left join auth.users au on au.id = t.chu_so_huu
   where
@@ -479,11 +560,28 @@ as $$
     public.co_the_xem_cay(t.id)
     or t.cho_nguoi_la_thay_ten = true
     or public.la_quan_tri_he_thong()
+    -- b103: NGƯỜI ĐANG CHỜ DUYỆT vẫn thấy cây mình đã nộp đơn.
+    --
+    -- Không có dòng này thì có một cảnh vô lý mà chỉ người dùng gặp: chủ cây
+    -- tắt công tắc SAU khi ai đó nộp đơn, và lá đơn ấy biến mất khỏi màn hình
+    -- người nộp — họ không còn cách nào biết mình đang chờ, cũng không nộp
+    -- lại được. Cột `da_nop_don` ngay trên vẽ ra huy hiệu "Đã nộp đơn", mà
+    -- dòng mang huy hiệu ấy lại không được trả về.
+    --
+    -- `approved = false` là cố ý và KHÔNG thừa: người đã duyệt đi qua
+    -- `co_the_xem_cay()` ở dòng đầu rồi. Viết trần `user_id = auth.uid()`
+    -- vẫn chạy đúng nhưng che mất câu "nhánh này chỉ để cho người CHỜ".
+    or exists (
+      select 1 from public.tree_members tm
+       where tm.tree_id = t.id
+         and tm.user_id = auth.uid()
+         and tm.approved = false
+    )
   order by t.name;
 $$;
 
 -- ============================================================
--- 15. ĐỔI 6 LUẬT RLS ĐỌC — la_thanh_vien → co_the_xem_cay
+-- 16. ĐỔI 6 LUẬT RLS ĐỌC — la_thanh_vien → co_the_xem_cay
 -- ============================================================
 -- Sáu bảng NỘI DUNG gia phả: đổi sang co_the_xem_cay để người vào bằng
 -- cửa cây mặc định xem được gia phả.
@@ -531,7 +629,7 @@ create policy doc_sources on public.sources
   using (public.co_the_xem_cay(tree_id));
 
 -- ============================================================
--- 16. CẤP QUYỀN GỌI HÀM
+-- 17. CẤP QUYỀN GỌI HÀM
 -- ============================================================
 -- Supabase có sẵn `alter default privileges` cấp `execute` cho `authenticated`,
 -- nên bỏ khối này thì app vẫn chạy. Viết ra vì sáu file trước đều viết
@@ -550,9 +648,11 @@ grant execute on function public.duoc_tao_cay()            to authenticated;
 grant execute on function public.ma_tai_khoan_cua_toi()    to authenticated;
 grant execute on function public.dat_cay_mac_dinh(uuid)    to authenticated;
 grant execute on function public.ds_gia_pha()              to authenticated;
+grant execute on function public.dat_cho_nguoi_la_thay_ten(uuid, boolean)
+                                                          to authenticated;
 
 -- ============================================================
--- 17. BẢNG TỰ KIỂM — đọc sau khi dán, xác nhận trước khi tiếp tục
+-- 18. BẢNG TỰ KIỂM — đọc sau khi dán, xác nhận trước khi tiếp tục
 -- ============================================================
 -- Chủ dự án đọc bảng này và xác nhận tất cả cột "Kết quả" đều hiện "ĐẠT"
 -- trước khi bấm thử bốn hàng rào.
@@ -752,6 +852,29 @@ from (
          and tablename in ('tree_members', 'change_log', 'imports')
          and qual ilike '%co_the_xem_cay%'
     ) then 'ĐẠT' else 'HỎNG — ĐÃ ĐỔI NHẦM: lộ email cả họ. Xem bẫy 3.' end
+
+  union all
+
+  -- 17. (b103) Hàm công tắc tầng 1 đã có chưa
+  select 17,
+    'Hàm dat_cho_nguoi_la_thay_ten(uuid, boolean) tồn tại',
+    case when exists (
+      select 1 from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'dat_cho_nguoi_la_thay_ten'
+    ) then 'ĐẠT' else 'HỎNG — khu Gia phả sẽ không bật/tắt được công tắc' end
+
+  union all
+
+  -- 18. (b103) ds_gia_pha() còn trả về cây của người ĐANG CHỜ DUYỆT không
+  select 18,
+    'ds_gia_pha() có nhánh cho người đang chờ duyệt',
+    case when (
+      select p.prosrc from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'ds_gia_pha'
+    ) ilike '%approved = false%' then 'ĐẠT'
+    else 'HỎNG — người đã nộp đơn mất luôn cây khỏi màn hình nếu chủ cây tắt công tắc' end
 
 ) t
 order by stt;

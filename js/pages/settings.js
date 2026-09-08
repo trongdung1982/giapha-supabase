@@ -4,7 +4,7 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.29.1 · Cập nhật: 05/09/2026 22:15
+// Phiên bản: 1.30.0 · Cập nhật: 08/09/2026 11:50
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -56,12 +56,13 @@
 import { state, notify } from '../state.js';
 import { coMayChu, datNguoiTrungTamMacDinh, xoaNguoiTrungTamMacDinh } from '../services/tuong-thich.js';
 import { dangXuat, dsChoDuyet, duyetThanhVien, tuChoiThanhVien,
-         demChoKiemDuyet, datHienNgayGio } from '../services/sb.js';
+         datHienNgayGio } from '../services/sb.js';
 import { fullName, coGiaTri, doiSongNguoi } from '../utils/text.js';
 import { veLinkTai, inAnhRaster, dpiConDungDuoc, laManHinhMayTinh, DAI_DPI,
          KHO_GIAY, CHU_CAO_KHUYEN_NGHI_MM }
   from './export-image.js';
-import { rongHop, caoHop, leLopPhu, RONG_NUT_TOI_DA } from '../config.js';
+import { rongHop, caoHop, leLopPhu, RONG_NUT_TOI_DA,
+         vaiTroBangChu } from '../config.js';
 
 let lopPhu = null;
 let xuLyNgoai = {};   // { onDoiMacDinh } — nơi gọi truyền vào
@@ -142,14 +143,25 @@ export function openSettings(xuLy = {}) {
   tieuDe.style.cssText = 'font-size:19px;font-weight:600';
   hop.append(tieuDe);
 
+  // ⚠ HAI KHỐI ĐÃ DỜI SANG TRANG QUẢN TRỊ (b103), và thứ tự dời KHÔNG theo
+  //   thứ tự trong kế hoạch — nó theo *khu bên kia đã viết xong chưa*:
+  //
+  //     · **Gia phả**        → khu 1 `#gia-pha`,    viết xong b103. Dời.
+  //     · **Duyệt nội dung** → khu 3 `#kiem-duyet`, viết xong b98.  Dời.
+  //
+  //   ⚠ **Đơn chờ duyệt Ở LẠI, dù kế hoạch b103 bảo gỡ.** Khu Thành viên nhận
+  //   nó là b106, chưa viết. Gỡ bây giờ thì từ hôm nay tới b106 KHÔNG CÒN
+  //   đường nào duyệt đơn — mà b103 vừa dựng thêm nút "Xin quyền", tức vừa
+  //   làm cho đơn NHIỀU HƠN. Dời một cái cửa đi trước khi mở cái cửa mới là
+  //   nhốt người ta ở giữa.
+  //
+  //   ⚠ **Sao lưu cũng ở lại** — khu 4 là b108.
   veKhoiQuanLy(hop);
   veKhoiMacDinh(hop);
   veKhoiHienThi(hop);
-  veKhoiGiaPha(hop);
   veKhoiSaoLuu(hop);
   veKhoiXuat(hop);
   veKhoiNhap(hop);
-  veKhoiKiemDuyet(hop);
   veKhoiChoDuyet(hop);
   veKhoiPhien(hop);
 
@@ -356,45 +368,17 @@ function veKhoiHienThi(vao) {
 }
 
 // ============================================================
-// Khối "Gia phả" — việc 9b, nửa giao diện của bước 52
+// Khối "Gia phả" — DỜI SANG TRANG QUẢN TRỊ 08/09/2026 (b103)
 // ============================================================
 //
-// Từ 28/08/2026 app mở được NHIỀU cây, và tới hôm ấy thì đường duy nhất để đổi
-// là sửa `FILE_ID` trong `Config.gs` rồi triển khai lại — việc của người xây
-// app, không phải của người dùng. Khối này là cửa vào màn hình chọn.
+// Nay là khu 1 của `QuanTri.html` (`js/pages/quan-tri/khu-gia-pha.js`,
+// `QuanTri.html#gia-pha`). Ở đó nó làm được ba việc màn hình này không làm
+// nổi: hiện cả những cây người ta CHƯA có chân, cho bấm xin quyền, và bật
+// công tắc cho người lạ thấy tên cây.
 //
-// ⚠ Nó đứng DƯỚI ba khối kia, khác hẳn "Quản lý gia phả": đổi cây là việc vài
-// tháng làm một lần, và bấm nhầm thì cả app nhảy sang một gia phả khác. Việc
-// hiếm mà hậu quả rộng thì không đặt ở chỗ tay hay chạm qua.
-//
-// Nút KHÔNG mờ với người chỉ có quyền xem: danh sách do Drive lọc theo quyền
-// của chính họ, nên họ mở màn hình ấy ra là thấy đúng phần của mình — và người
-// chỉ được chia sẻ một cây vẫn cần biết mình đang mở cây nào.
+// ⚠ Nút "Chọn gia phả khác" cũ đi cùng nó. `onMoChonGiaPha` giờ không còn ai
+//   gọi từ đây — nếu bạn đang tìm chỗ mở màn hình chọn cây, nó ở khu 1.
 
-function veKhoiGiaPha(vao) {
-  if (!xuLyNgoai.onMoChonGiaPha) return null;
-
-  const khoi = document.createElement('div');
-  khoi.style.cssText = 'margin-top:20px';
-  khoi.append(veNhanKhoi('Gia phả'));
-
-  const dangMo = state.phien && state.phien.tenFileDuLieu;
-  const giaiThich = document.createElement('div');
-  giaiThich.textContent =
-    (dangMo ? 'Đang mở ' + dangMo + '. ' : '') +
-    'Đổi sang một cây khác được chia sẻ cho bạn. Lựa chọn này của riêng tài ' +
-    'khoản bạn.';
-  giaiThich.style.cssText =
-    'font-size:13px;line-height:1.55;color:#8a8078;margin-bottom:10px';
-  khoi.append(giaiThich);
-
-  const b = nut('Chọn gia phả khác', false, true, () => xuLyNgoai.onMoChonGiaPha());
-  b.dataset.viec = 'chon-gia-pha';
-  khoi.append(b);
-
-  vao.append(khoi);
-  return khoi;
-}
 
 // ============================================================
 // Khối "Sao lưu & khôi phục" — việc 7
@@ -1032,53 +1016,14 @@ function veKhoiQuanLy(vao) {
 }
 
 // ============================================================
-// Khối "Duyệt nội dung" — đường sang QuanTri.html
+// Khối "Duyệt nội dung" — DỜI SANG TRANG QUẢN TRỊ 08/09/2026 (b103)
 // ============================================================
+//
+// Nay là khu 3 của `QuanTri.html` (`QuanTri.html#kiem-duyet`), và đã chạy
+// thật từ b98. Khối ở đây chỉ là một cái nút dẫn sang chính trang ấy cộng một
+// con số đếm — mà con số ấy nay nằm ngay trên thanh điều hướng bên đó, cạnh
+// đúng chỗ bấm để xử lý nó.
 
-/**
- * Đường duy nhất tới trang duyệt nội dung (b98).
- *
- * ⚠ **Chỉ một cái nút, không phải cả hàng chờ.** Duyệt nội dung cần một cái
- *   bảng năm cột; lớp phủ Cài đặt rộng tối đa 600px và đã có bảy khối khác.
- *   Khối này chỉ làm hai việc: nói *có bao nhiêu mục đang chờ* — con số ấy là
- *   thứ khiến người ta biết hôm nay có việc hay không — và mở trang kia.
- *
- * ⚠ Điều kiện `vaiTro` bên dưới KHÔNG phải phép kiểm quyền, cùng lý lẽ với
- *   khối *Đơn chờ duyệt* ngay dưới: nó chỉ để khỏi vẽ một khối vô nghĩa cho
- *   người thường. Hàng rào thật nằm trong `co_the_kiem_duyet()` ở máy chủ, và
- *   trang `QuanTri.html` hỏi lại nó một lần nữa trước khi vẽ bảng.
- */
-function veKhoiKiemDuyet(vao) {
-  const phien = state.phien;
-  if (!phien || (phien.vaiTro !== 'quan_tri_he_thong' && phien.vaiTro !== 'quan_tri')) return;
-
-  const khoi = document.createElement('div');
-  khoi.style.cssText = 'margin-top:20px';
-  const nhan = veNhanKhoi('Duyệt nội dung');
-  khoi.append(nhan);
-
-  // ⚠ Chép ĐÚNG TỪNG CHỮ HOA: GitHub Pages phân biệt hoa với thường, nên
-  //   `quantri.html` ra trang 404. `kiem-thu/kiem-trang-quan-tri.mjs` đối
-  //   chiếu chuỗi này với tên file có thật trong repo.
-  const b = nut('Mở trang duyệt nội dung', false, true, () => {
-    window.location.href = 'QuanTri.html';
-  });
-  b.dataset.viec = 'duyet-noi-dung';
-  khoi.append(b);
-
-  const bao = veLoiNhan('Đang đếm số mục đang chờ…', false);
-  khoi.append(bao);
-  vao.append(khoi);
-
-  // Đếm bất đồng bộ rồi sửa chữ, cùng cách khối *Đơn chờ duyệt* làm:
-  // `openSettings()` là hàm đồng bộ, không đợi được mạng.
-  demChoKiemDuyet(phien.treeId).then((n) => {
-    nhan.textContent = n ? 'Duyệt nội dung (' + n + ')' : 'Duyệt nội dung';
-    bao.textContent = n
-      ? 'Có ' + n + ' lần sửa đang chờ bạn xem.'
-      : 'Không có gì đang chờ duyệt.';
-  });
-}
 
 // ============================================================
 // Khối "Đơn chờ duyệt" — chỉ quản trị thấy
@@ -1243,6 +1188,12 @@ function veKhoiPhien(vao) {
   const bang = document.createElement('div');
   bang.style.cssText = 'display:flex;flex-direction:column;gap:1px';
   hang(bang, 'Đăng nhập', phien.email);
+  // ⚠ Mã ngắn của tài khoản (b103). Nó có việc thật, không phải trang trí:
+  //   khi hai người trong họ trùng tên — chuyện thường ở gia phả — người quản
+  //   trị cần một thứ để chỉ đúng người trong màn hình Thành viên, và email
+  //   thì không phải ai cũng muốn đọc to lên. Trường trống thì KHÔNG vẽ hàng,
+  //   đúng luật `CLAUDE.md` mục 7; `hang()` tự lo việc ấy.
+  hang(bang, 'Mã tài khoản', phien.maNgan);
   hang(bang, 'Dòng họ', phien.tenHo);
   hang(bang, 'Vai trò', vaiTroBangChu(phien.vaiTro));
   hang(bang, 'Quyền', quyenBangChu(phien));
@@ -1253,6 +1204,26 @@ function veKhoiPhien(vao) {
   // hiện lên vẫn là tên cũ thì bản triển khai Apps Script chưa được cập nhật.
   if (phien.tenFileDuLieu) hang(bang, 'File dữ liệu', phien.tenFileDuLieu);
   khoi.append(bang);
+
+  // ⚠ ĐÂY LÀ ĐƯỜNG VÀO TRANG QUẢN TRỊ, và từ 08/09/2026 nó là đường DUY NHẤT.
+  //   Trước đó lối vào nằm trong khối *Duyệt nội dung*; b103 dời khối ấy sang
+  //   khu 3 của chính trang kia, và suýt nữa mang theo cả cánh cửa — phép
+  //   kiểm `kiem-trang-quan-tri.mjs` PHẦN E bắt được đúng lúc.
+  //
+  // ⚠ Nút này KHÔNG mờ với ai cả, và không hỏi vai trò. Trang Quản trị không
+  //   phải hàng rào (`khung.js` đầu file): khu Gia phả ở đó phục vụ đúng người
+  //   CHƯA có quyền — họ vào để thấy tên cây và bấm xin quyền. Ẩn nút theo vai
+  //   là khoá cửa của chính người cần nó nhất.
+  //
+  // ⚠ Chép ĐÚNG TỪNG CHỮ HOA: GitHub Pages phân biệt hoa với thường, nên
+  //   `quantri.html` ra trang 404. `kiem-trang-quan-tri.mjs` đối chiếu chuỗi
+  //   này với tên file có thật trong repo.
+  const bQuanTri = nut('Mở trang Quản trị', false, true, () => {
+    window.location.href = 'QuanTri.html';
+  });
+  bQuanTri.dataset.viec = 'mo-quan-tri';
+  bQuanTri.style.cssText += ';margin-top:10px';
+  khoi.append(bQuanTri);
 
   const nhac = document.createElement('div');
   // ⚠ Câu cũ nói *"quyền do danh sách chia sẻ trên Google Drive quyết định"*.
@@ -1331,33 +1302,11 @@ function quyenBangChu(phien) {
   return '';
 }
 
-/**
- * Tên vai trò cho người đọc.
- *
- * ⚠ Dòng "Vai trò" TỪNG in thẳng mã trong cơ sở dữ liệu ra màn hình Cài đặt.
- * Chủ dự án bảo bỏ 04/09/2026: người trong họ không có lý do gì phải học mã
- * của bảng.
- *
- * Bốn tên, đúng như chủ dự án chốt:
- *
- *   Quản trị hệ thống  `quan_tri_he_thong`   dựng cây, đổi được quyền của người khác
- *   Quản trị viên      `quan_tri`               kiểm duyệt nội dung
- *   Thành viên         `sua`                 sửa được trực hệ của mình
- *   Khách              `xem`                 chỉ xem
- *
- * ⚠ **Thành viên và Khách là hai tên khác nhau**, dù dòng **Quyền** ngay dưới
- *   cũng nói *"Xem và sửa"* / *"Chỉ xem"*. Không gộp: một bên là *người ấy
- *   ĐỨNG Ở ĐÂU trong họ*, một bên là *hôm nay làm được gì* — và hai điều ấy
- *   lệch nhau thật, vì một thành viên chưa được duyệt vẫn chỉ xem được.
- */
-function vaiTroBangChu(vaiTro) {
-  if (vaiTro === 'quan_tri_he_thong') return 'Quản trị hệ thống';
-  if (vaiTro === 'quan_tri') return 'Quản trị gia phả';
-  if (vaiTro === 'sua') return 'Thành viên họ tộc';
-  if (vaiTro === 'xem') return 'Khách';
-  if (vaiTro === 'sao_luu') return 'Tài khoản sao lưu';
-  return vaiTro || '';
-}
+// ⚠ Hàm này DỜI SANG `js/config.js` ngày 08/09/2026 (b103) và được import ở
+//   đầu file. Lý do: khu Gia phả của trang Quản trị cũng phải in tên vai, và
+//   hai bản chép của cùng một bảng tên thì có ngày lệch nhau — đúng cái giá
+//   đã phải trả 04/09 khi mã vai `chu` nằm rải thành chữ viết thẳng ở 11 hàm.
+//   Khối ghi chú giải thích BỐN HẠNG NGƯỜI đi theo hàm sang file ấy.
 
 // ============================================================
 // Mấy mẩu dùng chung

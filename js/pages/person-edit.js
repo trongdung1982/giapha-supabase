@@ -8,7 +8,7 @@
 //            xoa,anh}.js, state,
 //            domains/{person,union,validate,media,purge,render},
 //            services/{repo,gas}, utils/{graph,text,date,image,avatar}, config
-// Phiên bản: 1.41.0 · Cập nhật: 30/08/2026 06:37
+// Phiên bản: 1.41.1 · Cập nhật: 08/09/2026 07:05
 // ============================================================
 //
 // NGƯỢC với hai màn hình kia: form HIỆN ĐỦ MỌI Ô, kèm chữ mờ gợi ý.
@@ -512,9 +512,13 @@ export function closePersonForm() {
  */
 function canTroLuu() {
   if (!suaDuoc()) {
+    // ⚠ Câu này TỪNG nói "không ghi xuống Google Drive" và "đổi quyền trên
+    //   Drive" — đúng với bản Apps Script, sai hẳn trên nền Supabase: Drive
+    //   không còn dính dáng gì, quyền do vai trò trong `tree_members` và Row
+    //   Level Security quyết, ở tầng máy chủ. Sửa 08/09/2026 (b103).
     return 'Bạn chỉ có quyền xem gia phả nên chưa lưu được. Xem và sửa thử thì ' +
-           'vẫn được, chỉ là bấm Lưu sẽ không ghi xuống Google Drive. Cần sửa ' +
-           'thật thì nhờ người quản lý đổi quyền trên Drive.';
+           'vẫn được, chỉ là bấm Lưu sẽ bị máy chủ từ chối. Cần sửa thật thì ' +
+           'nhờ người quản lý gia phả cấp quyền cho tài khoản của bạn.';
   }
   if (state.daLocNguoiConSong) {
     return 'Bản gia phả trong máy đang bị ẩn bớt chi tiết người còn sống, nên ' +

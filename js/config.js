@@ -3,7 +3,7 @@
 // Vai trò  : Hằng số hiển thị phía trình duyệt.
 // Lớp      : config — không gọi file nào khác
 // Phụ thuộc: (không)
-// Phiên bản: 0.20.0 · Cập nhật: 02/09/2026 (bước 84 — vGap 34→38, mỗi cuộc hôn nhân một mức thanh ngang)
+// Phiên bản: 0.21.0 · Cập nhật: 08/09/2026 11:50 (b103 — nhận bảng tên bốn hạng người)
 // ============================================================
 //
 // LƯU Ý: file này KHÔNG phải nơi bạn điền cấu hình. Mọi thứ cần điền nằm ở
@@ -699,4 +699,42 @@ export function leLopPhu(le = 20) {
 /** Tổng hai lề trên–dưới của `leLopPhu(le)`. Dùng trong `calc()` của `caoHop`. */
 function haiLe(le) {
   return 'min(' + (le * 2) + 'px, ' + (le * 2 / 5) + 'vh)';
+}
+
+// ============================================================
+// TÊN BỐN HẠNG NGƯỜI
+// ============================================================
+//
+// ⚠ Ở đây, không ở màn hình nào cả (dời về 08/09/2026, b103). Trước đó
+//   hàm này nằm trong `settings.js`, và khi khu Gia phả của trang Quản trị
+//   cũng cần in tên vai thì bản chép thứ hai ra đời — đúng đường dẫn tới
+//   cái giá đã trả 04/09/2026, khi một mã vai nằm rải thành chữ viết thẳng
+//   ở 11 hàm và 2 luật RLS khiến việc đổi tên nó phải dán lại năm file.
+
+/**
+ * Tên vai trò cho người đọc.
+ *
+ * ⚠ Dòng "Vai trò" TỪNG in thẳng mã trong cơ sở dữ liệu ra màn hình Cài đặt.
+ * Chủ dự án bảo bỏ 04/09/2026: người trong họ không có lý do gì phải học mã
+ * của bảng.
+ *
+ * Bốn tên, đúng như chủ dự án chốt:
+ *
+ *   Quản trị hệ thống  `quan_tri_he_thong`   dựng cây, đổi được quyền của người khác
+ *   Quản trị viên      `quan_tri`               kiểm duyệt nội dung
+ *   Thành viên         `sua`                 sửa được trực hệ của mình
+ *   Khách              `xem`                 chỉ xem
+ *
+ * ⚠ **Thành viên và Khách là hai tên khác nhau**, dù dòng **Quyền** ngay dưới
+ *   cũng nói *"Xem và sửa"* / *"Chỉ xem"*. Không gộp: một bên là *người ấy
+ *   ĐỨNG Ở ĐÂU trong họ*, một bên là *hôm nay làm được gì* — và hai điều ấy
+ *   lệch nhau thật, vì một thành viên chưa được duyệt vẫn chỉ xem được.
+ */
+export function vaiTroBangChu(vaiTro) {
+  if (vaiTro === 'quan_tri_he_thong') return 'Quản trị hệ thống';
+  if (vaiTro === 'quan_tri') return 'Quản trị gia phả';
+  if (vaiTro === 'sua') return 'Thành viên họ tộc';
+  if (vaiTro === 'xem') return 'Khách';
+  if (vaiTro === 'sao_luu') return 'Tài khoản sao lưu';
+  return vaiTro || '';
 }

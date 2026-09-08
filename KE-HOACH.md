@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 07/09/2026 · Bước gần nhất: **b102** (đã dán) · Việc kế tiếp: **b103***
+*Cập nhật 08/09/2026 · Bước gần nhất: **b103** (⚠ CHƯA DÁN) · Việc kế tiếp: **b104***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -138,7 +138,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Ba mươi chín việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Bốn mươi ba việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -183,6 +183,10 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Tầng quyền cấp hệ thống — `11-quyen-he-thong.sql` 0.2.0, bốn hàng rào 16/16** | **b102** | ✓ **07/09/2026** — đã dán CẢ HAI Supabase |
 | **Rà bản AGY bằng phép ĐO: bắt được 2 lỗ hổng mà 12/12 tự kiểm báo xanh** | **b102** | ✓ **07/09/2026** |
 | **Phép đo mượn danh nghĩa tài khoản (`set local role authenticated`) — 29/29, có 3 phép kiểm chứng ngược** | **b102** | ✓ **07/09/2026** |
+| **Khu Gia phả — thấy cả cây mình chưa có chân, xin quyền, công tắc cho người lạ thấy tên** | **b103** | ✓ **08/09/2026** ⚠ chưa dán, chưa ai bấm thử |
+| **`11` lên 0.3.0 — `dat_cho_nguoi_la_thay_ten()` · cột `toi_la_chu` · nhánh cho người đang chờ** | **b103** | ✓ **08/09/2026** ⚠ **chưa dán** |
+| **Phép đo `do-b103.mjs` — 22/22 ĐẠT, 3/3 kiểm chứng ngược** | **b103** | ✓ **08/09/2026** |
+| **`vaiTroBangChu()` dời xuống `config.js` — một bảng tên, không hai bản chép** | **b103** | ✓ **08/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -232,6 +236,22 @@ y hệt sau ba ngày.
 
 ✓ **BẢN 0.2.0 ĐÃ DÁN CẢ HAI SUPABASE — 07/09/2026 tối.** Máy chủ thật nay có
 tầng quyền cấp hệ thống; và Staging thôi mang hai lỗ hổng của bản 0.1.0.
+
+**KHU GIA PHẢ VIẾT XONG — 08/09/2026 (b103), NHƯNG CHƯA DÁN.** Khu 1 của trang
+Quản trị nay chạy thật trong mã: người đăng nhập thấy **cả những cây mình chưa
+có chân** (cây nào chủ nó đã bật công tắc), bấm Xin quyền nộp được đơn, chủ cây
+bật/tắt được công tắc, Quản trị hệ thống đặt được cây mặc định. Phép đo
+`do-b103.mjs` **22/22 ĐẠT** kèm **3/3 kiểm chứng ngược**.
+
+⚠⚠ **`11-quyen-he-thong.sql` 0.3.0 CHƯA DÁN — đây là thứ duy nhất chặn b104.**
+Máy chủ thật đang chạy 0.2.0. Mở khu 1 lúc này là ra lỗi, vì hàm công tắc và
+cột `toi_la_chu` chưa tồn tại bên đó. File dán lại được toàn bộ (đã đo bằng
+cách chạy nó hai lần liên tiếp trên bàn thử).
+
+⚠ **Và một luật mới, rút từ chính bước này:** *khối trong Cài đặt chỉ được gỡ
+khi khu bên trang Quản trị đã viết xong* — không phải khi kế hoạch nói tới nó.
+Làm đúng chữ của b103 thì từ hôm nay tới b106 không còn đường nào duyệt đơn,
+đúng lúc nút Xin quyền mới dựng làm cho đơn nhiều hơn.
 
 ---
 
@@ -369,7 +389,50 @@ thì sai lúc chưa có gì xây lên trên.
 | **⚠ Bẫy 4** *(mới, đo mới ra)* | Bảng `tai_khoan` giữ **cờ quyền**, nên nó **chỉ được có luật ĐỌC**. Đừng chép khuôn `rieng_user_settings` sang đây |
 | **Không phải lỗ hổng** | `ds_gia_pha()` trả `email_chu` cho cả người lạ là **cố ý** — `THIET-KE-NHIEU-CAY.md` mục *Ba tầng nhìn thấy*: email là đường liên hệ để xin quyền. Đừng "vá" |
 
-### b103 — Khu Gia phả, và Cài đặt gọn lại
+### ~~b103~~ — Khu Gia phả, và Cài đặt gọn lại · ✓ **XONG 08/09/2026**
+
+> **Đã làm:** `luoc-do/11-quyen-he-thong.sql` **0.3.0** *(hàm
+> `dat_cho_nguoi_la_thay_ten`, cột `toi_la_chu`, nhánh cho người đang chờ
+> duyệt, tự kiểm 16 → 18)* · `js/pages/quan-tri/khu-gia-pha.js` *(mới)* ·
+> `sb.js` 0.5.0 · `settings.js` 1.30.0 · `config.js` 0.21.0 · `khung.js` 0.2.0 ·
+> `kiem-thu/ban-thu-sql/do-b103.mjs` *(ngoài repo, **22/22 ĐẠT**, 3/3 kiểm
+> chứng ngược)*. Hai bộ kiểm cập nhật: 112/112 và 73/73.
+>
+> ⚠⚠ **CHƯA DÁN — đây là thứ chặn b104.** Máy chủ thật đang chạy `11` bản
+> 0.2.0, chưa có hàm công tắc và chưa có cột `toi_la_chu`. Mở khu 1 lúc này là
+> ra lỗi. File dán lại được (đã đo: chạy hai lần liên tiếp, lần hai chỉ ra bốn
+> dòng NOTICE) nên chỉ cần dán lại **cả file `11`**.
+>
+> ⚠ **Chưa ai bấm thử trên app.** Cả hai tầng đã đo, nhưng đo là máy chủ và bộ
+> kiểm tự nói về mình. Điểm dừng thật của b103 — một người không có chân ở cây
+> nào bấm được Xin quyền — chỉ người bấm mới đóng được.
+>
+> **Bốn chỗ lệch khỏi bản Antigravity**, mỗi chỗ một lý do đo được:
+>
+> 1. **`toi_la_chu` thành CỘT của máy chủ.** Bản AGY so email ngay trong trình
+>    duyệt. Không phải lỗ hổng — nhưng cây chưa gán `chu_so_huu` thì chủ cây
+>    thật KHÔNG thấy công tắc của chính mình, và không gì giải thích.
+> 2. **Khối *Đơn chờ duyệt* Ở LẠI Cài đặt**, dù dòng "Làm" dưới đây bảo gỡ.
+>    Khu Thành viên nhận nó là b106, chưa viết — gỡ bây giờ là cắt đường duyệt
+>    đơn đúng lúc b103 vừa dựng thêm nút Xin quyền, tức làm đơn nhiều hơn.
+>    **Luật rút ra: khối chỉ được gỡ khi khu bên kia đã viết xong, không phải
+>    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b108.
+> 3. **Thêm nút *Mở trang Quản trị*.** Gỡ khối Duyệt nội dung đã lấy đi lối vào
+>    DUY NHẤT của trang ấy; phép kiểm PHẦN E bắt được tại chỗ.
+> 4. **`vaiTroBangChu()` xuống `config.js`.** Bản AGY chép nó thành bản thứ
+>    hai — đúng con đường đã trả giá 04/09 với mã vai `chu`.
+>
+> ⚠ **Một bài học về công cụ, đắt hơn vẻ ngoài:** `psql.exe` trên Windows đọc
+> tham số `-c` theo cp1252, **không** theo `PGCLIENTENCODING`. Câu khôi phục
+> hàm chứa tiếng Việt ném lỗi mã hoá, phép đo không đọc mã lỗi ấy, và các phép
+> sau chạy trên bàn thử **còn nguyên vết bẻ gãy**: 14/20 với ba phép hỏng hoàn
+> toàn bịa, một trong số đó nghe y như lỗ hổng an ninh. **Tiếng Việt vào psql
+> phải đi bằng FILE (`-f`), không bằng dòng lệnh (`-c`).**
+>
+> ⚠ `js/pages/chon-gia-pha.js` nay **không còn lối vào nào** — nút mở nó nằm
+> trong khối Gia phả vừa gỡ. Chưa xoá (xoá file phải hỏi chủ dự án). Nó là màn
+> hình thời Drive, còn nói về `Config.gs` và `FILE_ID`; b104 thay nốt phần cuối
+> của nó, lúc ấy hỏi chủ dự án cho xoá.
 
 | | |
 |---|---|

@@ -59,6 +59,9 @@ const JS_QT = doc('../js/pages/quan-tri/khu-kiem-duyet.js');
 const JS_KH = doc('../js/pages/quan-tri/khung.js');
 const JS_SB = doc('../js/services/sb.js');
 const JS_ST = doc('../js/pages/settings.js');
+// Đường vào trang Quản trị chuyển từ Cài đặt sang màn hình sơ đồ (b103).
+const JS_TV = doc('../js/pages/tree-view.js');
+const JS_GP = doc('../js/pages/quan-tri/khu-gia-pha.js');
 const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
 
 /** Tên file có thật ở gốc repo, giữ nguyên chữ hoa chữ thường. */
@@ -212,19 +215,32 @@ kiem('năm cửa mới đều đi qua layKhach() chung',
 // ============================================================
 console.log('\nPHẦN E — đường vào trang (settings.js)');
 
-kiem('Cài đặt có khối Duyệt nội dung',
-     /veKhoiKiemDuyet/.test(JS_ST) && /demChoKiemDuyet/.test(JS_ST), 'thiếu khối');
+// ⚠ PHẦN NÀY ĐỔI CHIỀU 08/09/2026 (b103). Tới b102 nó canh *"Cài đặt có nút
+//   mở trang Duyệt nội dung"*; nay khối ấy đã DỜI hẳn sang khu 3 của trang
+//   Quản trị, nên phép cũ canh một thứ cố ý không còn.
+//
+//   Nhưng KHÔNG bỏ phần này đi. Dời một khối đi mà quên đường vào mới thì
+//   người dùng mất hẳn chức năng, và không có gì báo lỗi — đúng kiểu hỏng câm
+//   mà cả bộ kiểm này sinh ra để bắt. Nên phép mới hỏi ba câu:
+//   khối cũ đã đi chưa · đường vào mới có thật không · tên file đúng chữ hoa
+//   chưa (bẫy 2 vẫn nguyên giá trị, chỉ đổi chỗ đứng).
 
-kiem('nút trỏ tới đúng tên file có thật, đúng cả chữ hoa (bẫy 2)',
-     tenFileTrongMaCoThat(JS_ST, FILE_GOC),
-     'chuỗi trong settings.js không khớp tên file nào ở gốc repo');
+kiem('Cài đặt KHÔNG còn khối Duyệt nội dung (đã dời sang khu 3)',
+     !/veKhoiKiemDuyet/.test(JS_ST), 'khối cũ còn nằm lại — nay có hai đường vào');
 
-// Điều kiện vai trong Cài đặt chỉ để khỏi vẽ khối trống. Nếu nó là phép kiểm
-// DUY NHẤT thì hỏng — nên trang kia phải hỏi lại máy chủ, và nó có hỏi
-// (PHẦN C). Ở đây chỉ soát rằng khối không tự cấp quyền cho ai khác.
-kiem('khối ấy chỉ mọc cho hai vai quản trị',
-     /veKhoiKiemDuyet[\s\S]{0,600}quan_tri_he_thong[\s\S]{0,80}quan_tri/.test(JS_ST),
-     'điều kiện vai không đúng hai vai quản trị');
+kiem('  và cũng không còn khối Gia phả (đã dời sang khu 1)',
+     !/function veKhoiGiaPha/.test(JS_ST), 'khối cũ còn nằm lại');
+
+// ⚠ Đơn chờ duyệt thì PHẢI CÒN. Khu Thành viên nhận nó là b106, chưa viết;
+//   gỡ trước khi có chỗ nhận là cắt đứt đường duyệt đơn, mà b103 vừa dựng
+//   thêm nút "Xin quyền" tức làm cho đơn nhiều hơn.
+kiem('  nhưng khối Đơn chờ duyệt CÒN LẠI cho tới b106',
+     /veKhoiChoDuyet\(hop\)/.test(JS_ST),
+     'gỡ sớm — từ nay tới b106 không còn đường nào duyệt đơn');
+
+kiem('đường vào trang Quản trị đúng tên file có thật, đúng cả chữ hoa (bẫy 2)',
+     tenFileTrongMaCoThat(JS_TV, FILE_GOC) || tenFileTrongMaCoThat(JS_ST, FILE_GOC),
+     'không mã nào trỏ tới một tên file có thật ở gốc repo');
 
 // ============================================================
 // PHẦN F — khung điều hướng bốn khu (b101)
@@ -277,8 +293,20 @@ kiem('số 0 thì không vẽ huy hiệu',
 
 // Ba khu chưa viết phải nói thẳng chúng làm ở bước nào — bảng trống nói
 // "không có dữ liệu", mà sự thật là "chưa ai viết màn hình này".
-kiem('ba khu chưa làm đều có câu nói rõ làm ở bước nào',
-     (JS_KH.match(/chuaLam:/g) || []).length === 3, 'thiếu câu chuaLam');
+// b103 viết xong khu Gia phả, nên còn HAI khu mang câu `chuaLam` (Thành viên
+// → b106, Sao lưu → b108). Con số này giảm dần theo từng bước, và nó phải
+// giảm ĐÚNG LÚC: một khu đã viết mà vẫn còn `chuaLam` thì `veKhu()` vẽ câu
+// "chưa làm" đè lên màn hình vừa viết xong.
+kiem('hai khu chưa làm đều có câu nói rõ làm ở bước nào',
+     (JS_KH.match(/chuaLam:/g) || []).length === 2, 'thiếu câu chuaLam');
+
+// ⚠ Regex phải dừng ở dấu `}` của chính mục ấy. Bản đầu quét 120 ký tự bất
+//   kể ranh giới, nên nó vớ luôn `chuaLam` của MỤC SAU và báo hỏng oan —
+//   thước đo sai, không phải vật đo sai. Mất một vòng vì chuyện này 08/09.
+kiem('khu Gia phả đã nối vào khung, không còn câu "chưa làm"',
+     /mountKhuGiaPha/.test(JS_KH) &&
+     !/'gia-pha'[^}]*chuaLam/.test(JS_KH),
+     'khu 1 chưa nối, hoặc còn câu chưa làm đè lên nó');
 
 // Luật "một danh sách khu, hai cách vẽ": chỗ biết bề ngang màn hình nằm
 // TRỌN trong @media của QuanTri.html.

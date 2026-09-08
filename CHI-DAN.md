@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 07/09/2026 (b102)*
+*Nhánh Supabase · cập nhật 08/09/2026 (b103)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -19,7 +19,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
 | **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* |
-| Bàn thử SQL tại chỗ | `../kiem-thu/ban-thu-sql/` *(ngoài repo)* |
+| Bàn thử SQL tại chỗ · phép ĐO hàng rào | `../kiem-thu/ban-thu-sql/` *(ngoài repo)* — `do-b102` · `do-b103` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` |
 | Đụng tên hay mã vai trò | `08-kiem-duyet.sql` mục *TÊN GỌI* · `settings.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
@@ -45,10 +45,10 @@ nó chính là thứ nó sinh ra để tránh.
    11:28; luật trực hệ dán 13:20, phép thử H9 **5/5 hàng rào đạt** (b94);
    hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — cả
    hai đo bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
-   ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101).
-   `11-quyen-he-thong.sql` 0.2.0 **đã dán cả hai Supabase** 07/09 (b102) —
-   tầng quyền hệ thống có hiệu lực thật, **nhưng chưa ai bấm thử trên app**.
-   **b103 → b105 vẫn ở `codex/`.**
+   ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
+   tầng quyền hệ thống bản 0.2.0 (b102). ⚠⚠ **`11` bản 0.3.0 của b103 CHƯA
+   DÁN** — khu Gia phả mở ra sẽ lỗi cho tới khi dán lại cả file `11`.
+   **b104 · b105 vẫn ở `codex/`, chưa rà.**
 
 ## Quy ước khung tài liệu này
 

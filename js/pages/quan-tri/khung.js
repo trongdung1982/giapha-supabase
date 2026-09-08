@@ -3,8 +3,9 @@
 // Vai trò  : Khung điều hướng bốn khu của trang Quản trị — thanh trái trên
 //            máy tính, hàng thẻ ngang trên điện thoại. Mỗi lần vẽ một khu.
 // Lớp      : pages — được phép gọi mọi lớp dưới
-// Phụ thuộc: services/sb, pages/dang-nhap, pages/quan-tri/khu-kiem-duyet
-// Phiên bản: 0.1.0 · Cập nhật: 07/09/2026 19:33
+// Phụ thuộc: services/sb, pages/dang-nhap,
+//            pages/quan-tri/khu-kiem-duyet · khu-gia-pha
+// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 11:35
 // ============================================================
 //
 // ═══ BA LUẬT CỦA KHUNG NÀY, VÀ VÌ SAO ═══
@@ -42,6 +43,7 @@
 import { layPhien, dsChoDuyet, demChoKiemDuyet } from '../../services/sb.js';
 import { mountDangNhap } from '../dang-nhap.js';
 import { mountKhuKiemDuyet } from './khu-kiem-duyet.js';
+import { mountKhuGiaPha } from './khu-gia-pha.js';
 
 /**
  * Bốn khu, đúng thứ tự trên thanh. `ma` là chuỗi đi vào `#` của địa chỉ nên
@@ -51,8 +53,7 @@ import { mountKhuKiemDuyet } from './khu-kiem-duyet.js';
  * trống nói "không có dữ liệu", mà sự thật là "chưa ai viết màn hình này".
  */
 const KHU = [
-  { ma: 'gia-pha',    chu: 'Gia phả',
-    chuaLam: 'Khu này làm ở bước b103 — chọn cây, xin quyền, cây mặc định.' },
+  { ma: 'gia-pha',    chu: 'Gia phả' },
   { ma: 'thanh-vien', chu: 'Thành viên',
     chuaLam: 'Khu này làm ở bước b105 và b106 — đổi vai, gắn mã người, ' +
              'duyệt đơn xin vào cây.' },
@@ -136,7 +137,7 @@ export async function mountKhung(appEl) {
   khung.append(thanh, than);
   appEl.append(khung);
 
-  const veKhuDangMo = () => veKhu(than, nutTheoMa);
+  const veKhuDangMo = () => veKhu(than, nutTheoMa, phien);
   window.addEventListener('hashchange', veKhuDangMo);
   veKhuDangMo();
 
@@ -156,7 +157,7 @@ export async function mountKhung(appEl) {
  *   vẽ hai lần; và nó thêm một mục vào lịch sử, khiến nút Back quay về đúng
  *   cái `#` hỏng vừa bỏ đi.
  */
-function veKhu(than, nutTheoMa) {
+function veKhu(than, nutTheoMa, phien) {
   const maHash = window.location.hash.slice(1);
   const khu = KHU.find((k) => k.ma === maHash) || KHU[0];
   if (maHash !== khu.ma) window.history.replaceState(null, '', '#' + khu.ma);
@@ -171,7 +172,11 @@ function veKhu(than, nutTheoMa) {
   }
 
   than.innerHTML = '';
-  if (khu.ma === 'kiem-duyet') mountKhuKiemDuyet(than);
+  // ⚠ Khu Gia phả nhận `phien` vì nó phải biết ba điều mà chỉ phiên có: cây
+  //   nào đang mở, người này có phải Quản trị hệ thống không, và email của
+  //   họ. Ba khu kia tự hỏi máy chủ lấy dữ liệu của mình nên không cần.
+  if (khu.ma === 'gia-pha') mountKhuGiaPha(than, phien);
+  else if (khu.ma === 'kiem-duyet') mountKhuKiemDuyet(than);
   else veKhuChuaLam(than, khu);
 }
 
