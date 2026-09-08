@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 08/09/2026 (b103)*
+*Nhánh Supabase · cập nhật 08/09/2026 (b104)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -19,7 +19,7 @@ nó chính là thứ nó sinh ra để tránh.
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
 | **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* |
-| Bàn thử SQL tại chỗ · phép ĐO hàng rào | `../kiem-thu/ban-thu-sql/` *(ngoài repo)* — `do-b102` · `do-b103` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` |
+| Bàn thử SQL tại chỗ · phép ĐO hàng rào | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102` · `do-b103` · `do-b104` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` |
 | Đụng tên hay mã vai trò | `08-kiem-duyet.sql` mục *TÊN GỌI* · `settings.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
@@ -46,9 +46,9 @@ nó chính là thứ nó sinh ra để tránh.
    hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — đo
    bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
-   tầng quyền hệ thống bản 0.2.0 (b102). ⚠⚠ **`11` bản 0.3.1 của b103 CHƯA
-   DÁN** — khu Gia phả mở ra sẽ lỗi; lần dán đầu ném `42P13`, xem `KE-HOACH`
-   *(**dán lại được ≠ nâng cấp được**)*. **b104 · b105 ở `codex/`, chưa rà.**
+   tầng quyền hệ thống + tạo cây mới **đã dán cả hai Supabase** (b102–b104):
+   khu Gia phả mở được, nút *+ Dựng gia phả mới* chạy thật. Mã cây nay
+   **3 chữ số** (`NPG473`, không còn `NTBK7R3`). **b105 là việc kế tiếp.**
 
 ## Quy ước khung tài liệu này
 

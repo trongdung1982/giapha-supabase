@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 08/09/2026 · Bước gần nhất: **b103** (⚠ CHƯA DÁN) · Việc kế tiếp: **b104***
+*Cập nhật 08/09/2026 · Bước gần nhất: **b104** (đã dán, đã đẩy) · Việc kế tiếp: **b105***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -138,7 +138,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Bốn mươi ba việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Bốn mươi bảy việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -183,10 +183,14 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Tầng quyền cấp hệ thống — `11-quyen-he-thong.sql` 0.2.0, bốn hàng rào 16/16** | **b102** | ✓ **07/09/2026** — đã dán CẢ HAI Supabase |
 | **Rà bản AGY bằng phép ĐO: bắt được 2 lỗ hổng mà 12/12 tự kiểm báo xanh** | **b102** | ✓ **07/09/2026** |
 | **Phép đo mượn danh nghĩa tài khoản (`set local role authenticated`) — 29/29, có 3 phép kiểm chứng ngược** | **b102** | ✓ **07/09/2026** |
-| **Khu Gia phả — thấy cả cây mình chưa có chân, xin quyền, công tắc cho người lạ thấy tên** | **b103** | ✓ **08/09/2026** ⚠ chưa dán, chưa ai bấm thử |
-| **`11` lên 0.3.1 — `dat_cho_nguoi_la_thay_ten()` · cột `toi_la_chu` · nhánh cho người đang chờ · `drop function` trước `ds_gia_pha()`** | **b103** | ✓ **08/09/2026** ⚠ **chưa dán** *(lần dán đầu ném 42P13)* |
+| **Khu Gia phả — thấy cả cây mình chưa có chân, xin quyền, công tắc cho người lạ thấy tên** | **b103** | ✓ **08/09/2026** — đã dán |
+| **`11` lên 0.3.1 — `dat_cho_nguoi_la_thay_ten()` · cột `toi_la_chu` · nhánh cho người đang chờ · `drop function` trước `ds_gia_pha()`** | **b103** | ✓ **08/09/2026** — đã dán *(lần dán đầu ném 42P13, vá xong dán lại đạt)* |
 | **Phép đo `do-b103.mjs` — 22/22 ĐẠT, 3/3 kiểm chứng ngược** | **b103** | ✓ **08/09/2026** |
 | **`vaiTroBangChu()` dời xuống `config.js` — một bảng tên, không hai bản chép** | **b103** | ✓ **08/09/2026** |
+| **Tạo gia phả mới — `12-tao-cay.sql`, `tao_gia_pha_moi()` một giao dịch, nút + Dựng** | **b104** | ✓ **08/09/2026** — đã dán |
+| **Bàn thử SQL tại chỗ đo lại đường nâng cấp `11` (0.2.0→0.3.1) và đường nửa vời** | **b104** | ✓ **08/09/2026** |
+| **Phép đo `do-b104.mjs` — 38/38 ĐẠT, 3 kiểm chứng ngược** | **b104** | ✓ **08/09/2026** |
+| **Quy tắc mã cây đổi sang 3 chữ số, vá lỗ hổng bộ đếm mã** | **b104** | ✓ **08/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -237,15 +241,14 @@ y hệt sau ba ngày.
 ✓ **BẢN 0.2.0 ĐÃ DÁN CẢ HAI SUPABASE — 07/09/2026 tối.** Máy chủ thật nay có
 tầng quyền cấp hệ thống; và Staging thôi mang hai lỗ hổng của bản 0.1.0.
 
-**KHU GIA PHẢ VIẾT XONG — 08/09/2026 (b103), NHƯNG CHƯA DÁN.** Khu 1 của trang
+**KHU GIA PHẢ VIẾT XONG — 08/09/2026 (b103).** Khu 1 của trang
 Quản trị nay chạy thật trong mã: người đăng nhập thấy **cả những cây mình chưa
 có chân** (cây nào chủ nó đã bật công tắc), bấm Xin quyền nộp được đơn, chủ cây
 bật/tắt được công tắc, Quản trị hệ thống đặt được cây mặc định. Phép đo
 `do-b103.mjs` **22/22 ĐẠT** kèm **3/3 kiểm chứng ngược**.
 
-⚠⚠ **`11-quyen-he-thong.sql` CHƯA DÁN — đây là thứ duy nhất chặn b104.**
-Máy chủ thật đang chạy 0.2.0. Mở khu 1 lúc này là ra lỗi, vì hàm công tắc và
-cột `toi_la_chu` chưa tồn tại bên đó.
+✓ **`11-quyen-he-thong.sql` ĐÃ DÁN — 08/09/2026, chủ dự án dán cả hai
+Supabase.** Từng chặn b104; nay hết chặn.
 
 **LẦN DÁN ĐẦU HỎNG — 08/09/2026 sáng, và chỗ hỏng đáng ghi lại.** Chủ dự án dán
 0.3.0 lên máy chủ thật, Supabase ném:
@@ -274,9 +277,14 @@ chồng bản mới lên. Mục **19** của bảng tự kiểm sinh ra để b�
 hỏi *hình dạng* hàm, không hỏi hàm *có tồn tại* như mục 10 (mục 10 báo ĐẠT cả
 khi máy chủ còn giữ hàm 10 cột).
 
-⚠ Bản 0.3.1 **chưa chạy qua bàn thử**: máy đang dùng chưa cài PostgreSQL, bàn
-thử nằm ở máy kia. Đường đo thay thế là dán lên **Staging** (đang ở 0.2.0 —
-đúng nền cần) trước khi dán lên thật.
+✓ **Bản 0.3.1 ĐÃ chạy qua bàn thử, 08/09/2026 (b104)** — câu trên nói sai:
+bàn thử SQL tại chỗ CÓ trên máy này (PostgreSQL 17.11, cổng 5433), chỉ chưa
+ai kiểm lại trước khi viết. `do-b104.mjs` dựng đúng nền 0.2.0 bằng
+`git show <commit>:...` rồi chồng 0.3.1 lên — trót lọt, kèm phép kiểm chứng
+ngược (bản 0.3.0 lên cùng nền ném đúng `42P13`). Và đo thêm đường **nửa
+vời**: lần dán sáng nay ném lỗi giữa chừng nên máy chủ thật có thể đang ở
+trạng thái hàm mới đã vào mà `ds_gia_pha()` còn bản cũ — 0.3.1 chữa được cả
+hai đường.
 
 ⚠ **Và một luật mới, rút từ chính bước này:** *khối trong Cài đặt chỉ được gỡ
 khi khu bên trang Quản trị đã viết xong* — không phải khi kế hoạch nói tới nó.
@@ -428,14 +436,12 @@ thì sai lúc chưa có gì xây lên trên.
 > `kiem-thu/ban-thu-sql/do-b103.mjs` *(ngoài repo, **22/22 ĐẠT**, 3/3 kiểm
 > chứng ngược)*. Hai bộ kiểm cập nhật: 112/112 và 73/73.
 >
-> ⚠⚠ **CHƯA DÁN — đây là thứ chặn b104.** Máy chủ thật đang chạy `11` bản
-> 0.2.0, chưa có hàm công tắc và chưa có cột `toi_la_chu`. Mở khu 1 lúc này là
-> ra lỗi. File dán lại được (đã đo: chạy hai lần liên tiếp, lần hai chỉ ra bốn
-> dòng NOTICE) nên chỉ cần dán lại **cả file `11`**.
+> ✓ **ĐÃ DÁN — 08/09/2026, chủ dự án dán cả hai Supabase cùng lúc với `12`
+> của b104.**
 >
-> ⚠ **Chưa ai bấm thử trên app.** Cả hai tầng đã đo, nhưng đo là máy chủ và bộ
-> kiểm tự nói về mình. Điểm dừng thật của b103 — một người không có chân ở cây
-> nào bấm được Xin quyền — chỉ người bấm mới đóng được.
+> ⚠ **Chưa ai bấm thử khu Gia phả trên app.** Cả hai tầng đã đo, nhưng đo là
+> máy chủ và bộ kiểm tự nói về mình. Điểm dừng thật của b103 — một người
+> không có chân ở cây nào bấm được Xin quyền — chỉ người bấm mới đóng được.
 >
 > **Bốn chỗ lệch khỏi bản Antigravity**, mỗi chỗ một lý do đo được:
 >
@@ -471,15 +477,35 @@ thì sai lúc chưa có gì xây lên trên.
 | **Điểm dừng** | Đăng nhập bằng một tài khoản **không có chân trong cây nào**: thấy đúng danh sách cây đã bật công tắc, bấm Xin quyền nộp được đơn, và **không mở được nội dung cây nào**. Đặt cây mặc định rồi thử lại: mở được đúng một cây ấy |
 | **⚠ Không làm** | Không mở RLS trên `trees`. Lọc cột bằng hàm, không bằng RLS |
 
-### b104 — Tạo gia phả mới
+### ~~b104~~ — Tạo gia phả mới · ✓ **XONG 08/09/2026**
 
-| | |
-|---|---|
-| **Làm** | `luoc-do/12-tao-cay.sql` — `tao_gia_pha_moi(p_ten, p_ma_cay, p_note)`, hai câu `insert` **trong cùng một giao dịch** · `repo.taoGiaPhaMoi()` thôi trả `'chualam'` · màn hình trong khu 1 |
-| **Sản phẩm** | File SQL + bộ kiểm + màn hình |
-| **Điểm dừng** | Một tài khoản **được cấp `duoc_tao_cay`** dựng được cây rỗng, tự thành quản trị của nó, thêm được người đầu tiên. Một tài khoản **không được cấp** bấm vào thì bị máy chủ từ chối *(không phải bị JavaScript giấu nút)* |
-| **⚠ Bẫy** | Đẻ ra `trees` mà không đẻ `tree_members` là đẻ ra cây **không ai vào được, kể cả người vừa tạo** — và RLS chặn nên chính họ cũng không xoá được |
-| **⚠ Bẫy 2** | `tree_code` phải `unique`. Hai cây cùng mã thì `NTBK7R3_P0013` hết là duy nhất |
+> **Đã làm:** `luoc-do/12-tao-cay.sql` *(mới)* — ràng buộc `unique` trên
+> `trees.tree_code`, hàm `tao_gia_pha_moi(p_ten, p_ma_cay, p_note)` đẻ
+> `trees` + `tree_members` trong một giao dịch · `sb.js` 0.6.0 · `repo.js`
+> 0.3.0 *(thôi trả `'chualam'`)* · `khu-gia-pha.js` 0.4.0 *(nút + Dựng gia
+> phả mới)* · `kiem-thu/ban-thu-sql/do-b104.mjs` *(ngoài repo, **38/38 ĐẠT**,
+> 3 kiểm chứng ngược)* · `kiem-thu/kiem-tao-cay.mjs` *(mới, **33/33**)*.
+>
+> ✓ **ĐÃ DÁN CẢ HAI SUPABASE — 08/09/2026, chủ dự án xác nhận.**
+>
+> ⚠ **Quy tắc mã cây đổi, chủ dự án chốt cùng bước này**: phần phân biệt từ
+> 4 ký tự xen kẽ chữ–số (`NTBK7R3`) sang **3 chữ số** (`NPG473`). Vá luôn một
+> lỗ hổng đo được: mã cây 4 số mà viết tắt kết thúc bằng P/U/M/S tự khớp
+> khuôn mã bản ghi, làm bộ đếm mã nhảy vọt — `utils/id.js` 1.3.0. Hai mã đã
+> cấp (`NTB`, `NPGQ8C9`) giữ nguyên.
+>
+> ⚠ **Vai cấp cho người dựng cây là `quan_tri_he_thong`, LỆCH khỏi
+> `THIET-KE-NHIEU-CAY.md` mục 7** (viết `quan_tri`) — xem dòng Đính chính
+> trong `nhat-ky/INDEX.md`. Lý do: `co_the_quan_tri()` chỉ nhận
+> `quan_tri_he_thong`, cấp vai kia thì người dựng cây không duyệt được đơn
+> của chính cây mình.
+>
+> ⚠ **Bàn thử SQL tại chỗ hoá ra CÓ trên máy này** — nhờ đó đo được đường
+> nâng cấp thật của `11` (0.2.0 → 0.3.1, dựng nền bằng `git show`) và đường
+> **nửa vời** do lần dán sáng 08/09 vấp giữa chừng. Xem dòng Đính chính.
+>
+> ⚠ **Chưa ai bấm thử trên app.** Đo bằng bàn thử SQL, chưa ai bấm nút *+ Dựng
+> gia phả mới* trên `nguyentrongbac.io.vn`.
 
 ### b105 — Thành viên & quyền, tầng máy chủ
 
