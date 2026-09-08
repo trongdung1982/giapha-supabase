@@ -5,7 +5,8 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.5.0 · Cập nhật: 08/09/2026 10:40
+// Phiên bản: 0.6.0 · Cập nhật: 08/09/2026 15:01
+//            0.6.0 (b104) thêm `taoGiaPhaMoi()` — cửa dựng gia phả mới.
 // ============================================================
 //
 // ĐÂY LÀ RANH GIỚI GIỮA TRÌNH DUYỆT VÀ MÁY CHỦ — đúng vai `services/gas.js`
@@ -555,6 +556,53 @@ export async function datChoNguoiLaThayTen(treeId, cho) {
     return { ok: false, loi: data.lyDo || 'Không đổi được công tắc.' };
   }
   return { ok: true, loi: null };
+}
+
+/**
+ * Dựng một gia phả MỚI, rỗng, và người gọi thành quản trị của nó.
+ *
+ * @param {string} ten    tên gia phả, có dấu
+ * @param {string} maCay  mã cây — chữ hoa không dấu, mở đầu bằng chữ cái
+ * @param {string} note   ghi chú, có thể bỏ trống
+ * @returns {Promise<{ok:boolean, cay:{fileId:string,ten:string,maCay:string}|null,
+ *                    loi:string|null}>}
+ *
+ * ⚠ **KHÔNG hỏi trước xem người này có quyền không.** Đường đúng là cứ gọi và
+ *   để máy chủ trả lời — `luoc-do/12-tao-cay.sql` hỏi `duoc_tao_cay()` ngay
+ *   câu đầu. Đó là điểm dừng b104 viết thành chữ: *"một tài khoản không được
+ *   cấp bấm vào thì bị MÁY CHỦ từ chối, không phải bị JavaScript giấu nút"*.
+ *   Hỏi trước rồi ẩn nút là dựng phân quyền bằng JavaScript —
+ *   `THIET-KE-NHIEU-CAY.md` mục 10 điều 6 cấm đúng việc ấy.
+ *
+ * ⚠ Hai câu `insert` (`trees` và `tree_members`) nằm trong CÙNG một giao dịch
+ *   ở máy chủ. Không có đường nào từ đây đẻ ra một cây thiếu dòng thành viên —
+ *   thứ sẽ là một cây không ai vào được, kể cả người vừa tạo.
+ */
+export async function taoGiaPhaMoi(ten, maCay, note = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, cay: null, loi: 'Chưa nối được máy chủ.' };
+
+  const { data, error } = await k.rpc('tao_gia_pha_moi', {
+    p_ten: String(ten == null ? '' : ten),
+    p_ma_cay: String(maCay == null ? '' : maCay),
+    p_note: String(note == null ? '' : note),
+  });
+  if (error) return { ok: false, cay: null, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return {
+      ok: false, cay: null,
+      loi: (data && data.lyDo) || 'Không dựng được gia phả mới.',
+    };
+  }
+
+  const c = data.cay || {};
+  // `fileId` là tên cũ từ thời file JSON trên Drive — giữ nguyên vì `repo.js`
+  // và hai màn hình cũ đang đọc đúng tên ấy. Cùng lý do đã ghi ở
+  // `layDanhSachGiaPha()`.
+  return {
+    ok: true, loi: null,
+    cay: { fileId: c.id, ten: c.ten || '', maCay: c.maCay || '' },
+  };
 }
 
 /**

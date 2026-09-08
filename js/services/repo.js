@@ -4,7 +4,9 @@
 // Lớp      : services — được gọi bởi: pages · gọi: services/sb,
 //            services/hinh-dang, utils, state
 // Phụ thuộc: services/sb.js, services/hinh-dang.js, utils/graph.js, state.js
-// Phiên bản: 0.2.0 · Cập nhật: 05/09/2026 11:09
+// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 15:01
+//            0.3.0 (b104) `taoGiaPhaMoi()` thôi trả `'chualam'` — máy chủ nay
+//            có hàm `tao_gia_pha_moi()`.
 // ============================================================
 //
 // ═══ RANH GIỚI ĐỔI KHO LƯU TRỮ ═══
@@ -36,6 +38,7 @@ import * as sb from './sb.js';
 import { rapCay, soSanh, coGiDeGhi } from './hinh-dang.js';
 import { state, notify } from '../state.js';
 import { buildIndex } from '../utils/graph.js';
+import { sinhMaCay } from '../utils/id.js';
 import { DATA_VERSION } from '../config.js';
 
 /**
@@ -288,25 +291,50 @@ function canhBaoThieuUid(cay) {
 }
 
 // ============================================================
-// CHƯA LÀM
+// DỰNG GIA PHẢ MỚI
 // ============================================================
 
 /**
- * Dựng một gia phả MỚI. **Chưa làm trên nền Supabase.**
+ * Dựng một gia phả MỚI, rỗng, và người gọi thành quản trị của nó.
  *
- * Bản Drive dựng ba thư mục và một file rồi phải đi TÌM lại cây vừa tạo, vì
+ * @param {string} ten        tên gia phả
+ * @param {{maCay?:string, note?:string, conSong?:()=>boolean}} tuyChon
+ *        `maCay` thiếu thì tự gợi ý từ tên. `conSong` giữ nguyên từ bản Drive:
+ *        màn hình đóng giữa chừng thì đừng vẽ tiếp lên chỗ không còn.
+ * @returns {Promise<{ok:boolean, moi:{fileId:string,ten:string,tenFile:string}|null,
+ *                    lyDo:string|null, loi:string|null}>}
+ *
+ * ⚠ Hình dạng trả về giữ **đúng** hợp đồng của bản Apps Script (`moi.fileId`,
+ *   `lyDo: 'daDong'`), vì `pages/import-export.js` và `pages/chon-gia-pha.js`
+ *   đang đọc đúng những tên ấy. Đổi ở đây là sửa lan sang hai file không liên
+ *   quan gì tới b104.
+ *
+ * Bản Drive dựng ba thư mục rồi phải đi TÌM lại cây vừa tạo, vì
  * `gas.taoFileDuLieuMoi()` không trả về gì và Drive đánh chỉ mục có độ trễ.
- * Cả đoạn ấy biến mất ở đây: trên Postgres việc này là hai câu `insert` trong
- * một giao dịch, và nó trả về ngay mã cây vừa tạo.
- *
- * Nhưng nó phải là một hàm `security definer` trong cơ sở dữ liệu, vì
- * `02-rls.sql` cố ý không cấp cho trình duyệt quyền ghi vào `trees`. Hàm ấy
- * chưa viết — xem `KIEN-TRUC.md` mục 6.
+ * Cả đoạn ấy biến mất: trên Postgres đây là hai câu `insert` trong một giao
+ * dịch, và máy chủ trả về ngay mã cây.
  */
-export async function taoGiaPhaMoi() {
+export async function taoGiaPhaMoi(ten, tuyChon = {}) {
+  const conSong = typeof tuyChon.conSong === 'function' ? tuyChon.conSong : null;
+  const ngungRoi = () => (conSong ? !conSong() : false);
+
+  const tenSach = String(ten == null ? '' : ten).trim();
+  // ⚠ Gợi ý mã bằng `utils/id.js`, KHÔNG viết lại phép sinh mã ở đây. Hàm ấy
+  //   thuần, và nó biết hai thứ mà một phép ghép chuỗi vội vàng không biết:
+  //   bỏ những từ chung ("gia phả", "họ", "dòng tộc"), và xen kẽ chữ–số để mã
+  //   cây không tự khớp khuôn mã bản ghi (`LVTS1234` chứa `S1234`).
+  //   Màn hình khu Gia phả điền sẵn mã này rồi để người dùng sửa; hai màn hình
+  //   cũ không có ô mã nên nhận thẳng gợi ý.
+  const maCay = String(tuyChon.maCay || '').trim() || sinhMaCay(tenSach, tenSach);
+
+  const kq = await sb.taoGiaPhaMoi(tenSach, maCay, tuyChon.note || '');
+  if (ngungRoi()) return { ok: false, moi: null, lyDo: 'daDong', loi: null };
+
+  if (!kq.ok) {
+    return { ok: false, moi: null, lyDo: 'maychutuchoi', loi: kq.loi };
+  }
   return {
-    ok: false, moi: null, lyDo: 'chualam',
-    loi: 'Chức năng dựng gia phả mới chưa làm xong trên nền Supabase. ' +
-         'Hiện phải tạo bằng tay trong Supabase, hoặc dùng script di dời.',
+    ok: true, lyDo: null, loi: null,
+    moi: { fileId: kq.cay.fileId, ten: kq.cay.ten, tenFile: kq.cay.maCay },
   };
 }

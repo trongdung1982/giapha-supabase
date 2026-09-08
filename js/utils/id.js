@@ -3,7 +3,9 @@
 // Vai trò  : Sinh ID bất biến cho person / union / media / source
 // Lớp      : utils — được gọi bởi: services, domains, pages
 // Phụ thuộc: utils/text.js
-// Phiên bản: 1.2.0 · Cập nhật: 29/08/2026 17:30
+// Phiên bản: 1.3.0 · Cập nhật: 08/09/2026 15:01
+//            1.3.0 (b104) phần phân biệt của mã cây đổi từ bốn ký tự xen kẽ
+//            chữ–số sang BA CHỮ SỐ. Chủ dự án chốt 08/09/2026.
 // ============================================================
 //
 // HÀM THUẦN. Không đọc đồng hồ máy, không sinh số ngẫu nhiên: cùng một cây thì
@@ -166,24 +168,39 @@ export function maCayCuaCay(tree) {
 //
 // Mã cây ghép hai phần, và hai phần ấy làm hai việc khác nhau:
 //
-//   NTB      K7R3
+//   NTB      417
 //   ↑        ↑
 //   đọc được  phân biệt
 //
 // Phần đọc được lấy chữ đầu các từ trong tên cây, để người mở file `.ged` bằng
 // Notepad còn đoán ra được nó là cây nào. Phần đọc được MỘT MÌNH thì không đủ:
 // "Nguyễn Trọng Bắc" và "Nguyễn Trọng Bình" cùng ra `NTB`, mà đó lại đúng là
-// hai cây dễ bị nhập nhầm vào nhau nhất. Nên có thêm bốn ký tự băm ra từ hạt
+// hai cây dễ bị nhập nhầm vào nhau nhất. Nên có thêm ba chữ số băm ra từ hạt
 // giống.
 //
-// ⚠ BỐN KÝ TỰ ẤY XEN KẼ CHỮ–SỐ–CHỮ–SỐ, và đó KHÔNG phải chuyện thẩm mỹ. Bộ
-// đếm mã quét mọi chuỗi khớp `[PUMS]` + bốn số trở lên. Một mã cây như
-// `LVTS1234` sẽ tự nó khớp `S1234`, và bộ đếm nguồn nhảy lên 1235 vì một cái
-// tên. Xen kẽ thì trong mã cây không bao giờ có nổi hai chữ số liền nhau, nên
-// ca ấy không xảy ra được — chặn bằng cấu trúc, không bằng lời dặn.
+// ⚠⚠ **BA CHỮ SỐ, KHÔNG PHẢI BỐN — và đó là cả cái hàng rào.**
+//
+// Bộ đếm mã quét mọi chuỗi khớp `[PUMS]` + **từ bốn chữ số trở lên**. Một mã
+// cây bốn số như `LVS1234` tự nó khớp `S1234`, và bộ đếm nguồn nhảy từ `S0003`
+// lên `S1235` vì một cái tên — đo được 08/09/2026, và chữ cuối `P`/`U`/`M`/`S`
+// thì rất dễ gặp với tên Việt (*Phúc, Phú, Sơn, Minh, Uyên*).
+//
+// Ba số thì **không bao giờ đủ dài để khớp**, dù phần viết tắt kết thúc bằng
+// chữ nào. Chặn bằng cấu trúc, không bằng lời dặn — đúng tinh thần bản trước,
+// chỉ đổi cách thực hiện.
+//
+// ⚠ Bản trước (tới 08/09/2026) dùng **bốn ký tự xen kẽ chữ–số–chữ–số**
+// (`NTBK7R3`), cũng chặn được ca ấy vì không bao giờ có hai chữ số liền nhau.
+// Chủ dự án chốt đổi sang toàn số cho dễ đọc và dễ đọc cho nhau qua điện
+// thoại. Hai mã đã cấp (`NTB`, `NPGQ8C9`) **giữ nguyên** — mã đã cấp thì không
+// đổi, và `KHUON_MA_CAY` vẫn nhận cả hai dạng.
+//
+// ⚠ `giapha/js/utils/id.js` **KHÔNG đổi theo** — nhánh ấy đóng băng 02/09/2026.
+// Từ hôm nay hai bản `utils/id.js` lệch nhau ở đúng hàm `phanPhanBiet()`, và
+// `kiem-thu/kiem-ma-cay.mjs` đang đo bản CŨ. Bản mới do
+// `supabase/kiem-thu/kiem-tao-cay.mjs` PHẦN D gác.
 
-const CHU_BAM = 'ABCDEFGHJKLMNPQRTVWXYZ';   // bỏ I, O, S, U — dễ nhầm khi đọc
-const SO_BAM  = '23456789';                 // bỏ 0, 1 — dễ nhầm với O, I
+const SO_BAM = '23456789';   // bỏ 0 và 1 — dễ nhầm với O và I khi đọc cho nhau
 
 /** Từ chung trong tên gia phả, không mang thông tin phân biệt. */
 const TU_BO = ['gia', 'pha', 'ho', 'dong', 'toc', 'cua', 'chi', 'nhanh',
@@ -196,7 +213,7 @@ const TU_BO = ['gia', 'pha', 'ho', 'dong', 'toc', 'cua', 'chi', 'nhanh',
  * @param {string} hat  chuỗi bất kỳ nhưng phải ỔN ĐỊNH theo cây — cùng một cây
  *                      thì mọi máy, mọi lần gọi đều phải đưa vào cùng một hạt.
  *                      `repo.js` dùng `createdAt` + tên.
- * @returns {string} ví dụ 'NTBK7R3'
+ * @returns {string} ví dụ 'NTB417'
  *
  * Hàm THUẦN: không `Math.random()`, không đọc đồng hồ. Hai người mở app cùng
  * lúc trên cùng một cây phải ra cùng một mã, nếu không thì ai lưu trước sẽ đặt
@@ -224,12 +241,20 @@ function phanDocDuoc(ten) {
   return chuCai.length ? chuCai.join('') : 'GP';
 }
 
-/** Bốn ký tự xen kẽ chữ–số–chữ–số, băm ra từ hạt giống. */
+/**
+ * Ba chữ số, băm ra từ hạt giống.
+ *
+ * ⚠ Đúng BA — xem khối cảnh báo đầu mục. Thêm một số nữa là mã cây tự khớp
+ *   khuôn mã bản ghi và bộ đếm nhảy vọt.
+ *
+ * 512 tổ hợp (8³), và chừng ấy là thừa: phần số chỉ phải phân biệt những cây
+ * TRÙNG chữ viết tắt, mà `trees.tree_code` nay có ràng buộc `unique` nên trùng
+ * thì máy chủ từ chối ngay lúc dựng chứ không lặng lẽ.
+ */
 function phanPhanBiet(hat) {
   const h = bam(hat, 2166136261);
-  const lay = (bang, dich) => bang.charAt(Math.floor(h / dich) % bang.length);
-  return lay(CHU_BAM, 1) + lay(SO_BAM, 32) +
-         lay(CHU_BAM, 512) + lay(SO_BAM, 16384);
+  const lay = (dich) => SO_BAM.charAt(Math.floor(h / dich) % SO_BAM.length);
+  return lay(1) + lay(32) + lay(512);
 }
 
 // ============================================================

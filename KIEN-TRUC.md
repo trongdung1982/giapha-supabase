@@ -193,15 +193,19 @@ thấy app gọi tới `di-doi/` là ranh giới đã vỡ.
 24/08/2026, trước khi có quyết định giữ bản Apps Script chạy tiếp cho người
 trong họ. **Gỡ deploy hôm nay là tắt app của cả họ.** Không làm.
 
-**Bốn màn hình chưa mở được** — mọi hàm chúng gọi đều ném lỗi có câu chữ đàng
+**Ba màn hình chưa mở được** — mọi hàm chúng gọi đều ném lỗi có câu chữ đàng
 hoàng, **không giả vờ thành công**:
 
 | Màn hình | Vì sao |
 |---|---|
 | Sao lưu *(nút trong app)* | Sao lưu nay chạy nền ngoài app; nút này chưa nối lại vào đâu |
-| Dựng gia phả mới | Cần một hàm `security definer` nữa, chưa viết |
 | Bỏ chọn gia phả | Nền này **không có** "gia phả mặc định" để quay về |
 | Mở quyền xem ảnh | Không còn nỗi khổ ấy — kho Supabase một luật cho cả kho |
+
+✓ **Dựng gia phả mới — XONG 08/09/2026 (b104).** Hàm `security definer` ấy nay
+có tên: `tao_gia_pha_moi()` trong `luoc-do/12-tao-cay.sql`, và lối vào là nút
+*+ Dựng gia phả mới* ở khu Gia phả của trang Quản trị. `repo.taoGiaPhaMoi()`
+thôi trả `'chualam'`. ⚠ Còn chờ chủ dự án dán hai file SQL.
 
 **Giấu chi tiết người còn sống với người chỉ có quyền xem** — chưa làm. RLS lọc
 theo **dòng**; việc này phải lọc theo **cột**. `state.daLocNguoiConSong` giữ

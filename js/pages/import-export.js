@@ -4,7 +4,9 @@
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, pages/form-ghep-doi, domains/{gedcom,excel}, services/{gas,repo},
 //            utils/{date,text}, config
-// Phiên bản: 1.7.0 · Cập nhật: 31/08/2026 08:00
+// Phiên bản: 1.7.1 · Cập nhật: 08/09/2026 15:01
+//            1.7.1 (b104) sửa hai câu nói SAI NƠI dữ liệu tới — đường dựng cây
+//            mới nay ghi xuống Postgres, không xuống Drive.
 // ============================================================
 //
 // File này giữ HAI màn hình, và chúng là hai chiều của cùng một cửa:
@@ -781,7 +783,10 @@ function veKhoiGhi(kq, tenNguon) {
     'background:#fbf0ec;color:#8a3a2a;font-size:12px;line-height:1.6';
   const taiKhoan = (state.phien && state.phien.email) || 'tài khoản của bạn';
   nhac.append(
-    dongChu('· Lưu vào Google Drive của ' + taiKhoan + '.'),
+    // b104: đường dựng cây mới nay chạy thật, và nó ghi xuống Postgres chứ
+    // không xuống Drive. Câu cũ nói sai NƠI dữ liệu tới — thứ duy nhất đoạn
+    // nhắc này có nhiệm vụ nói đúng.
+    dongChu('· Lưu vào máy chủ, dưới tài khoản ' + taiKhoan + '.'),
     dongChu('· Ghi xong KHÔNG có nút hoàn tác.'),
   );
   khoi.append(nhac);
@@ -886,8 +891,8 @@ async function chayGhiVaoCayMoi(kq, o, nutGhi, tin) {
     o.disabled = false;
   };
 
-  // 1. Dựng trên Drive.
-  noi('Đang dựng "' + ten + '" trên Google Drive…');
+  // 1. Dựng cây mới trên máy chủ (b104 — `repo.taoGiaPhaMoi`).
+  noi('Đang dựng "' + ten + '" trên máy chủ…');
   const daTao = await taoGiaPhaMoi(ten, { conSong: () => !!lopPhuNhap });
   if (!lopPhuNhap) { dangGhi = false; return; }
   if (!daTao.ok) {

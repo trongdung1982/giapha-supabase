@@ -330,10 +330,23 @@ Nối **quan hệ** giữa hai cây (ông A ở cây này là con ông B ở câ
 ```
 duoc_tao_cay()  →  tao_gia_pha_moi(p_ten, p_ma_cay, p_note)
                         ├── insert trees (chu_so_huu = auth.uid())
-                        └── insert tree_members (role='quan_tri',
+                        └── insert tree_members (role='quan_tri_he_thong',
                                                   approved=true)
                             ── TRONG CÙNG MỘT GIAO DỊCH
 ```
+
+⚠ **Vai ấy sửa 08/09/2026 (b104), từ `quan_tri` thành `quan_tri_he_thong`** —
+đo mới ra, không phải đổi ý. `co_the_quan_tri()` của `08-kiem-duyet.sql` mục 8
+chỉ nhận đúng một vai là `quan_tri_he_thong`, mà `duyet_thanh_vien()` và
+`tu_choi_thanh_vien()` đều gác bằng hàm ấy. Cấp `quan_tri` thì **người dựng
+cây không duyệt được đơn xin vào cây của chính mình** — hỏng đúng chỗ việc này
+sinh ra để mở. Thêm nữa, hai cây đang chạy lẫn bộ sinh SQL di dời đều cấp
+`quan_tri_he_thong`, nên cấp khác đi là đẻ ra hạng chủ cây thứ hai.
+
+Nhắc lại cho khỏi hiểu nhầm: vai trong `tree_members` là quyền **theo cây**
+(mọi nơi hỏi nó đều qua `vai_tro(p_tree)`). Quản trị **toàn hệ thống** đọc ở
+chỗ khác hẳn — cờ `tai_khoan.la_quan_tri_he_thong`. Đã đo: `do-b104.mjs` HR4,
+người vừa dựng cây riêng đọc cây `NTB` ra **0 dòng**.
 
 ⚠ **Hai câu `insert` ấy không được tách rời.** Đẻ ra một `trees` mà không có
 dòng `tree_members` là đẻ ra một cây **không ai vào được, kể cả người vừa tạo**
