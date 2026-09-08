@@ -5,9 +5,10 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 14:05
+// Phiên bản: 0.2.1 · Cập nhật: 08/09/2026 14:35
 //            0.2.0 bỏ nút "Chọn" — chủ dự án đo bằng mắt trên app thật và
 //            nói chữ ấy mơ hồ. Thay bằng cột *Cây hiển thị* với dấu tích.
+//            0.2.1 đổi cây xong thì Ở LẠI trang Quản trị, không hất sang sơ đồ.
 // ============================================================
 //
 // ═══ KHU NÀY LÀ CHỖ DUY NHẤT NGƯỜI LẠ CÓ VIỆC ═══
@@ -312,10 +313,19 @@ function veDauTich(c, phien, td) {
 
     const kq = await chonGiaPha(c.fileId);
     if (kq.ok) {
-      // ⚠ Về thẳng sơ đồ, không ở lại đây. `state.tree` của trang kia đang
-      //   giữ cây cũ, và nạp lại cả trang là cách chắc chắn nhất để không
-      //   có hai cây lẫn nhau trong bộ nhớ — đúng cảnh báo ở `sb.chonGiaPha`.
-      window.location.href = 'index.html';
+      // ⚠ Ở LẠI trang Quản trị (đổi 08/09/2026 theo chủ dự án). Đổi cây là
+      //   việc người ta làm KHI ĐANG quản trị — hất họ sang sơ đồ là bắt họ
+      //   tự tìm đường quay lại chỗ vừa đứng.
+      //
+      // ⚠⚠ NHƯNG PHẢI NẠP LẠI TRANG, không được chỉ vẽ lại bảng. `khung.js`
+      //   lấy `phien` đúng MỘT lần lúc dựng trang, rồi đếm số đơn chờ duyệt
+      //   và số thay đổi chờ kiểm duyệt theo `phien.treeId` ấy. Chỉ gọi
+      //   `napLai()` thì bảng này đúng còn hai con số trên nút điều hướng
+      //   vẫn của cây cũ — sai lặng lẽ, không có gì báo. Cùng một họ với
+      //   cảnh báo ở `sb.chonGiaPha`, chỉ nhỏ hơn.
+      //
+      //   `reload()` giữ nguyên khu đang mở vì khu nằm ở `location.hash`.
+      window.location.reload();
       return;
     }
 
