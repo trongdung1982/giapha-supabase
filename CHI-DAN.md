@@ -43,12 +43,12 @@ nó chính là thứ nó sinh ra để tránh.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
 3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09
    11:28; luật trực hệ dán 13:20, phép thử H9 **5/5 hàng rào đạt** (b94);
-   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — cả
-   hai đo bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
+   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — đo
+   bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
-   tầng quyền hệ thống bản 0.2.0 (b102). ⚠⚠ **`11` bản 0.3.0 của b103 CHƯA
-   DÁN** — khu Gia phả mở ra sẽ lỗi cho tới khi dán lại cả file `11`.
-   **b104 · b105 vẫn ở `codex/`, chưa rà.**
+   tầng quyền hệ thống bản 0.2.0 (b102). ⚠⚠ **`11` bản 0.3.1 của b103 CHƯA
+   DÁN** — khu Gia phả mở ra sẽ lỗi; lần dán đầu ném `42P13`, xem `KE-HOACH`
+   *(**dán lại được ≠ nâng cấp được**)*. **b104 · b105 ở `codex/`, chưa rà.**
 
 ## Quy ước khung tài liệu này
 

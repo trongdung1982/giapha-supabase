@@ -5,19 +5,28 @@
 --            sửa vai_tro() và la_thanh_vien(), đổi 6 luật RLS đọc.
 -- Chạy ở   : Supabase → SQL Editor → dán → Run.
 --            Chạy SAU 10-sua-nhieu-cay.sql.
--- Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 09:40
+-- Phiên bản: 0.3.1 · Cập nhật: 08/09/2026 12:10
 --            0.1.0 soạn bởi Antigravity (codex/) · 0.2.0 vá hai lỗ hổng
 --            do phép đo `kiem-thu/ban-thu-sql/do-b102.mjs` bắt được.
 --            0.3.0 (b103) thêm mục 14 — công tắc `cho người lạ thấy tên` —
 --            và mở rộng `ds_gia_pha()` cho người ĐANG CHỜ DUYỆT thấy lại
 --            cây mình đã nộp đơn.
+--            0.3.1 thêm `drop function` trước `ds_gia_pha()` — xem cảnh báo
+--            ngay dưới đây.
 --
 -- ⚠ File này DÁN LẠI ĐƯỢC. Mọi câu đều `if not exists` / `or replace` /
---   `drop … if exists`; đã đo trên bàn thử 08/09/2026 bằng cách chạy nó hai
---   lần liên tiếp — lần hai chỉ ra bốn dòng NOTICE, không một lỗi nào. Nên
---   sửa file tại chỗ rồi nhờ chủ dự án dán lại cả file là an toàn, và tốt
---   hơn là đẻ ra một file `12-vá-11.sql` mà sau này ai dán lại `11` sẽ lùi
---   mất.
+--   `drop … if exists`. Nên sửa file tại chỗ rồi nhờ chủ dự án dán lại cả
+--   file là an toàn, và tốt hơn là đẻ ra một file `12-vá-11.sql` mà sau này
+--   ai dán lại `11` sẽ lùi mất.
+--
+-- ⚠⚠ NHƯNG "DÁN LẠI ĐƯỢC" KHÔNG BẰNG "NÂNG CẤP ĐƯỢC", và 0.3.0 đã trả giá
+--   cho chỗ lẫn ấy. Phép đo của b103 chạy file này HAI LẦN LIÊN TIẾP trên bàn
+--   thử và báo sạch — nhưng bàn thử dựng từ cơ sở dữ liệu TRỐNG, nên cả hai
+--   lần đều là 0.3.0 chồng lên 0.3.0. Máy chủ thật thì đang chạy 0.2.0, và
+--   nâng từ 0.2.0 lên 0.3.0 ném lỗi 42P13 ngay câu `ds_gia_pha()`.
+--   **Đường dán lại KHÔNG đi qua đường nâng cấp.** Bàn thử muốn đo được
+--   đường thứ hai thì phải dựng nền bằng bản CŨ (`git show <commit>:<file>`)
+--   rồi mới chồng bản mới lên.
 -- ============================================================
 --
 -- ⚠⚠ BƯỚC NGUY HIỂM NHẤT CỦA CẢ DỰ ÁN ⚠⚠
@@ -510,6 +519,17 @@ $$;
 --   Khác hẳn `tree_members` (bẫy 3): bảng ấy lộ email CỦA CẢ HỌ, không phải
 --   của một người tự nguyện đứng tên chủ cây.
 
+-- ⚠ PHẢI `drop` TRƯỚC, KHÔNG ĐƯỢC CHỈ `or replace`. Postgres từ chối
+--   `create or replace` khi danh sách CỘT TRẢ VỀ đổi:
+--       ERROR 42P13: cannot change return type of existing function
+--   Bản 0.3.0 thêm cột thứ 11 `toi_la_chu`, nên máy chủ nào đang chạy 0.2.0
+--   (10 cột) sẽ ném đúng lỗi ấy — máy chủ thật ném nó 08/09/2026.
+--   `drop` không kèm `cascade` là CỐ Ý: không view hay luật RLS nào phụ thuộc
+--   hàm này (chỉ `services/sb.js` gọi qua RPC), nên nếu mai kia có thứ phụ
+--   thuộc thì câu này phải NÉM LỖI để người dán biết, chứ không được lặng lẽ
+--   kéo theo. Lệnh `grant execute` ở mục 17 đứng SAU đây nên quyền được cấp lại.
+drop function if exists public.ds_gia_pha();
+
 create or replace function public.ds_gia_pha()
 returns table (
   id                   uuid,
@@ -875,6 +895,22 @@ from (
        where n.nspname = 'public' and p.proname = 'ds_gia_pha'
     ) ilike '%approved = false%' then 'ĐẠT'
     else 'HỎNG — người đã nộp đơn mất luôn cây khỏi màn hình nếu chủ cây tắt công tắc' end
+
+  union all
+
+  -- 19. (0.3.1) ds_gia_pha() trả đúng HÌNH DẠNG mới, không chỉ "có tồn tại"
+  -- ⚠ Mục 10 ở trên hỏi hàm có tồn tại không — câu hỏi ấy quá lỏng: hàm bản
+  --   0.2.0 (10 cột, thiếu `toi_la_chu`) cũng làm nó ĐẠT. Đúng chỗ đó đã cho
+  --   qua lỗi 42P13 ngày 08/09/2026: bảng tự kiểm báo xanh trong khi máy chủ
+  --   thật vẫn giữ hàm cũ. Mục này hỏi hình dạng, nên nó bắt được.
+  select 19,
+    'ds_gia_pha() trả về cột toi_la_chu (hình dạng 0.3.x)',
+    case when (
+      select pg_get_function_result(p.oid) from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'ds_gia_pha'
+    ) ilike '%toi_la_chu%' then 'ĐẠT'
+    else 'HỎNG — máy chủ còn giữ hàm bản cũ; khu Gia phả sẽ không thấy công tắc của chủ cây' end
 
 ) t
 order by stt;

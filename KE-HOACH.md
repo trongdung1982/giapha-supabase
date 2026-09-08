@@ -184,7 +184,7 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Rà bản AGY bằng phép ĐO: bắt được 2 lỗ hổng mà 12/12 tự kiểm báo xanh** | **b102** | ✓ **07/09/2026** |
 | **Phép đo mượn danh nghĩa tài khoản (`set local role authenticated`) — 29/29, có 3 phép kiểm chứng ngược** | **b102** | ✓ **07/09/2026** |
 | **Khu Gia phả — thấy cả cây mình chưa có chân, xin quyền, công tắc cho người lạ thấy tên** | **b103** | ✓ **08/09/2026** ⚠ chưa dán, chưa ai bấm thử |
-| **`11` lên 0.3.0 — `dat_cho_nguoi_la_thay_ten()` · cột `toi_la_chu` · nhánh cho người đang chờ** | **b103** | ✓ **08/09/2026** ⚠ **chưa dán** |
+| **`11` lên 0.3.1 — `dat_cho_nguoi_la_thay_ten()` · cột `toi_la_chu` · nhánh cho người đang chờ · `drop function` trước `ds_gia_pha()`** | **b103** | ✓ **08/09/2026** ⚠ **chưa dán** *(lần dán đầu ném 42P13)* |
 | **Phép đo `do-b103.mjs` — 22/22 ĐẠT, 3/3 kiểm chứng ngược** | **b103** | ✓ **08/09/2026** |
 | **`vaiTroBangChu()` dời xuống `config.js` — một bảng tên, không hai bản chép** | **b103** | ✓ **08/09/2026** |
 
@@ -243,10 +243,40 @@ có chân** (cây nào chủ nó đã bật công tắc), bấm Xin quyền nộ
 bật/tắt được công tắc, Quản trị hệ thống đặt được cây mặc định. Phép đo
 `do-b103.mjs` **22/22 ĐẠT** kèm **3/3 kiểm chứng ngược**.
 
-⚠⚠ **`11-quyen-he-thong.sql` 0.3.0 CHƯA DÁN — đây là thứ duy nhất chặn b104.**
+⚠⚠ **`11-quyen-he-thong.sql` CHƯA DÁN — đây là thứ duy nhất chặn b104.**
 Máy chủ thật đang chạy 0.2.0. Mở khu 1 lúc này là ra lỗi, vì hàm công tắc và
-cột `toi_la_chu` chưa tồn tại bên đó. File dán lại được toàn bộ (đã đo bằng
-cách chạy nó hai lần liên tiếp trên bàn thử).
+cột `toi_la_chu` chưa tồn tại bên đó.
+
+**LẦN DÁN ĐẦU HỎNG — 08/09/2026 sáng, và chỗ hỏng đáng ghi lại.** Chủ dự án dán
+0.3.0 lên máy chủ thật, Supabase ném:
+
+```
+ERROR: 42P13: cannot change return type of existing function
+DETAIL: Row type defined by OUT parameters is different.
+HINT:  Use DROP FUNCTION ds_gia_pha() first
+```
+
+`ds_gia_pha()` bản 0.3.0 có **11 cột** (thêm `toi_la_chu`), bản 0.2.0 đang chạy
+có **10**. Postgres không cho `create or replace` đổi danh sách cột trả về —
+phải `drop` trước. Đã vá: **0.3.1** thêm `drop function if exists
+public.ds_gia_pha();` ngay trước câu `create`, không kèm `cascade` (không gì
+phụ thuộc hàm này ngoài `sb.js` gọi RPC; có thứ phụ thuộc thì phải ném lỗi cho
+người dán biết, không được lặng lẽ kéo theo). Bảng tự kiểm lên **19 mục**.
+
+⚠ **Bài học, và nó lớn hơn một câu SQL thiếu: "dán lại được" KHÔNG bằng "nâng
+cấp được".** Phép đo của b103 chạy file `11` hai lần liên tiếp và báo sạch —
+nhưng bàn thử dựng từ cơ sở dữ liệu **trống**, nên cả hai lần đều là 0.3.0
+chồng lên 0.3.0. Đường thật là 0.2.0 → 0.3.0, và **không phép đo nào đi qua
+đường ấy**. Cùng họ với bài học b102 (*hỏi hàm không phải là đo hàng rào*):
+lần này là *chạy lại không phải là nâng cấp*. Bàn thử muốn đo đường thứ hai
+thì phải dựng nền bằng bản CŨ — `git show <commit>:luoc-do/11-…sql` — rồi mới
+chồng bản mới lên. Mục **19** của bảng tự kiểm sinh ra để bắt đúng chỗ này: nó
+hỏi *hình dạng* hàm, không hỏi hàm *có tồn tại* như mục 10 (mục 10 báo ĐẠT cả
+khi máy chủ còn giữ hàm 10 cột).
+
+⚠ Bản 0.3.1 **chưa chạy qua bàn thử**: máy đang dùng chưa cài PostgreSQL, bàn
+thử nằm ở máy kia. Đường đo thay thế là dán lên **Staging** (đang ở 0.2.0 —
+đúng nền cần) trước khi dán lên thật.
 
 ⚠ **Và một luật mới, rút từ chính bước này:** *khối trong Cài đặt chỉ được gỡ
 khi khu bên trang Quản trị đã viết xong* — không phải khi kế hoạch nói tới nó.
