@@ -518,3 +518,63 @@ không hàm nào đổi. Nay có `doi_chu_cay(p_tree, p_user_moi)`: chủ cũ �
 `quan_tri`, chủ mới nhận cột `chu_so_huu` **và** một dòng `tree_members` trong
 cùng một giao dịch — thiếu dòng ấy là chủ mới *sửa được mà không đọc được*.
 
+
+### 4. ✓ CHỐT 08/09/2026 (b107) — VÀO CÂY LÀ QUYỀN CỦA MỖI NGƯỜI
+
+Nguyên văn chủ dự án:
+
+> *"quyền vào gia phả hay không là quyền mỗi người nên quản trị hệ thống cũng
+> chỉ có thể mời người vào gia phả rồi để người dùng quyết định có vào hay
+> không."*
+
+**Không đường nào đưa được một tài khoản vào cây bằng một cú bấm.** Vào cây
+luôn cần **hai chữ ký**: một bên ngỏ lời, một bên nhận. Hôm nay đã có một
+chiều — người ta *xin*, quản trị *duyệt*. b107 thêm chiều ngược lại — quản trị
+*mời*, người ta *nhận*. Luật này **không có ngoại lệ cho Quản trị hệ thống**:
+họ mời được vào mọi cây, nhưng không nhận hộ ai.
+
+**Ba trạng thái, một bảng `tree_members`** — không đẻ bảng mới, đúng
+`THIET-KE-QUAN-TRI.md` mục 7 điều 3:
+
+| Dòng | Nghĩa | Đọc được cây? |
+|---|---|---|
+| `moi_boi` trống · `approved=false` | **đơn xin vào** — người ta gõ cửa | không |
+| `moi_boi` có · `approved=false` | **lời mời** — mình gõ cửa nhà người ta | **không** |
+| `approved=true` | thành viên thật | có |
+
+⚠ **CÁI BẪY, đo được trong mã đang chạy, không phải suy đoán.** `la_thanh_vien()`
+của `11-quyen-he-thong.sql` cho vào cây khi `approved` **hoặc** vai nằm trong
+`('quan_tri_he_thong','quan_tri','sao_luu')` — mệnh đề đi tắt ấy `07` cố ý đặt
+vào và b102 đã trả giá một lần để giữ nó. Nghĩa là **một lời mời ghi sẵn vai
+`quan_tri` vào cột `role` sẽ mở cây ra ngay lúc mời**, trước khi người kia bấm
+gì. Đúng thứ luật trên cấm.
+
+Nên lời mời giữ vai được mời ở **cột riêng `moi_vai`**; cột `role` của dòng ấy
+là `xem` cho tới lúc người ta nhận, và lúc nhận mới chép sang. Cách này **không
+đụng vào `la_thanh_vien()`** — hàm nền móng mà mọi hàm quyết quyền đều hỏi, và
+là chỗ b102 đã chứng minh sửa gọn một dòng thì sao lưu đêm ra file rỗng.
+
+**Nhận lời mời KHÔNG vi phạm luật "không tự đặt quyền cho mình"** (mục 3),
+và ranh giới nằm ở chỗ này: người nhận chỉ lật được đúng cột `approved`, trên
+đúng dòng của mình, và **chỉ khi dòng ấy có `moi_boi`** — tức có người đủ
+thẩm quyền đã ký trước. Họ không đổi được `moi_vai`, không đổi được `person_id`,
+không bật được `tin_cay`. Ai tự tạo dòng mời cho mình thì `moi_boi` là chính
+họ, và hàm nhận từ chối đúng chỗ ấy.
+
+### 5. ✓ CHỐT 08/09/2026 (b107) — CỜ QUẢN TRỊ HỆ THỐNG BẬT ĐƯỢC TRÊN MÀN HÌNH
+
+Chủ dự án chốt: **có nút bật/tắt cờ `tai_khoan.la_quan_tri_he_thong`, nhưng
+không ai trỏ vào chính mình.** Trước b107 cột ấy không có hàm nào đặt — cố ý,
+vì đó đúng là lỗ hổng b102 bắt được (*ai cũng tự đặt mình thành Quản trị hệ
+thống*).
+
+Luật năm cửa của mục 3 nay là **sáu cửa**, và cửa thứ sáu là cửa cao nhất hệ
+thống. Nó gác đúng cùng một câu: `p_user = auth.uid()` thì từ chối, không
+ngoại lệ. Nhờ vậy không ai leo thang được — muốn thành Quản trị hệ thống thì
+phải có một Quản trị hệ thống khác phong cho.
+
+⚠ **Không chặn được việc hạ nốt người cuối cùng.** Nếu hệ thống chỉ còn một
+Quản trị hệ thống, người ấy không tự tắt cờ mình được (luật trên), nhưng hai
+người thì tắt lẫn nhau về không được. Phép đo b107 phải có một phép cho chuyện
+ấy, và câu trả lời là **đếm trước khi tắt**: còn đúng một cờ đang bật thì hàm
+từ chối. Khoá cả nhà rồi vứt chìa là hỏng theo kiểu chỉ sửa được bằng SQL tay.

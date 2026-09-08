@@ -1,6 +1,8 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 08/09/2026 · Bước gần nhất: **b105** (đã dán) · Việc kế tiếp: **b106***
+*Cập nhật 08/09/2026 23:55 · Bước gần nhất: **b106** (mã xong, chủ dự án đang
+nghiệm thu bằng mắt) · Việc kế tiếp: **b107** — tầng máy chủ đã viết và đã đo
+46/46 trên bàn thử, **chờ chủ dự án dán `luoc-do/14-loi-moi.sql`***
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -216,7 +218,7 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 app thật (`nguyentrongbac.io.vn/QuanTri.html`): bấm qua lại bốn mục, `F5` về
 đúng khu, nút Back đi ngược đúng thứ tự, điện thoại thành hàng thẻ ngang —
 **đạt cả bốn**. Ba khu chưa viết nói thẳng chúng làm ở bước nào, không vẽ bảng
-trống. Đây là nền cho b103 → b108, nên nó đứng trước mọi khu.
+trống. Đây là nền cho b103 → b110, nên nó đứng trước mọi khu.
 
 ⚠ **Antigravity đã dựng sẵn b102 → b105 trong `codex/`, NGOÀI repo.** Chủ dự
 án đã dán SQL cả bốn lên **Supabase Staging** và xác nhận đạt. Nhưng **máy chủ
@@ -297,7 +299,7 @@ Làm đúng chữ của b103 thì từ hôm nay tới b106 không còn đường
 
 ---
 
-## Việc kế tiếp — b100 → b109, MỘT PHIÊN MỘT BƯỚC
+## Việc kế tiếp — b100 → b111, MỘT PHIÊN MỘT BƯỚC
 
 ⚠ **Chuỗi này viết lại 05/09/2026** sau khi chủ dự án chốt ba câu về **nhiều
 gia phả**. Chuỗi cũ (b100→b105, chỉ nói trang Quản trị) vẫn còn nguyên trong
@@ -456,7 +458,7 @@ thì sai lúc chưa có gì xây lên trên.
 >    Khu Thành viên nhận nó là b106, chưa viết — gỡ bây giờ là cắt đường duyệt
 >    đơn đúng lúc b103 vừa dựng thêm nút Xin quyền, tức làm đơn nhiều hơn.
 >    **Luật rút ra: khối chỉ được gỡ khi khu bên kia đã viết xong, không phải
->    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b108.
+>    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b110.
 > 3. **Thêm nút *Mở trang Quản trị*.** Gỡ khối Duyệt nội dung đã lấy đi lối vào
 >    DUY NHẤT của trang ấy; phép kiểm PHẦN E bắt được tại chỗ.
 > 4. **`vaiTroBangChu()` xuống `config.js`.** Bản AGY chép nó thành bản thứ
@@ -586,7 +588,34 @@ thì sai lúc chưa có gì xây lên trên.
 Bước này **xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md`** — chỗ hôm nay bảo chủ
 dự án gõ `update` trong SQL Editor.
 
-### b107 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
+### b107 — Mời vào gia phả, tầng máy chủ · ✓ **VIẾT XONG 08/09/2026, CHỜ DÁN**
+
+Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy về một luật —
+`THIET-KE-NHIEU-CAY.md` mục **11.4** và **11.5**, đọc trước khi động vào:
+
+> *"quyền vào gia phả hay không là quyền mỗi người nên quản trị hệ thống cũng
+> chỉ có thể mời người vào gia phả rồi để người dùng quyết định có vào hay
+> không."*
+
+| | |
+|---|---|
+| **Làm** | `luoc-do/14-loi-moi.sql` — 3 cột (`moi_boi` · `moi_luc` · `moi_vai`) + **7 hàm**: `moi_vao_cay` · `loi_moi_cua_toi` · `nhan_loi_moi` · `tu_choi_loi_moi` · `dat_quan_tri_he_thong` · `ds_tai_khoan_he_thong` · `ds_cay_cua_tai_khoan`. Và dán đè `ds_gia_pha()` để thêm 3 cột lời mời |
+| **Điểm dừng** | ✓ `kiem-thu/ban-thu-sql/do-b107.mjs` **46/46 ĐẠT**, gồm 3 phép bẻ gãy có chủ ý. ⏳ Còn chờ chủ dự án dán vào máy chủ thật |
+| **⚠ Cái bẫy đã đo được** | `la_thanh_vien()` cho vào cây khi `approved` **hoặc** vai ∈ (`quan_tri_he_thong`,`quan_tri`,`sao_luu`). Ghi vai được mời thẳng vào `role` là **mở cây ra ngay lúc mời**. Nên có cột `moi_vai` riêng; `role` giữ `xem` tới lúc nhận. Phép KC2 tái hiện đúng cái bẫy ấy để chứng minh HR5 đo thật |
+| **⚠ Bẫy của phép ĐO, không phải của mã** | Câu `select id from trees where tree_code='NTB'` lồng trong khối mượn danh nghĩa **cũng đi qua RLS** — người ngoài không thấy cây nên hàm nhận `p_tree = null`. 5 phép HỎNG bịa ở lần chạy đầu. Mã cây phải hỏi một lần bằng `postgres` rồi cắm hằng số |
+| **Còn hở, cố ý** | `trang_thai_cua_toi()` của `07` chưa biết trạng thái *"được mời"* — người được mời mà bấm *Xin quyền* sẽ nhận câu "đơn đang chờ". Không sai nguy hiểm, nhưng nói không đúng chuyện; sửa ở b108 cùng lúc với màn hình |
+
+### b108 — Mời vào gia phả + khu Tài khoản toàn hệ thống, MÀN HÌNH
+
+| | |
+|---|---|
+| **Làm** | Khu Gia phả: cột **Mời** *(chủ cây và Quản trị hệ thống thấy)* + dòng cây mình **được mời** hiện *Nhận · Từ chối* thay cho *Xin quyền*. Khu Tài khoản: tấm lọc thứ tư **Toàn hệ thống** *(chỉ Quản trị hệ thống)* — mọi tài khoản đã đăng ký, cột **Số cây**, bấm vào mở bảng sâu theo từng cây |
+| **Bảng sâu làm được gì** | Đúng năm việc đã có của `13` *(đổi vai · gắn mã người · tin cậy · gỡ · bàn giao)*, chỉ khác là chọn cây theo dòng — **không hàm việc nào phải viết mới**. Cộng nút bật/tắt cờ **Quản trị hệ thống**, và nút **Mời thẳng vào một cây** |
+| **Chưa làm** | **Xoá hẳn tài khoản khỏi ứng dụng.** Không hoàn tác được và xoá cả dấu vết người ấy trong `change_log` — đáng một bước riêng có phép đo riêng. Chủ dự án chưa chốt |
+| **Điểm dừng** | Mời một tài khoản thật → tài khoản ấy đăng nhập, **thấy lời mời**, và **chưa đọc được cây**; bấm Nhận thì đọc được, vai đúng bằng vai được mời |
+| **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
+
+### b109 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
 | | |
 |---|---|
@@ -596,7 +625,7 @@ dự án gõ `update` trong SQL Editor.
 | **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại |
 | **⚠ Giữ nguyên** | Xem theo **ô**, duyệt theo **lần Lưu**. Không cho nhận từng ô |
 
-### b108 — Khu Sao lưu + Số đếm đối chiếu
+### b110 — Khu Sao lưu + Số đếm đối chiếu
 
 | | |
 |---|---|
@@ -605,7 +634,7 @@ dự án gõ `update` trong SQL Editor.
 | **Điểm dừng** | Số trên màn hình khớp với số đếm được trong file sao lưu đêm gần nhất |
 | **⚠ Không làm** | **Không vẽ nút Khôi phục.** Máy chủ chưa khôi phục được, vẽ nút là giả vờ giải quyết bằng giao diện |
 
-### b109 — Mã người xuyên cây
+### b111 — Mã người xuyên cây
 
 | | |
 |---|---|
@@ -615,7 +644,7 @@ dự án gõ `update` trong SQL Editor.
 | **⚠ Bẫy** | Cột không có tên trong `TEN_PERSON` thì mỗi lần lưu ghi `null` đè lên, **và không có gì báo lỗi** — `DU-LIEU.md` mục 3 điều 7 |
 | **Đứng cuối vì** | Chưa ai dựng cây thứ ba. Cột này chỉ có việc khi có người dựng cây cho bên nhà họ |
 
-### Sau b109 — chưa đặt số, chưa chốt
+### Sau b111 — chưa đặt số, chưa chốt
 
 Nhập GEDCOM/Excel qua máy chủ · **khôi phục thật** *(việc nguy hiểm nhất, và
 phải kiểm chứng bằng vòng `sao lưu → đổi dữ liệu → khôi phục → dữ liệu quay
@@ -1064,7 +1093,7 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 | ⚠ **Chưa có màn hình quản lý thành viên** — đổi vai, gắn mã người, gỡ đều bằng `update` trong SQL Editor → **b105 · b106** *(sửa 07/09: dòng cũ ghi b101 · b102, sai — b101 chỉ dựng khung)* | `THIET-KE-QUAN-TRI.md` khu 2 |
 | ⚠ **Tài khoản thử `thu-h9@…` chưa dọn** — đang gắn `P0012`, đã duyệt → dọn ở **b106**, bằng chính màn hình mới *(sửa 07/09: dòng cũ ghi b102, sai — b102 chỉ đụng SQL)* | `nhat-ky/b94-phep-thu-h9.md` |
 | ⚠ **Cờ `tin_cay` chưa có màn hình** — bật bằng `update` trong SQL Editor → **b106** *(sửa 07/09: dòng cũ ghi b102)* | `luoc-do/08-kiem-duyet.sql` mục 3 |
-| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b107** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
+| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b109** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
 | ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
 | ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
 | ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |
