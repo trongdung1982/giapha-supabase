@@ -5,12 +5,12 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 15:05
+// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 15:25
 //            0.2.0 bỏ nút "Chọn" — chủ dự án đo bằng mắt trên app thật và
 //            nói chữ ấy mơ hồ. Thay bằng cột dấu tích.
 //            0.2.1 đổi cây xong thì Ở LẠI trang Quản trị, không hất sang sơ đồ.
-//            0.3.0 cột tên là *Cây làm việc*, và cú nạp lại trang nay đi sau
-//            một hộp báo — người bấm Xong thì trang mới nạp.
+//            0.3.0 cột tên là *Cây làm việc*, và dấu tích HỎI trước khi đổi —
+//            hộp Đổi / Huỷ bỏ. Bấm nhầm ô tròn không còn đổi được cây.
 // ============================================================
 //
 // ═══ KHU NÀY LÀ CHỖ DUY NHẤT NGƯỜI LẠ CÓ VIỆC ═══
@@ -251,7 +251,7 @@ function veOThaoTac(c, phien, napLai) {
   const td = o('', 'padding:10px;text-align:center');
 
   if (c.coTheXem) {
-    td.append(veDauTich(c, phien, td));
+    td.append(veDauTich(c, phien));
     return td;
   }
 
@@ -283,7 +283,7 @@ function veOThaoTac(c, phien, napLai) {
  *   là **tiêu đề cột** (*Cây làm việc*) cộng câu dẫn đầu khu. Đổi tiêu đề cột
  *   thành chữ khác là lấy mất lời giải thích duy nhất của ô này.
  */
-function veDauTich(c, phien, td) {
+function veDauTich(c, phien) {
   const dangLam = c.fileId === phien.treeId;
 
   // ⚠ `padding:12px` không phải để cho thoáng — nó là VÙNG BẤM. Bản thân ô
@@ -308,72 +308,48 @@ function veDauTich(c, phien, td) {
   oTron.style.cssText =
     'width:17px;height:17px;margin:0;accent-color:#2a2622;cursor:pointer';
 
-  oTron.addEventListener('change', async () => {
+  // ⚠ Bấm dấu tích KHÔNG đổi cây ngay — nó chỉ mở câu hỏi. Một ô tròn nằm
+  //   giữa bảng là thứ dễ bấm nhầm khi cuộn trang trên điện thoại, và cái
+  //   giá của lần nhầm ấy không nhỏ: cả trang nạp lại, mọi con số nhảy sang
+  //   cây khác, người dùng không hiểu vừa xảy ra chuyện gì.
+  //   `chonGiaPha()` chỉ được gọi sau khi người ấy bấm **Đổi**.
+  oTron.addEventListener('change', () => {
     if (!oTron.checked) return;
-
-    const cho = document.createElement('div');
-    cho.textContent = 'Đang chuyển…';
-    cho.style.cssText = 'font-size:11px;color:#8a8078;margin-top:4px';
-    td.append(cho);
-    doiKhoaDauTich(true);
-
-    const kq = await chonGiaPha(c.fileId);
-    if (kq.ok) {
-      // ⚠ Ở LẠI trang Quản trị (đổi 08/09/2026 theo chủ dự án). Đổi cây là
-      //   việc người ta làm KHI ĐANG quản trị — hất họ sang sơ đồ là bắt họ
-      //   tự tìm đường quay lại chỗ vừa đứng.
-      //
-      // ⚠⚠ NHƯNG PHẢI NẠP LẠI TRANG, không được chỉ vẽ lại bảng. `khung.js`
-      //   lấy `phien` đúng MỘT lần lúc dựng trang, rồi đếm số đơn chờ duyệt
-      //   và số thay đổi chờ kiểm duyệt theo `phien.treeId` ấy. Chỉ gọi
-      //   `napLai()` thì bảng này đúng còn hai con số trên nút điều hướng
-      //   vẫn của cây cũ — sai lặng lẽ, không có gì báo. Cùng một họ với
-      //   cảnh báo ở `sb.chonGiaPha`, chỉ nhỏ hơn.
-      //
-      //   `reload()` giữ nguyên khu đang mở vì khu nằm ở `location.hash`.
-      cho.remove();
-      moHopDaDoi(c.ten || 'Gia phả này');
-      return;
-    }
-
-    // Hỏng thì trả dấu tích về đúng CÂY LÀM VIỆC hiện nay, đừng để nó nằm ở
-    // cây vừa bấm — ô tích nói *"cây nào đang là cây làm việc"*, không phải
-    // *"tôi vừa bấm gì"*.
-    cho.remove();
-    doiKhoaDauTich(false);
-    const cu = document.querySelector(
-      'input[name="cay-lam-viec"][data-cay="' + phien.treeId + '"]');
-    if (cu) cu.checked = true;
-    else oTron.checked = false;
-    td.append(dongLoi(kq.loi || 'Không đổi được gia phả.'));
+    hoiRoiDoiCay(c, phien);
   });
 
   nhan.append(oTron);
   return nhan;
 }
 
-/** Khoá/mở mọi dấu tích trong lúc chờ máy chủ, để không bấm được cây thứ hai. */
-function doiKhoaDauTich(khoa) {
+/** Trả dấu tích về đúng cây làm việc HIỆN NAY (dùng khi huỷ, và khi hỏng). */
+function traDauTichVe(treeId) {
   for (const r of document.querySelectorAll('input[name="cay-lam-viec"]')) {
-    r.disabled = khoa;
+    r.checked = r.dataset.cay === treeId;
   }
 }
 
 /**
- * Hộp báo *"đã đổi cây làm việc"*, và nó nạp lại trang khi người ta bấm Xong.
+ * Hỏi trước, đổi sau. Hộp có hai lối ra: **Đổi** và **Huỷ bỏ**.
  *
- * ⚠ Hộp này không phải để trang trí. Trang PHẢI nạp lại (lý do ở chỗ gọi), mà
- *   màn hình tự chớp một cái không báo trước thì người dùng tưởng app trục
- *   trặc — chủ dự án nói đúng chữ ấy 08/09/2026. Hộp làm hai việc: nói việc
- *   đã xong, và **để cú nạp lại xảy ra do NGƯỜI ẤY bấm**, chứ không tự nhiên
- *   ập đến. Cùng một cái chớp, khác hẳn cảm giác.
+ * ⚠ Vì sao phải hỏi, chứ không đổi thẳng rồi báo: một ô tròn nằm giữa bảng
+ *   là thứ dễ chạm nhầm khi cuộn trang trên điện thoại, và lần nhầm ấy không
+ *   rẻ — cả trang nạp lại, mọi con số nhảy sang cây khác, người dùng không
+ *   hiểu vừa xảy ra chuyện gì. Chủ dự án chốt 08/09/2026.
  *
- * ⚠ Tự dựng bằng DOM, KHÔNG `alert()` — luật ghi ở đầu file này và ở
+ * ⚠ Huỷ phải trả dấu tích về cây cũ. Trình duyệt đã dời tích sang dòng vừa
+ *   bấm TRƯỚC khi ta kịp hỏi (đó là bản tính của radio), nên bỏ qua bước này
+ *   là để lại một màn hình nói dối: tích nằm ở cây A trong khi máy chủ vẫn
+ *   đang làm việc với cây B.
+ *
+ * ⚠ Tự dựng bằng DOM, KHÔNG `confirm()` — luật ghi ở đầu file này và ở
  *   `khung.js`. Ngôn ngữ hình lấy nguyên của lớp phủ trong `pages/backup.js`
  *   (cùng nền mờ, cùng bo góc, cùng bóng đổ) để người dùng không phải học
  *   kiểu hộp thứ hai.
  */
-function moHopDaDoi(tenCay) {
+function hoiRoiDoiCay(c, phien) {
+  const tenCay = c.ten || 'Gia phả này';
+
   const lopPhu = document.createElement('div');
   lopPhu.style.cssText =
     'position:fixed;inset:0;background:rgba(42,38,34,.35);z-index:30;' +
@@ -385,37 +361,88 @@ function moHopDaDoi(tenCay) {
   hop.setAttribute('aria-modal', 'true');
   hop.style.cssText =
     'background:#fffdf9;border-radius:14px;padding:18px;box-sizing:border-box;' +
-    'width:100%;max-width:380px;box-shadow:0 8px 32px rgba(42,38,34,.28)';
+    'width:100%;max-width:400px;box-shadow:0 8px 32px rgba(42,38,34,.28)';
 
   const tua = document.createElement('div');
-  tua.textContent = 'Đã đổi cây làm việc';
+  tua.textContent = 'Đổi cây làm việc?';
   tua.style.cssText = 'font-size:19px;font-weight:600';
 
   const chu = document.createElement('div');
   chu.textContent =
-    '“' + tenCay + '” nay là gia phả bạn đang làm việc. Trang sẽ nạp lại để ' +
-    'mọi con số trên màn hình tính theo gia phả này.';
+    'Bạn sắp chuyển sang làm việc với “' + tenCay + '”. Trang sẽ nạp lại, và ' +
+    'từ đó mọi màn hình tính theo gia phả này.';
   chu.style.cssText =
     'font-size:13px;line-height:1.55;color:#8a8078;margin-top:6px';
 
+  const oLoi = document.createElement('div');
+
   const hang = document.createElement('div');
-  hang.style.cssText = 'display:flex;justify-content:flex-end;margin-top:16px';
+  hang.style.cssText =
+    'display:flex;justify-content:flex-end;gap:8px;margin-top:16px';
 
-  const bXong = nut('Xong', true);
-  bXong.style.cssText += ';padding:8px 18px;font-size:13px';
-  bXong.addEventListener('click', () => window.location.reload());
+  const bHuy = nut('Huỷ bỏ', false);
+  bHuy.style.cssText += ';padding:8px 16px;font-size:13px';
 
-  hang.append(bXong);
-  hop.append(tua, chu, hang);
-  lopPhu.append(hop);
-  // Bấm ra ngoài cũng là "đã đọc xong" — cùng một việc, không phải huỷ bỏ:
-  // cây ĐÃ đổi trên máy chủ rồi, chỉ còn màn hình chưa bắt kịp.
+  const bDoi = nut('Đổi', true);
+  bDoi.style.cssText += ';padding:8px 18px;font-size:13px';
+
+  function dong() {
+    document.removeEventListener('keydown', phimEsc);
+    lopPhu.remove();
+  }
+
+  function huy() {
+    dong();
+    traDauTichVe(phien.treeId);
+  }
+
+  function phimEsc(e) {
+    if (e.key === 'Escape' && !bDoi.disabled) huy();
+  }
+
+  bHuy.addEventListener('click', huy);
+  // Bấm ra vùng mờ = huỷ, giống mọi hộp khác trong app.
   lopPhu.addEventListener('click', (e) => {
-    if (e.target === lopPhu) window.location.reload();
+    if (e.target === lopPhu && !bDoi.disabled) huy();
+  });
+  document.addEventListener('keydown', phimEsc);
+
+  bDoi.addEventListener('click', async () => {
+    bDoi.disabled = true;
+    bHuy.disabled = true;
+    bDoi.textContent = 'Đang chuyển…';
+    oLoi.innerHTML = '';
+
+    const kq = await chonGiaPha(c.fileId);
+    if (kq.ok) {
+      // ⚠ Ở LẠI trang Quản trị. Đổi cây là việc người ta làm KHI ĐANG quản
+      //   trị — hất họ sang sơ đồ là bắt họ tự tìm đường quay lại chỗ vừa đứng.
+      //
+      // ⚠⚠ NHƯNG PHẢI NẠP LẠI TRANG, không được chỉ vẽ lại bảng. `khung.js`
+      //   lấy `phien` đúng MỘT lần lúc dựng trang, rồi đếm số đơn chờ duyệt
+      //   và số thay đổi chờ kiểm duyệt theo `phien.treeId` ấy. Chỉ gọi
+      //   `napLai()` thì bảng này đúng còn hai con số trên nút điều hướng vẫn
+      //   của cây cũ — sai lặng lẽ, không có gì báo. Cùng một họ với cảnh báo
+      //   ở `sb.chonGiaPha`, chỉ nhỏ hơn.
+      //
+      //   `reload()` giữ nguyên khu đang mở vì khu nằm ở `location.hash`.
+      window.location.reload();
+      return;
+    }
+
+    // Hỏng thì nói NGAY TRONG HỘP, đừng đóng hộp rồi báo sau lưng người ta.
+    bDoi.disabled = false;
+    bHuy.disabled = false;
+    bDoi.textContent = 'Đổi';
+    oLoi.append(dongLoi(kq.loi || 'Không đổi được gia phả.'));
+    traDauTichVe(phien.treeId);
   });
 
+  hang.append(bHuy, bDoi);
+  hop.append(tua, chu, oLoi, hang);
+  lopPhu.append(hop);
   document.body.append(lopPhu);
-  bXong.focus();
+  bDoi.focus();
 }
 
 /** Ô nhập lời nhắn, mở ngay tại dòng ấy — không lớp phủ, không hộp thoại. */
