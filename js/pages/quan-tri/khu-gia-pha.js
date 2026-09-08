@@ -1,14 +1,16 @@
 // ============================================================
 // giapha-supabase · js/pages/quan-tri/khu-gia-pha.js
 // Vai trò  : Khu 1 của trang Quản trị — danh sách mọi gia phả người này THẤY
-//            được, dấu tích "cây hiển thị" / nút Xin quyền, công tắc "cho
+//            được, dấu tích "cây làm việc" / nút Xin quyền, công tắc "cho
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.2.1 · Cập nhật: 08/09/2026 14:35
+// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 15:05
 //            0.2.0 bỏ nút "Chọn" — chủ dự án đo bằng mắt trên app thật và
-//            nói chữ ấy mơ hồ. Thay bằng cột *Cây hiển thị* với dấu tích.
+//            nói chữ ấy mơ hồ. Thay bằng cột dấu tích.
 //            0.2.1 đổi cây xong thì Ở LẠI trang Quản trị, không hất sang sơ đồ.
+//            0.3.0 cột tên là *Cây làm việc*, và cú nạp lại trang nay đi sau
+//            một hộp báo — người bấm Xong thì trang mới nạp.
 // ============================================================
 //
 // ═══ KHU NÀY LÀ CHỖ DUY NHẤT NGƯỜI LẠ CÓ VIỆC ═══
@@ -55,8 +57,11 @@ export async function mountKhuGiaPha(el, phien) {
   const dan = document.createElement('p');
   dan.textContent =
     'Những gia phả bạn thấy được trên hệ thống. Mỗi lúc app chỉ mở một gia ' +
-    'phả — tích vào cột Cây hiển thị để chuyển sang gia phả khác, hoặc bấm ' +
+    'phả — tích vào cột Cây làm việc để chuyển sang gia phả khác, hoặc bấm ' +
     'Xin quyền nếu bạn chưa có chân trong gia phả ấy.';
+  // ⚠ Câu trên là chỗ DUY NHẤT nói ra luật "mỗi lúc chỉ một gia phả". Cột dấu
+  //   tích cho thấy luật ấy nhưng không nói ra được, và người mới vào không
+  //   suy ngược từ hình sang luật. Rút câu này là lấy mất lời giải thích.
   dan.style.cssText = 'margin:0 0 16px;color:#6a625a;line-height:1.5';
 
   const than = document.createElement('div');
@@ -137,7 +142,7 @@ function veDauBang() {
     ['Người lạ thấy tên', 'text-align:center'],
     // ⚠ Tiêu đề cột này là lời giải thích DUY NHẤT của ô tích bên dưới — ô
     //   tròn không mang chữ nào. Đổi nó là làm cột ấy câm.
-    ['Cây hiển thị', 'text-align:center'],
+    ['Cây làm việc', 'text-align:center'],
   ];
   for (const [chu, them] of cot) {
     const th = document.createElement('th');
@@ -165,7 +170,7 @@ function veDong(c, cayMacDinh, phien, napLai) {
   const oTen = o('', 'padding:10px;font-weight:600;color:#2a2622');
   oTen.textContent = c.ten || '(chưa đặt tên)';
   // ⚠ KHÔNG gắn huy hiệu "Đang mở" ở đây nữa (bỏ 08/09/2026). Dấu tích ở cột
-  //   *Cây hiển thị* đã nói đúng điều ấy, và nói ở chỗ người ta bấm để đổi.
+  //   *Cây làm việc* đã nói đúng điều ấy, và nói ở chỗ người ta bấm để đổi.
   //   Hai chỗ cùng nói một tin trên một hàng thì người đọc phải dừng lại hỏi
   //   "hai cái này có khác nhau không" — mà chúng không khác.
   //   Huy hiệu "Mặc định" thì Ở LẠI: nó nói chuyện khác hẳn — cây mà NGƯỜI LẠ
@@ -241,7 +246,7 @@ function veOCongTac(c, phien) {
   return td;
 }
 
-/** Cột *Cây hiển thị*: dấu tích · Xin quyền · Đã nộp đơn. */
+/** Cột *Cây làm việc*: dấu tích · Xin quyền · Đã nộp đơn. */
 function veOThaoTac(c, phien, napLai) {
   const td = o('', 'padding:10px;text-align:center');
 
@@ -265,7 +270,7 @@ function veOThaoTac(c, phien, napLai) {
 }
 
 /**
- * Dấu tích *cây hiển thị* — một ô tròn cho mỗi cây người này mở được.
+ * Dấu tích *cây làm việc* — một ô tròn cho mỗi cây người này mở được.
  *
  * ⚠ Vì sao là `input type=radio` thật, không phải một dấu ✓ vẽ bằng chữ:
  *   app **chỉ mở được một gia phả tại một lúc**, và đó đúng là ngữ nghĩa sẵn
@@ -275,11 +280,11 @@ function veOThaoTac(c, phien, napLai) {
  *   phải viết lại từng thứ một.
  *
  * ⚠ Ô này KHÔNG tự nói lên nó làm gì như một cái nút có chữ. Cái nói thay nó
- *   là **tiêu đề cột** (*Cây hiển thị*) cộng câu dẫn đầu khu. Đổi tiêu đề cột
+ *   là **tiêu đề cột** (*Cây làm việc*) cộng câu dẫn đầu khu. Đổi tiêu đề cột
  *   thành chữ khác là lấy mất lời giải thích duy nhất của ô này.
  */
 function veDauTich(c, phien, td) {
-  const dangHien = c.fileId === phien.treeId;
+  const dangLam = c.fileId === phien.treeId;
 
   // ⚠ `padding:12px` không phải để cho thoáng — nó là VÙNG BẤM. Bản thân ô
   //   tròn chỉ 17px, nhỏ hơn đầu ngón tay; thẻ `label` bọc ngoài nhận cú bấm
@@ -289,16 +294,17 @@ function veDauTich(c, phien, td) {
   const nhan = document.createElement('label');
   nhan.style.cssText =
     'display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:12px';
-  nhan.title = dangHien
-    ? 'Gia phả này đang hiển thị'
-    : 'Bấm để hiển thị gia phả này';
+  nhan.title = dangLam
+    ? 'Đây là cây làm việc hiện nay'
+    : 'Bấm để lấy gia phả này làm cây làm việc';
 
   const oTron = document.createElement('input');
   oTron.type = 'radio';
-  oTron.name = 'cay-hien-thi';
-  oTron.checked = dangHien;
+  oTron.name = 'cay-lam-viec';
+  oTron.checked = dangLam;
   oTron.dataset.cay = c.fileId;
-  oTron.setAttribute('aria-label', 'Hiển thị ' + (c.ten || 'gia phả này'));
+  oTron.setAttribute('aria-label',
+    'Lấy ' + (c.ten || 'gia phả này') + ' làm cây làm việc');
   oTron.style.cssText =
     'width:17px;height:17px;margin:0;accent-color:#2a2622;cursor:pointer';
 
@@ -325,16 +331,18 @@ function veDauTich(c, phien, td) {
       //   cảnh báo ở `sb.chonGiaPha`, chỉ nhỏ hơn.
       //
       //   `reload()` giữ nguyên khu đang mở vì khu nằm ở `location.hash`.
-      window.location.reload();
+      cho.remove();
+      moHopDaDoi(c.ten || 'Gia phả này');
       return;
     }
 
-    // Hỏng thì trả dấu tích về đúng cây ĐANG hiển thị, đừng để nó nằm ở cây
-    // vừa bấm — ô tích nói *"cây nào đang hiện"*, không phải *"tôi vừa bấm gì"*.
+    // Hỏng thì trả dấu tích về đúng CÂY LÀM VIỆC hiện nay, đừng để nó nằm ở
+    // cây vừa bấm — ô tích nói *"cây nào đang là cây làm việc"*, không phải
+    // *"tôi vừa bấm gì"*.
     cho.remove();
     doiKhoaDauTich(false);
     const cu = document.querySelector(
-      'input[name="cay-hien-thi"][data-cay="' + phien.treeId + '"]');
+      'input[name="cay-lam-viec"][data-cay="' + phien.treeId + '"]');
     if (cu) cu.checked = true;
     else oTron.checked = false;
     td.append(dongLoi(kq.loi || 'Không đổi được gia phả.'));
@@ -346,9 +354,68 @@ function veDauTich(c, phien, td) {
 
 /** Khoá/mở mọi dấu tích trong lúc chờ máy chủ, để không bấm được cây thứ hai. */
 function doiKhoaDauTich(khoa) {
-  for (const r of document.querySelectorAll('input[name="cay-hien-thi"]')) {
+  for (const r of document.querySelectorAll('input[name="cay-lam-viec"]')) {
     r.disabled = khoa;
   }
+}
+
+/**
+ * Hộp báo *"đã đổi cây làm việc"*, và nó nạp lại trang khi người ta bấm Xong.
+ *
+ * ⚠ Hộp này không phải để trang trí. Trang PHẢI nạp lại (lý do ở chỗ gọi), mà
+ *   màn hình tự chớp một cái không báo trước thì người dùng tưởng app trục
+ *   trặc — chủ dự án nói đúng chữ ấy 08/09/2026. Hộp làm hai việc: nói việc
+ *   đã xong, và **để cú nạp lại xảy ra do NGƯỜI ẤY bấm**, chứ không tự nhiên
+ *   ập đến. Cùng một cái chớp, khác hẳn cảm giác.
+ *
+ * ⚠ Tự dựng bằng DOM, KHÔNG `alert()` — luật ghi ở đầu file này và ở
+ *   `khung.js`. Ngôn ngữ hình lấy nguyên của lớp phủ trong `pages/backup.js`
+ *   (cùng nền mờ, cùng bo góc, cùng bóng đổ) để người dùng không phải học
+ *   kiểu hộp thứ hai.
+ */
+function moHopDaDoi(tenCay) {
+  const lopPhu = document.createElement('div');
+  lopPhu.style.cssText =
+    'position:fixed;inset:0;background:rgba(42,38,34,.35);z-index:30;' +
+    'display:flex;align-items:center;justify-content:center;padding:16px;' +
+    'font-family:system-ui,sans-serif;color:#2a2622';
+
+  const hop = document.createElement('div');
+  hop.setAttribute('role', 'dialog');
+  hop.setAttribute('aria-modal', 'true');
+  hop.style.cssText =
+    'background:#fffdf9;border-radius:14px;padding:18px;box-sizing:border-box;' +
+    'width:100%;max-width:380px;box-shadow:0 8px 32px rgba(42,38,34,.28)';
+
+  const tua = document.createElement('div');
+  tua.textContent = 'Đã đổi cây làm việc';
+  tua.style.cssText = 'font-size:19px;font-weight:600';
+
+  const chu = document.createElement('div');
+  chu.textContent =
+    '“' + tenCay + '” nay là gia phả bạn đang làm việc. Trang sẽ nạp lại để ' +
+    'mọi con số trên màn hình tính theo gia phả này.';
+  chu.style.cssText =
+    'font-size:13px;line-height:1.55;color:#8a8078;margin-top:6px';
+
+  const hang = document.createElement('div');
+  hang.style.cssText = 'display:flex;justify-content:flex-end;margin-top:16px';
+
+  const bXong = nut('Xong', true);
+  bXong.style.cssText += ';padding:8px 18px;font-size:13px';
+  bXong.addEventListener('click', () => window.location.reload());
+
+  hang.append(bXong);
+  hop.append(tua, chu, hang);
+  lopPhu.append(hop);
+  // Bấm ra ngoài cũng là "đã đọc xong" — cùng một việc, không phải huỷ bỏ:
+  // cây ĐÃ đổi trên máy chủ rồi, chỉ còn màn hình chưa bắt kịp.
+  lopPhu.addEventListener('click', (e) => {
+    if (e.target === lopPhu) window.location.reload();
+  });
+
+  document.body.append(lopPhu);
+  bXong.focus();
 }
 
 /** Ô nhập lời nhắn, mở ngay tại dòng ấy — không lớp phủ, không hộp thoại. */
