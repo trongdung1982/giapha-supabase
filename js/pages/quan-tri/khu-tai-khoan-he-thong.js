@@ -4,7 +4,14 @@
 //            phần mềm, và bảng sâu theo từng cây của một tài khoản.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-thanh-vien
-// Phiên bản: 0.2.0 · Cập nhật: 09/09/2026 12:55 (b109b)
+// Phiên bản: 0.3.0 · Cập nhật: 09/09/2026 14:20 (b109b)
+//            0.3.0 chủ dự án bấm thử bản 0.2.0 và đặt hai việc: ① thêm cột
+//            **Quyền** (vai cao nhất, bấm được để xem từng cây) · ② **bỏ cột
+//            nút riêng**, gộp chỗ bấm vào chính ô Tài khoản, kèm chú thích
+//            nhỏ dưới tiêu đề cột. `moDong()` vì thế đổi cách đánh dấu dòng
+//            đang mở: `datTrangThai(bool)` thay cho gán đè `textContent` —
+//            ô Tài khoản nay chứa tên, email và huy hiệu, gán đè là xoá sạch.
+//            0.2.0 ô *mã người* của form Mời nay có gợi ý (`o-goi-y.js`), và
 //            0.2.0 ô *mã người* của form Mời nay có gợi ý (`o-goi-y.js`), và
 //            thêm việc **Họ tên** — chỗ DUY NHẤT điền tên cho một tài khoản.
 //            Tên hiện chồng trên email trong ô Tài khoản, KHÔNG thành cột mới
@@ -125,7 +132,7 @@ export async function mountToanHeThong(than, napLai) {
   if (khung.scrollWidth > khung.clientWidth + 4) {
     const n = document.createElement('div');
     n.textContent =
-      'Màn hình hẹp hơn bảng — kéo ngang trong bảng để thấy cột thao tác ở cuối dòng.';
+      'Màn hình hẹp hơn bảng — kéo ngang trong bảng để thấy hết các cột.';
     n.style.cssText = 'margin-top:8px;font-size:12px;color:#8a8078;line-height:1.5';
     than.append(n);
   }
@@ -166,9 +173,15 @@ function veDauBang() {
   const tr = document.createElement('tr');
   tr.style.cssText = 'border-bottom:1px solid #e6e0d8;background:#faf8f5';
 
+  // ⚠ KHÔNG CÒN CỘT NÚT RIÊNG. Chủ dự án chốt 09/09/2026: *"nút mở đó tích
+  //   hợp luôn vào cột tài khoản"*. Cả ô Tài khoản và ô Quyền đều bấm được —
+  //   nên tiêu đề cột phải nói ra, vì một ô bảng trông không giống nút.
   const cot = [
-    ['Tài khoản', ''],
+    ['Tài khoản', '', 'bấm để xem/sửa chi tiết'],
     ['Mã tài khoản', ''],
+    // Cột Quyền nói vai CAO NHẤT ở đâu đó. Nó là một dòng tóm tắt, nên nó
+    // cũng phải là chỗ bấm mở bảng theo từng cây.
+    ['Quyền', '', 'cao nhất · bấm xem từng cây'],
     ['Số cây', 'text-align:center'],
     // Ba cột chỉ đọc dưới đây là **thứ duy nhất ở cả trang này** nói được
     // "tài khoản kia có thật đang dùng phần mềm không". Email chưa xác nhận
@@ -177,14 +190,19 @@ function veDauBang() {
     ['Xác nhận email', 'text-align:center'],
     ['Đăng ký', ''],
     ['Đăng nhập gần nhất', ''],
-    ['', 'text-align:right'],
   ];
-  for (const [chu, them] of cot) {
+  for (const [chu, them, phu] of cot) {
     const th = document.createElement('th');
-    th.textContent = chu;
     th.style.cssText =
       'padding:9px 10px;text-align:left;font-weight:600;color:#6a625a;' +
       'font-size:12px;white-space:nowrap;' + them;
+    th.append(document.createTextNode(chu));
+    if (phu) {
+      const d = document.createElement('div');
+      d.textContent = phu;
+      d.style.cssText = 'font-weight:400;font-size:11px;color:#8a8078';
+      th.append(d);
+    }
     tr.append(th);
   }
   thead.append(tr);
@@ -199,7 +217,21 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
   //   đã phải hạ `min-width` xuống 880 ở b109 vì cột nút rơi khỏi mép trên
   //   màn hình 1280 — khu chỉ rộng ~925px, thanh trái ăn 230px. Thêm một cột
   //   là làm lại đúng chỗ hỏng ấy. Xếp chồng hai dòng thì không tốn bề ngang.
-  const oTk = o('', 'padding:10px;color:#2a2622;word-break:break-all');
+  const oTk = o('', 'padding:0;color:#2a2622;word-break:break-all');
+
+  // ⚠ MỘT `<button>` THẬT, không phải `<div>` gắn `onclick`. Ô này là chỗ duy
+  //   nhất mở được bảng sâu từ khi bỏ cột nút, nên nó phải đi được bằng phím
+  //   Tab và bấm được bằng Enter như mọi nút khác. Một `div` bấm được là thứ
+  //   chuột dùng được còn bàn phím thì không.
+  const bMo = document.createElement('button');
+  bMo.type = 'button';
+  bMo.style.cssText =
+    'display:block;width:100%;padding:10px;border:0;background:none;' +
+    'font:inherit;color:inherit;text-align:left;cursor:pointer;' +
+    'border-radius:8px';
+  bMo.addEventListener('mouseenter', () => { bMo.style.background = '#f5f1ea'; });
+  bMo.addEventListener('mouseleave', () => { bMo.style.background = 'none'; });
+
   const email = document.createElement('span');
   email.textContent = tk.email || '(không rõ email)';
   email.style.fontWeight = tk.hoTen ? '400' : '600';
@@ -207,15 +239,18 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
     const ten = document.createElement('div');
     ten.textContent = tk.hoTen;
     ten.style.cssText = 'font-weight:600';
-    oTk.append(ten);
+    bMo.append(ten);
     email.style.cssText = 'font-size:12px;color:#6a625a';
   }
-  oTk.append(email);
-  if (tk.laQuanTriHeThong) oTk.append(huyHieu('Quản trị hệ thống', true));
-  if (tk.laChinhToi) oTk.append(huyHieu('Bạn', false));
+  bMo.append(email);
+  if (tk.laQuanTriHeThong) bMo.append(huyHieu('Quản trị hệ thống', true));
+  if (tk.laChinhToi) bMo.append(huyHieu('Bạn', false));
+  oTk.append(bMo);
 
   const oMa = o(tk.maNgan || '—',
     'padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:#5b4533');
+
+  const oQuyen = veOQuyen(tk);
 
   // Ba con số không gộp được, nên chúng không gộp: số to là chân THẬT, dòng
   // nhỏ dưới nói phần đang treo — và chỉ hiện khi khác 0, đúng `CLAUDE.md`
@@ -249,9 +284,7 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
     (tk.dangNhapGanNhat ? '#6a625a' : '#8a8078'));
   if (!tk.dangNhapGanNhat) oDn.style.fontStyle = 'italic';
 
-  const oThao = o('', 'padding:10px;text-align:right');
-
-  tr.append(oTk, oMa, oSo, oXn, oTao, oDn, oThao);
+  tr.append(oTk, oMa, oQuyen, oSo, oXn, oTao, oDn);
   ruot.append(tr);
 
   // ⚠ Dòng của chính mình KHÔNG khoá ở đây, khác hẳn bảng bên `khu-thanh-vien`.
@@ -259,13 +292,70 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
   //   ra chẳng để làm gì. Ở đây thì bảng sâu vẫn có việc thật: xem mình đang
   //   đứng ở những cây nào. Chỉ hai việc bên trong bị khoá — cờ Quản trị hệ
   //   thống và Xoá tài khoản — và chúng tự nói lý do tại chỗ.
-  const bMo = nut('Mở', false);
-  bMo.dataset.chuDong = 'Mở';
-  bo.nut.push(bMo);
-  bMo.addEventListener('click',
-    () => moDong(bo, tk, bMo, () => veBangSau(tk, ds, dsCay, napLai)));
+  // ⚠ HAI CHỖ BẤM, MỘT HÀNH VI. Ô Tài khoản và ô Quyền cùng mở một bảng sâu.
+  //   Trạng thái "đang mở" phải hiện ở CẢ HAI, nếu không thì bấm ô Quyền rồi
+  //   nhìn sang ô Tài khoản sẽ thấy nó nói dòng này đang đóng.
+  // `datTrangThai` thay cho lối cũ gán đè `textContent`: ô Tài khoản nay chứa
+  // cả tên, email và huy hiệu, nên gán đè chữ là **xoá sạch nội dung ô**.
+  const datTrangThai = (dangMo) => {
+    bMo.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+    bMo.style.background = dangMo ? '#f2ece2' : 'none';
+    if (oQuyen.datTrangThai) oQuyen.datTrangThai(dangMo);
+  };
+  bo.nut.push(datTrangThai);
 
-  oThao.append(bMo);
+  const mo = () => moDong(bo, tk, datTrangThai,
+                          () => veBangSau(tk, ds, dsCay, napLai));
+  bMo.addEventListener('click', mo);
+  if (oQuyen.nut) oQuyen.nut.addEventListener('click', mo);
+}
+
+/**
+ * Ô **Quyền** — vai CAO NHẤT tài khoản này đang có ở đâu đó.
+ *
+ * ⚠ ĐÂY LÀ MỘT NỬA SỰ THẬT, VÀ NÓ PHẢI TỰ NÓI RA. Quyền ở app này gắn với
+ *   TỪNG cây: cùng một người có thể là chủ cây A và chỉ xem được cây B. Nên ô
+ *   này bấm được, và bấm là mở đúng bảng *"Gia phả tài khoản này dính tới"* —
+ *   nơi có một dòng cho mỗi cây. Hiện con số cao nhất mà không mở được đường
+ *   xuống chi tiết là làm người ta tin một câu tóm tắt.
+ *
+ * ⚠ `chu_cay` KHÔNG có trong `vaiTroBangChu()` của `config.js` — nó không
+ *   phải mã vai trong `tree_members` (ràng buộc bảng ấy từ chối nó từ b105),
+ *   nó là cột `trees.chu_so_huu`. Nên tên chữ của nó nằm ở đây.
+ */
+function veOQuyen(tk) {
+  const td = o('', 'padding:0');
+
+  if (!tk.vaiCaoNhat) {
+    // Trường trống thì không vẽ hàng ấy — `CLAUDE.md` mục 7. Nhưng ô bảng thì
+    // phải có gì đó, nếu không người đọc tưởng màn hình lỗi. Một gạch ngang mờ
+    // nói "không có", khác hẳn một ô trắng nói "không biết".
+    const d = document.createElement('div');
+    d.textContent = '—';
+    d.style.cssText = 'padding:10px;color:#a89f94';
+    td.append(d);
+    return td;
+  }
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.style.cssText =
+    'display:block;width:100%;padding:10px;border:0;background:none;' +
+    'font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:8px';
+
+  const hh = huyHieu(
+    tk.vaiCaoNhat === 'chu_cay' ? 'Chủ gia phả' : vaiTroBangChu(tk.vaiCaoNhat),
+    tk.vaiCaoNhat === 'chu_cay');
+  hh.style.marginLeft = '0';
+  b.append(hh);
+
+  td.append(b);
+  td.nut = b;
+  td.datTrangThai = (dangMo) => {
+    b.style.background = dangMo ? '#f2ece2' : 'none';
+    b.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+  };
+  return td;
 }
 
 /**
@@ -277,11 +367,14 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
  * Một chỗ đứng chung nên **mỗi lúc chỉ một dòng mở được** — đó là chủ ý: hai
  * bảng sâu cùng mở là hai ô "gõ lại email để xoá" nằm cạnh nhau.
  */
-function moDong(bo, tk, bMo, veNoiDung) {
+function moDong(bo, tk, datTrangThai, veNoiDung) {
   const dangMoDongNay = bo.dangMo === tk.userId;
 
   bo.oSau.innerHTML = '';
-  for (const n of bo.nut) n.textContent = n.dataset.chuDong;
+  // `bo.nut` nay chứa HÀM đặt trạng thái, không phải phần tử nút. Đổi từ
+  // b109b, khi ô Tài khoản thành chỗ bấm: gán đè `textContent` lên nó là xoá
+  // sạch tên, email và huy hiệu bên trong.
+  for (const dat of bo.nut) dat(false);
 
   if (dangMoDongNay) {
     bo.dangMo = null;
@@ -289,7 +382,7 @@ function moDong(bo, tk, bMo, veNoiDung) {
   }
 
   bo.dangMo = tk.userId;
-  bMo.textContent = 'Thu lại';
+  datTrangThai(true);
 
   const hop = document.createElement('div');
   hop.style.cssText =

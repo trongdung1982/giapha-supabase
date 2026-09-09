@@ -122,7 +122,11 @@ const DAN_CAY =
 
 const DAN_HE_THONG =
   'MỌI tài khoản đã đăng ký phần mềm này, kể cả người chưa vào gia phả nào. ' +
-  'Bấm Mở để xem tài khoản ấy đứng ở đâu trong từng cây, mời họ vào một cây, ' +
+  // ⚠ Câu này nói NGƯỜI TA BẤM VÀO ĐÂU, nên nó phải đổi cùng lúc với chỗ bấm.
+  //   Bản trước nói "Bấm Mở" — nút ấy không còn từ b109b, chỗ bấm nay là chính
+  //   ô Tài khoản. Đúng bài học b37/b38: đổi hành vi thì đi tìm mọi câu chữ mô
+  //   tả hành vi ấy, và 154 phép kiểm không bắt được câu nào nói sai.
+  'Bấm vào một dòng để xem tài khoản ấy đứng ở đâu trong từng cây, mời họ vào một cây, ' +
   'bật/tắt cờ Quản trị hệ thống, hoặc xoá hẳn tài khoản.';
 
 /** Thẻ `<p>` chứa câu dẫn, giữ lại để `nap()` đổi chữ theo tấm lọc. */

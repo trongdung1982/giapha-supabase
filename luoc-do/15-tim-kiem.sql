@@ -3,7 +3,12 @@
 -- Vai trò  : Ô TÌM/GỢI Ý cho form Mời và cho việc gắn mã người. Thêm cột
 --            `ho_ten` cho tài khoản, một hàm bỏ dấu tiếng Việt, và hai hàm
 --            tìm có lọc — giới hạn số dòng, gác đúng quyền, chạy ở máy chủ.
--- Phiên bản: 0.1.0 · Cập nhật: 09/09/2026 12:10 (b109b)
+-- Phiên bản: 0.2.0 · Cập nhật: 09/09/2026 14:05 (b109b)
+--            0.2.0 `ds_tai_khoan_he_thong()` thêm cột `vai_cao_nhat` — khu
+--            *Toàn hệ thống* phải nói được mỗi tài khoản đang có quyền gì.
+--            ⚠ ĐỔI DANH SÁCH CỘT, nên `drop function` trước là BẮT BUỘC
+--            (42P13). Chủ dự án đã dán 0.1.0 lên cả hai Supabase 09/09 —
+--            **phải dán lại bản này**, dán đè an toàn, không mất dữ liệu.
 -- ============================================================
 --
 -- ⚠⚠ THỨ TỰ DÁN: file này dán SAU `13-quan-ly-thanh-vien.sql`.
@@ -493,6 +498,7 @@ returns table (
   user_id            uuid,
   email              text,
   ho_ten             text,
+  vai_cao_nhat       text,
   ma_ngan            text,
   la_quan_tri_he_thong boolean,
   duoc_tao_cay       boolean,
@@ -512,6 +518,35 @@ as $$
   select u.id,
          u.email::text,
          coalesce(tk.ho_ten, ''),
+         -- ⚠ VAI CAO NHẤT TRONG MỌI CÂY — một dòng tóm tắt, KHÔNG phải câu
+         --   trả lời đầy đủ. Quyền ở app này gắn với TỪNG cây: cùng một người
+         --   có thể là chủ cây A và chỉ xem được cây B. Cột này nói *"cao nhất
+         --   người ấy đang có ở đâu đó"*, và màn hình phải mở được bảng chi
+         --   tiết theo từng cây ngay từ nó — nếu không thì nó đang nói một nửa
+         --   sự thật mà trông như cả sự thật.
+         --
+         -- ⚠ `chu_cay` KHÔNG phải một mã vai trong `tree_members` — ràng buộc
+         --   bảng ấy chỉ nhận `quan_tri · sua · xem · sao_luu` (b105). Chủ cây
+         --   là cột `trees.chu_so_huu`, nên nó phải hỏi riêng, và nó đứng trên
+         --   `quan_tri`: quản trị gia phả sửa và duyệt nội dung, chủ cây mới
+         --   đổi được quyền.
+         --
+         -- ⚠ Chỉ tính chân THẬT (`approved`). Đơn đang chờ và lời mời chưa
+         --   nhận không phải quyền — chúng đã có chỗ riêng ở `so_cho`/`so_moi`.
+         (case
+            when exists (select 1 from public.trees t where t.chu_so_huu = u.id)
+              then 'chu_cay'
+            else coalesce((
+              select m.role from public.tree_members m
+               where m.user_id = u.id and m.approved
+               order by case m.role
+                          when 'quan_tri' then 1
+                          when 'sua'      then 2
+                          when 'xem'      then 3
+                          when 'sao_luu'  then 4
+                          else 5 end
+               limit 1), '')
+          end),
          coalesce(tk.ma_ngan, ''),
          coalesce(tk.la_quan_tri_he_thong, false),
          coalesce(tk.duoc_tao_cay, false),
@@ -695,6 +730,14 @@ from (
                   and p.proname in ('ds_thanh_vien', 'ds_cay_cua_tai_khoan')
                   and p.prosrc ilike '%ten_day_du%') = 2
          then 'ĐẠT' else 'HỎNG — chưa dán đè, cột tên vẫn hiện mã người' end
+
+  union all
+  select 13, 'ds_tai_khoan_he_thong() đã có cột vai_cao_nhat',
+    case when exists (
+      select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'ds_tai_khoan_he_thong'
+         and pg_get_function_result(p.oid) like '%vai_cao_nhat%')
+         then 'ĐẠT' else 'HỎNG — chưa dán bản 0.2.0' end
 
   union all
   select 12, 'ds_tai_khoan_he_thong() đã có cột ho_ten',

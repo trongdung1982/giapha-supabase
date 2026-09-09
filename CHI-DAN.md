@@ -49,8 +49,8 @@ nó chính là thứ nó sinh ra để tránh.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
    tầng quyền hệ thống + tạo cây mới đã dán cả hai Supabase (b102–b104); mã
    cây nay **3 chữ số** (`NPG473`). `13` đã dán 08/09 (b105), khu Tài khoản
-   chạy 08/09 (b106); `14` đã dán, **b108 và b109 chạy thật 09/09**. ⏳ **b109b
-   (ô gợi ý) mã xong, `15-tim-kiem.sql` CHƯA DÁN** — tự kiểm phải ra 12 ĐẠT.
+   chạy 08/09 (b106); `14` đã dán, **b108·b109·b109b chạy thật 09/09**. ⏳ **`15`
+   bản 0.2.0 CHƯA DÁN** (cột `vai_cao_nhat`) — tự kiểm phải ra 13 ĐẠT.
    Dán lại `11`/`10` → dán lại `14`; dán lại `13`/`14` → **dán lại `15`**.
 
 ## Quy ước khung tài liệu này

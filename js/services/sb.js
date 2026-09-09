@@ -5,7 +5,10 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.10.0 · Cập nhật: 09/09/2026 (b109b)
+// Phiên bản: 0.11.0 · Cập nhật: 09/09/2026 14:05 (b109b)
+//            0.11.0 `dsTaiKhoanHeThong()` đọc thêm `vaiCaoNhat` — vai cao
+//            nhất tài khoản ấy đang có ở ĐÂU ĐÓ. ⚠ Một dòng TÓM TẮT, không
+//            phải câu trả lời đầy đủ: quyền ở app này gắn với TỪNG cây.
 //            0.10.0 ba cửa TÌM KIẾM của `15-tim-kiem.sql`: `timTaiKhoan()` ·
 //            `timNguoiTrongCay()` · `datHoTenTaiKhoan()`. Và `dsThanhVien()`
 //            với `dsCayCuaTaiKhoan()` nay nhận được TÊN người thật ở
@@ -1178,6 +1181,11 @@ export async function dsTaiKhoanHeThong() {
     // ⚠ Tên của TÀI KHOẢN (`15-tim-kiem.sql` mục 1), không phải tên người
     //   trong sơ đồ. Tài khoản chưa gắn vào ai vẫn có tên này.
     hoTen: r.ho_ten || '',
+    // ⚠ Vai cao nhất trong MỌI cây — `15-tim-kiem.sql` mục 5b. Cùng một người
+    //   có thể là chủ cây A và chỉ xem được cây B, nên trường này là một dòng
+    //   TÓM TẮT. Màn hình phải mở được bảng theo từng cây ngay từ nó; hiện nó
+    //   mà không cho xem chi tiết là nói một nửa sự thật trông như cả sự thật.
+    vaiCaoNhat: r.vai_cao_nhat || '',
     maNgan: r.ma_ngan || '',
     laQuanTriHeThong: Boolean(r.la_quan_tri_he_thong),
     duocTaoCay: Boolean(r.duoc_tao_cay),
@@ -1328,6 +1336,11 @@ export async function timTaiKhoan(treeId, chuoi) {
     userId: r.user_id,
     email: r.email || '',
     hoTen: r.ho_ten || '',
+    // ⚠ Vai cao nhất trong MỌI cây — `15-tim-kiem.sql` mục 5b. Cùng một người
+    //   có thể là chủ cây A và chỉ xem được cây B, nên trường này là một dòng
+    //   TÓM TẮT. Màn hình phải mở được bảng theo từng cây ngay từ nó; hiện nó
+    //   mà không cho xem chi tiết là nói một nửa sự thật trông như cả sự thật.
+    vaiCaoNhat: r.vai_cao_nhat || '',
     maNgan: r.ma_ngan || '',
     maNguoi: r.person_id || '',
     tenNguoi: r.ten_nguoi || '',

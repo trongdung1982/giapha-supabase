@@ -154,12 +154,10 @@ thêm dòng họ tên vào cùng ô nên nó lộ ra. Sửa: `display:inline-blo
 
 ## Còn treo
 
-- ⏳ **Chủ dự án dán `15-tim-kiem.sql`** — đụng bảng `tai_khoan` (thêm cột) và
-  định nghĩa lại 5 hàm. Dán **sau** `13` và `14`. Tự kiểm phải ra **12 ĐẠT**.
-- ⏳ **Chưa bấm thử trên máy chủ thật.** Bàn thử không có PostgREST, không có
-  bộ đăng nhập, không có ai bấm nút.
-- **Chủ dự án phải điền họ tên** cho những tài khoản đã cấp từ trước, ở khu
-  *Toàn hệ thống* → Mở → *Họ tên*. Chưa điền thì ô gợi ý email chỉ hiện email.
+- ⏳ **Dán LẠI `15-tim-kiem.sql` bản 0.2.0** — chỉ thêm cột `vai_cao_nhat` vào
+  `ds_tai_khoan_he_thong()`. Dán đè an toàn. Tự kiểm nay ra **13 ĐẠT**.
+- ⏳ **Cột Quyền chưa bấm thử trên máy chủ thật.**
+- ~~Điền họ tên~~ — ✓ chủ dự án đã điền đủ 09/09/2026.
 - Chưa cho người ta **tự sửa tên mình** — cố ý, vì chưa có màn hình nào đi qua
   cửa ấy. Mở một cửa chưa có màn hình là mở một cửa không ai nhìn.
 - Tài khoản `sao_luu` vẫn hiện trong gợi ý email. Vô hại, chỉ hơi nhiễu.
@@ -167,19 +165,61 @@ thêm dòng họ tên vào cùng ô nên nó lộ ra. Sửa: `display:inline-blo
 
 ---
 
+## Bổ sung cùng ngày — chủ dự án bấm thử bản đầu
+
+Dán `15` 0.1.0 lên cả hai Supabase, tự kiểm ĐẠT; điền đủ họ tên; bật/tắt cờ
+Quản trị hệ thống chạy; ô tìm người để mời hiện đúng tên và email. Rồi đặt
+thêm hai việc, làm luôn trong phiên:
+
+**① Cột *Quyền*** trong tấm lọc *Toàn hệ thống*, mặc định hiện vai **cao
+nhất**, bấm được để xem chi tiết. Chỗ đáng ghi là **vì sao nó phải bấm
+được**: quyền ở app này gắn với TỪNG cây — cùng một người có thể là chủ cây A
+và chỉ xem được cây B. Một ô hiện "Chủ gia phả" mà không mở được đường xuống
+bảng theo từng cây là bắt người đọc tin một câu tóm tắt như thể nó là cả sự
+thật. Nên ô ấy mở đúng bảng *"Gia phả tài khoản này dính tới"*.
+
+⚠ `chu_cay` **không có** trong `vaiTroBangChu()` của `config.js`, và đúng như
+thế: nó không phải mã vai trong `tree_members` — ràng buộc bảng ấy từ chối nó
+từ b105 — nó là cột `trees.chu_so_huu`. Nên `vai_cao_nhat` phải hỏi riêng, và
+`chu_cay` đứng trên `quan_tri`: quản trị gia phả sửa và duyệt nội dung, chủ
+cây mới đổi được quyền.
+
+⚠ Chỉ tính chân THẬT (`approved`). Đơn đang chờ và lời mời chưa nhận **không
+phải quyền** — HR23 canh đúng chỗ ấy, vì hiện chúng thành một vai là nói
+ngược luật hai chữ ký của `14`.
+
+**② Bỏ cột nút riêng**, gộp chỗ bấm vào chính ô Tài khoản, kèm chú thích nhỏ
+dưới tiêu đề cột. Ba chỗ phải sửa theo mà đọc mã không thấy ngay:
+
+- `moDong()` đánh dấu dòng đang mở bằng cách **gán đè `textContent`** của nút
+  (`'Mở'` ↔ `'Thu lại'`). Ô Tài khoản nay chứa tên, email và huy hiệu — gán đè
+  chữ lên nó là **xoá sạch nội dung ô**. Đổi sang `datTrangThai(bool)`.
+- Câu mô tả đầu khu vẫn nói *"Bấm Mở để xem…"*. Đúng bài học b37/b38: **đổi
+  hành vi thì đi tìm mọi câu chữ mô tả hành vi ấy** — 154 phép kiểm không bắt
+  được một câu nói sai.
+- Bộ kiểm và bộ chụp ảnh bấm nút **theo chữ trên nút** (`?bam=Mở`). Bỏ nút ấy
+  là chúng hết chỗ bấm. Thêm cú pháp `~` (khớp đầu chuỗi) vào trang giả.
+
+⚠ Và một lần nữa **phép thay chuỗi trúng nhầm chỗ**: `vaiCaoNhat` của bản giả
+rơi vào mảng `TAI_KHOAN` thay vì `SO_DANG_KY`, vì mẫu tìm (`maNgan: 'SL001',`)
+có mặt ở cả hai. Triệu chứng: cột Quyền hiện `—` ở **mọi** dòng — trông y như
+lỗi của `veOQuyen()`. Chỉ mở ảnh ra nhìn mới thấy. Cùng họ với bài học
+*"python nhiều phép thay chuỗi hỏng nửa chừng"*: mẫu tìm phải **duy nhất**,
+không thì thay hẳn cả khối.
+
 ## File đã đụng tới
 
 **Mới**
-- `supabase/luoc-do/15-tim-kiem.sql` 0.1.0
+- `supabase/luoc-do/15-tim-kiem.sql` 0.2.0
 - `supabase/js/pages/quan-tri/o-goi-y.js` 0.1.0
 - `kiem-thu/ban-thu-sql/do-b109b.mjs` 0.1.0 *(ngoài repo)*
 - `kiem-thu/do-goi-y.mjs` + `kiem-thu/do-goi-y.html` 0.1.0 *(ngoài repo)*
 
 **Sửa**
-- `supabase/js/services/sb.js` → 0.10.0
+- `supabase/js/services/sb.js` → 0.11.0
 - `supabase/js/pages/quan-tri/khu-gia-pha.js` → 0.6.0
 - `supabase/js/pages/quan-tri/khu-thanh-vien.js` → 0.4.0 *(gồm vá `huyHieu`)*
-- `supabase/js/pages/quan-tri/khu-tai-khoan-he-thong.js` → 0.2.0
+- `supabase/js/pages/quan-tri/khu-tai-khoan-he-thong.js` → 0.3.0
 - `supabase/CHI-DAN.md` *(vẫn đúng 80/80 dòng)* · `KE-HOACH.md` ·
   `THIET-KE-QUAN-TRI.md` *(khu 2 + mục 6)* · `DU-LIEU.md` *(cột `ho_ten`)*
 - `kiem-thu/sb-gia.mjs` → 0.4.0 *(ngoài repo)*
@@ -192,8 +232,8 @@ thêm dòng họ tên vào cùng ô nên nó lộ ra. Sửa: `display:inline-blo
 
 | Phép | Kết quả |
 |---|---|
-| Bảng tự kiểm `15-tim-kiem.sql` | **11/11 ĐẠT** *(12 sau khi thêm phép cột `ho_ten`)* |
-| `do-b109b.mjs` — 18 hàng rào + 3 kiểm chứng ngược | **36/36 ĐẠT**, chạy hai lần cùng kết quả |
+| Bảng tự kiểm `15-tim-kiem.sql` 0.2.0 | **13/13 ĐẠT** |
+| `do-b109b.mjs` 0.2.0 — 22 hàng rào + 3 kiểm chứng ngược | **40/40 ĐẠT**, chạy hai lần cùng kết quả |
 | `/kiem-tra` | **9/9 ĐẠT** |
 | `kiem-trang-quan-tri.mjs` | **154/154 ĐẠT** |
 | `do-goi-y.mjs` | 0 cặp đè nhau · 0 thứ rơi khỏi mép · gợi ý mở đúng chỗ, nằm trọn trong cửa sổ |
