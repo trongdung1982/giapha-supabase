@@ -1,11 +1,10 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 11:10 · Bước gần nhất: **b109** · Việc kế tiếp: **b109b***
+*Cập nhật 09/09/2026 11:40 · Bước gần nhất: **b109** · Việc kế tiếp: **b109b***
 
-> ✓ **b109 MÃ XONG, chưa bấm thử.** Tấm lọc *Toàn hệ thống* + bảng sâu +
-> bốn việc. **Không dán SQL** — bốn hàm ấy đã nằm sẵn trên cả hai máy chủ từ
-> b107–b108. Việc còn lại của bước này là **chủ dự án mở trang Quản trị →
-> khu Tài khoản → tấm lọc *Toàn hệ thống*** và bấm thử.
+> ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
+> — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
+> chạy. Không dán SQL — bốn hàm ấy đã nằm sẵn trên cả hai máy chủ từ b107–b108.
 >
 > b109 chia đôi ngay đầu phiên: nửa sau — **b109b**, ô tìm/gợi ý cho form
 > Mời — chưa bắt đầu, và nó cần bàn thiết kế trước vì đụng ranh giới
@@ -626,7 +625,7 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
 | **Chủ dự án bấm thử, đo ra hai việc còn thiếu** | ① Form Mời thiếu ô **mã người trong sơ đồ** dù `moi_vao_cay()` đã nhận tham số ấy từ đầu — vá ngay trong phiên (0.5.1). ② Ô email và ô mã người cần **tìm/gợi ý thật** (gõ vài chữ, hiện danh sách khớp), không phải ô gõ tay mù — dời sang b109, việc lớn hơn, cần hàm tìm kiếm mới ở máy chủ |
 
-### ✓ b109 — Khu Tài khoản: tấm lọc *Toàn hệ thống* + bảng sâu — MÃ XONG 09/09/2026
+### ✓ b109 — Khu Tài khoản: tấm lọc *Toàn hệ thống* + bảng sâu — XONG, chạy thật 09/09/2026
 
 ⚠ **Chia đôi ngay đầu phiên, chủ dự án chốt.** Nửa sau (ô tìm/gợi ý cho form
 Mời) thành **b109b** — nó cần một hàm SQL mới và một câu thiết kế phải bàn
@@ -636,7 +635,7 @@ trước, trộn vào đây là một phiên không có điểm dừng.
 |---|---|
 | **Làm** | `sb.js` 0.9.0: bốn cầu nối còn thiếu của `14` — `dsTaiKhoanHeThong` · `dsCayCuaTaiKhoan` · `datQuanTriHeThong` · `xoaTaiKhoan`. **File mới** `khu-tai-khoan-he-thong.js` 0.1.0: sổ đăng ký bảy cột + bảng sâu theo từng cây + bốn việc. `khu-thanh-vien.js` 0.3.0: tấm lọc thứ tư, và sáu hàm việc đổi tham số `phien` → `treeId` |
 | **KHÔNG dán SQL** | Bốn hàm ấy đã nằm sẵn trên cả hai máy chủ từ b107–b108, chỉ chưa có màn hình nào gọi. Cả bước này là mã trình duyệt |
-| **Điểm dừng — CHƯA ĐẠT, chờ chủ dự án bấm thử trên máy chủ thật** | Bấm một tài khoản trong tấm lọc *Toàn hệ thống* → đúng số cây, làm được cả bốn việc |
+| **Điểm dừng — ĐẠT, chạy thật** | Chủ dự án bấm một tài khoản trong tấm lọc *Toàn hệ thống* trên máy chủ thật → đúng số cây, làm được cả bốn việc |
 | **Năm việc của `13` được DÙNG LẠI, không chép** | Chúng vốn chỉ đọc `phien.treeId`, nên đổi tham số thành `treeId` là đủ để gọi lại theo TỪNG CÂY. Bộ kiểm có một phép canh đúng chỗ này (PHẦN I) và một phép bẻ gãy nó (G13) — chép sang bản thứ hai thì hôm nay hai bản giống hệt nhau, và lệch dần từ lần sửa thứ hai |
 | **Vì sao file mới, không viết thêm vào `khu-thanh-vien.js`** | Hai chế độ trả lời hai câu khác nhau — *"ai có quyền trong CÂY NÀY"* và *"sổ đăng ký của cả phần mềm"*. Chủ dự án chọn tách file. Nối bằng `import()` **động** một chiều: file mới `import` ngược lại để dùng năm việc, tĩnh cả hai chiều là một vòng import, mà vòng import trong ES Modules gốc **không ném lỗi lúc nạp** — nó để một hàm thành `undefined` và chỉ vỡ lúc ai đó bấm đúng nút ấy |
 | **⚠ Ba chỗ hỏng chỉ NHÌN mới thấy** | ① bảng `min-width:980px` làm **cột nút Mở rơi khỏi mép ngay trên màn hình 1280** — khu chỉ rộng ~925px vì thanh trái ăn 230px; hạ xuống 880. ② ô mã người 180px cắt mất chữ cuối lời gợi ý. ③ dòng *"được mời"* có một nút mờ ghi đúng câu cột bên cạnh vừa nói. **154 phép văn bản xanh suốt trong lúc cả ba chỗ ấy còn nguyên** — đúng bài học b106, và lần này bộ ảnh chụp bắt được trước khi chủ dự án phải bấm |

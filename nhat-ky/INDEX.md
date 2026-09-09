@@ -56,6 +56,7 @@ thường, không phải thiếu sót.
 | 106 | 09/09/2026 | Khu Tài khoản chạy: bảng, ba tấm lọc, năm việc đổi quyền; dời khối Đơn chờ duyệt khỏi Cài đặt | `b106-khu-tai-khoan.md` |
 | 107 | 09/09/2026 | Mời vào gia phả, cờ Quản trị hệ thống, xoá tài khoản — 8 hàm máy chủ, đo 59/59, chưa dán | `b107-moi-vao-gia-pha.md` |
 | 108 | 09/09/2026 | Mời vào gia phả CHẠY THẬT: Nhận/Từ chối ngay màn hình khởi động; vá `trang_thai_cua_toi()` | `b108-moi-nhan-tu-choi.md` |
+| 109 | 09/09/2026 | Khu Tài khoản Toàn hệ thống + bảng sâu, chạy thật; bộ kiểm 154 phép; vá trang giả bị trắng | `b109-khu-tai-khoan-he-thong.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
