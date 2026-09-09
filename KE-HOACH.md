@@ -1,10 +1,11 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 06:55 · Bước gần nhất: **b107** · Việc kế tiếp: **b108***
+*Cập nhật 09/09/2026 08:55 · Bước gần nhất: **b108** · Việc kế tiếp: **b109***
 
-> ⏳ **ĐANG CHẶN b108: chủ dự án chưa dán `luoc-do/14-loi-moi.sql`.** Tầng máy
-> chủ của b107 đã viết xong và đo **59/59** trên bàn thử tại chỗ, gồm 3 phép bẻ
-> gãy có chủ ý — nhưng chưa chạm máy chủ thật lần nào.
+> ✓ **b108 XONG, chạy thật.** Mời vào gia phả + Nhận/Từ chối — đã dán
+> `14-loi-moi.sql` 0.2.0 trên cả hai Supabase, chủ dự án xác nhận cả hai
+> chiều chạy đúng. **b109** (khu Tài khoản Toàn hệ thống + ô tìm/gợi ý thật
+> cho form Mời) chưa bắt đầu — không bị chặn gì, chỉ chưa làm.
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -220,7 +221,7 @@ nay đọc thẳng danh sách cột `not null` từ `01-bang.sql` để bắt l�
 app thật (`nguyentrongbac.io.vn/QuanTri.html`): bấm qua lại bốn mục, `F5` về
 đúng khu, nút Back đi ngược đúng thứ tự, điện thoại thành hàng thẻ ngang —
 **đạt cả bốn**. Ba khu chưa viết nói thẳng chúng làm ở bước nào, không vẽ bảng
-trống. Đây là nền cho b103 → b111, nên nó đứng trước mọi khu.
+trống. Đây là nền cho b103 → b112, nên nó đứng trước mọi khu.
 
 ⚠ **Antigravity đã dựng sẵn b102 → b105 trong `codex/`, NGOÀI repo.** Chủ dự
 án đã dán SQL cả bốn lên **Supabase Staging** và xác nhận đạt. Nhưng **máy chủ
@@ -301,7 +302,7 @@ Làm đúng chữ của b103 thì từ hôm nay tới b106 không còn đường
 
 ---
 
-## Việc kế tiếp — b100 → b112, MỘT PHIÊN MỘT BƯỚC
+## Việc kế tiếp — b100 → b113, MỘT PHIÊN MỘT BƯỚC
 
 ⚠ **Chuỗi này viết lại 05/09/2026** sau khi chủ dự án chốt ba câu về **nhiều
 gia phả**. Chuỗi cũ (b100→b105, chỉ nói trang Quản trị) vẫn còn nguyên trong
@@ -460,7 +461,7 @@ thì sai lúc chưa có gì xây lên trên.
 >    Khu Thành viên nhận nó là b106, chưa viết — gỡ bây giờ là cắt đường duyệt
 >    đơn đúng lúc b103 vừa dựng thêm nút Xin quyền, tức làm đơn nhiều hơn.
 >    **Luật rút ra: khối chỉ được gỡ khi khu bên kia đã viết xong, không phải
->    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b111.
+>    khi kế hoạch nói tới nó.** Cài đặt vì thế xuống **8 khối**, về 6 ở b112.
 > 3. **Thêm nút *Mở trang Quản trị*.** Gỡ khối Duyệt nội dung đã lấy đi lối vào
 >    DUY NHẤT của trang ấy; phép kiểm PHẦN E bắt được tại chỗ.
 > 4. **`vaiTroBangChu()` xuống `config.js`.** Bản AGY chép nó thành bản thứ
@@ -609,19 +610,31 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **⚠ Bàn thử nói dối ở đây** | Supabase thật còn `auth.identities` · `sessions` · `refresh_tokens` trỏ về `auth.users`; bàn thử chỉ dựng mỗi `auth.users`. Phép HR15 chứng minh **luật gác đúng**, KHÔNG chứng minh lệnh xoá chạy trót lọt trên máy chủ thật. Lần dán thật là lần đầu biết điều đó |
 | **⚠ Cái bẫy đã đo được** | `la_thanh_vien()` cho vào cây khi `approved` **hoặc** vai ∈ (`quan_tri_he_thong`,`quan_tri`,`sao_luu`). Ghi vai được mời thẳng vào `role` là **mở cây ra ngay lúc mời**. Nên có cột `moi_vai` riêng; `role` giữ `xem` tới lúc nhận. Phép KC2 tái hiện đúng cái bẫy ấy để chứng minh HR5 đo thật |
 | **⚠ Bẫy của phép ĐO, không phải của mã** | Câu `select id from trees where tree_code='NTB'` lồng trong khối mượn danh nghĩa **cũng đi qua RLS** — người ngoài không thấy cây nên hàm nhận `p_tree = null`. 5 phép HỎNG bịa ở lần chạy đầu. Mã cây phải hỏi một lần bằng `postgres` rồi cắm hằng số |
-| **Còn hở, cố ý** | `trang_thai_cua_toi()` của `07` chưa biết trạng thái *"được mời"* — người được mời mà bấm *Xin quyền* sẽ nhận câu "đơn đang chờ". Không sai nguy hiểm, nhưng nói không đúng chuyện; sửa ở b108 cùng lúc với màn hình |
+| **✓ Đã sửa, b108** | `trang_thai_cua_toi()` của `07` không biết trạng thái *"được mời"* — người được mời mà mở app thường sẽ nhận câu "đơn đang chờ", sai hẳn chuyện đang xảy ra. Vá ở `14-loi-moi.sql` mục 6b (0.2.0), đo 61/61 trên bàn thử, dán thật 09/09 |
 
-### b108 — Mời vào gia phả + khu Tài khoản toàn hệ thống, MÀN HÌNH
+### ✓ b108 — Mời vào gia phả (khu Gia phả), MÀN HÌNH — XONG 09/09/2026
 
 | | |
 |---|---|
-| **Làm** | Khu Gia phả: cột **Mời** *(chủ cây và Quản trị hệ thống thấy)* + dòng cây mình **được mời** hiện *Nhận · Từ chối* thay cho *Xin quyền*. Khu Tài khoản: tấm lọc thứ tư **Toàn hệ thống** *(chỉ Quản trị hệ thống)* — mọi tài khoản đã đăng ký, cột **Số cây**, bấm vào mở bảng sâu theo từng cây |
-| **Bảng sâu làm được gì** | Đúng năm việc đã có của `13` *(đổi vai · gắn mã người · tin cậy · gỡ · bàn giao)*, chỉ khác là chọn cây theo dòng — **không hàm việc nào phải viết mới**. Cộng nút bật/tắt cờ **Quản trị hệ thống**, và nút **Mời thẳng vào một cây** |
-| **Bốn việc chủ dự án chốt cho bảng sâu** | ① xem từng cây + năm việc của `13` · ② mời thẳng vào một cây · ③ **xoá hẳn tài khoản** *(gõ lại email để xác nhận)* · ④ cột chỉ đọc: đăng ký lúc nào, đăng nhập gần nhất, email đã xác nhận chưa |
-| **Điểm dừng** | Mời một tài khoản thật → tài khoản ấy đăng nhập, **thấy lời mời**, và **chưa đọc được cây**; bấm Nhận thì đọc được, vai đúng bằng vai được mời |
+| **Làm** | Khu Gia phả: cột **Mời** *(chủ cây và Quản trị hệ thống thấy)*, gọi `moi_vao_cay()` với email + mã người + vai. Dòng cây mình **được mời** hiện *Nhận · Từ chối* thay cho *Xin quyền*, cả ở khu Gia phả lẫn màn hình khởi động của app thường (`khoi-dong.js`) |
+| **Điểm dừng — ĐẠT, chạy thật** | Mời một tài khoản thật → tài khoản ấy đăng nhập, **thấy lời mời**, và **chưa đọc được cây**; bấm Nhận thì đọc được, vai đúng bằng vai được mời. Chủ dự án xác nhận cả hai chiều (Nhận/Từ chối) chạy đúng trên máy chủ thật |
+| **File đụng tới** | `luoc-do/14-loi-moi.sql` 0.2.0 (mục 6b) · `sb.js` 0.8.0 · `khoi-dong.js` 0.11.0 · `khu-gia-pha.js` 0.5.1 |
 | **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
+| **Chủ dự án bấm thử, đo ra hai việc còn thiếu** | ① Form Mời thiếu ô **mã người trong sơ đồ** dù `moi_vao_cay()` đã nhận tham số ấy từ đầu — vá ngay trong phiên (0.5.1). ② Ô email và ô mã người cần **tìm/gợi ý thật** (gõ vài chữ, hiện danh sách khớp), không phải ô gõ tay mù — dời sang b109, việc lớn hơn, cần hàm tìm kiếm mới ở máy chủ |
 
-### b109 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
+### b109 — Khu Tài khoản Toàn hệ thống + bảng sâu, cộng ô tìm/gợi ý thật cho Mời
+
+| | |
+|---|---|
+| **Làm** | Khu Tài khoản: tấm lọc thứ tư **Toàn hệ thống** *(chỉ Quản trị hệ thống)* — mọi tài khoản đã đăng ký, cột **Số cây**, bấm vào mở bảng sâu theo từng cây. `ds_tai_khoan_he_thong()` và `ds_cay_cua_tai_khoan()` đã có sẵn ở `14-loi-moi.sql`, chưa hàm nào lộ ra màn hình |
+| **Bảng sâu làm được gì** | Đúng năm việc đã có của `13` *(đổi vai · gắn mã người · tin cậy · gỡ · bàn giao)*, chỉ khác là chọn cây theo dòng — **không hàm việc nào phải viết mới**. Cộng nút bật/tắt cờ **Quản trị hệ thống**, và nút **Mời thẳng vào một cây** |
+| **Bốn việc chủ dự án chốt cho bảng sâu** | ① xem từng cây + năm việc của `13` · ② mời thẳng vào một cây · ③ **xoá hẳn tài khoản** *(gõ lại email để xác nhận, hàm `xoa_tai_khoan()` đã có ở `14`)* · ④ cột chỉ đọc: đăng ký lúc nào, đăng nhập gần nhất, email đã xác nhận chưa |
+| **⚠⚠ Việc mới, chốt 09/09/2026 khi chủ dự án bấm thử b108** | Ô **email** và ô **mã người** ở form Mời (`veFormMoi()`, `khu-gia-pha.js`) phải là ô **tìm/gợi ý thật**: gõ vài chữ, hiện danh sách người/tài khoản khớp — không phải ô gõ tay mù như bản 0.5.1. Email lọc trong `ds_tai_khoan_he_thong()` *(đã có, chỉ Quản trị hệ thống gọi được — chủ cây thường sẽ không có gợi ý, cần bàn cách hạ quyền hoặc chấp nhận vậy)*; mã người cần **hàm tìm kiếm MỚI** — tìm theo tên/mã trong một cây cụ thể, trả về ít dòng, KHÔNG nạp cả cây |
+| **⚠⚠ Đụng đúng ranh giới kiến trúc, đọc trước khi viết** | `THIET-KE-QUAN-TRI.md` mục 1: *"`QuanTri.html` cố ý KHÔNG nạp cây gia phả"*. Một hàm tìm người theo tên là mở một khe hẹp qua ranh giới ấy — phải là **tìm có lọc, giới hạn số dòng, security definer gác đúng quyền xem cây**, không phải nạp danh sách rồi lọc ở trình duyệt. Bàn kỹ hình dạng hàm này TRƯỚC khi viết, đừng đoán |
+| **Điểm dừng** | Bấm vào một tài khoản trong tấm lọc Toàn hệ thống → thấy đúng số cây, làm được cả 4 việc; gõ 2-3 chữ vào ô email/mã người ở form Mời → thấy gợi ý đúng, không phải gõ hết |
+| **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` |
+
+### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
 
 Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** trước.
 *"chủ cây có quyền yêu cầu xoá cây do mình tạo ra"* — chữ **yêu cầu** là nghĩa
@@ -636,7 +649,7 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | **Vì sao không xoá cứng ngay** | `CLAUDE.md` mục 7 — *"Không xoá cứng"*. Và **chưa ai từng thử KHÔI PHỤC từ bản sao lưu đêm** (treo từ 04/09), nên hôm nay sao lưu chưa phải đường lùi đã kiểm chứng |
 | **Phải hỏi chủ dự án** | Ai gọi `don_thung_rac()` — nút bấm tay trong khu Sao lưu, hay nối vào trigger Apps Script chạy đêm? Đừng tự chọn: đường thứ hai cho một việc phá dữ liệu chạy tự động lúc không ai ngồi xem |
 
-### b110 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
+### b111 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
 | | |
 |---|---|
@@ -646,7 +659,7 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại |
 | **⚠ Giữ nguyên** | Xem theo **ô**, duyệt theo **lần Lưu**. Không cho nhận từng ô |
 
-### b111 — Khu Sao lưu + Số đếm đối chiếu
+### b112 — Khu Sao lưu + Số đếm đối chiếu
 
 | | |
 |---|---|
@@ -655,7 +668,7 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | **Điểm dừng** | Số trên màn hình khớp với số đếm được trong file sao lưu đêm gần nhất |
 | **⚠ Không làm** | **Không vẽ nút Khôi phục.** Máy chủ chưa khôi phục được, vẽ nút là giả vờ giải quyết bằng giao diện |
 
-### b112 — Mã người xuyên cây
+### b113 — Mã người xuyên cây
 
 | | |
 |---|---|
@@ -665,7 +678,7 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | **⚠ Bẫy** | Cột không có tên trong `TEN_PERSON` thì mỗi lần lưu ghi `null` đè lên, **và không có gì báo lỗi** — `DU-LIEU.md` mục 3 điều 7 |
 | **Đứng cuối vì** | Chưa ai dựng cây thứ ba. Cột này chỉ có việc khi có người dựng cây cho bên nhà họ |
 
-### Sau b112 — chưa đặt số, chưa chốt
+### Sau b113 — chưa đặt số, chưa chốt
 
 Nhập GEDCOM/Excel qua máy chủ · **khôi phục thật** *(việc nguy hiểm nhất, và
 phải kiểm chứng bằng vòng `sao lưu → đổi dữ liệu → khôi phục → dữ liệu quay
@@ -1114,14 +1127,14 @@ lần `/ket-thuc`, đừng chép con số của lần trước.*
 |---|---|
 | ⏳ **`14-loi-moi.sql` CHƯA DÁN** — bảng tự kiểm cuối file phải ra **8 dòng ĐẠT**. Dán lại `11` thì bắt buộc dán lại `14` | `nhat-ky/b107-moi-vao-gia-pha.md` |
 | ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |
-| ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b109 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
+| ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b110 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
 | ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |
 | ⚠ **b103 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`, mới chỉ dán lên Staging. Đã soi lướt: `12` và `13` **không thêm luật ghi nào**, nên lỗ hổng loại b102 không lặp ở đó — nhưng chưa rà kỹ, chưa đo | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
 | ~~Chưa có màn hình quản lý thành viên~~ — ✓ **XONG b106 (09/09/2026)**: khu Tài khoản làm cả năm việc, xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md` | `nhat-ky/b106-khu-tai-khoan.md` |
 | ~~Tài khoản thử `thu-h9@…` chưa dọn~~ — ✓ **XONG 08/09/2026**, chủ dự án gỡ bằng chính màn hình mới | `nhat-ky/b106-khu-tai-khoan.md` |
 | ~~Cờ `tin_cay` chưa có màn hình~~ — ✓ **XONG b106**; trên màn hình gọi là **Tin cậy**, không phải "Ghi thẳng" | `nhat-ky/b106-khu-tai-khoan.md` |
-| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b110** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
+| ⚠ **Duyệt nội dung chưa xem được TRƯỚC/SAU từng ô** → **b111** *(sửa 07/09: dòng cũ ghi b103, lạc hậu từ lúc chuỗi bước viết lại 05/09; sửa lại 09/09 vì b109 mới chen vào đẩy số — xem b108)*. Chủ dự án nêu lại 07/09 khi nhìn cột *Việc* trên app thật | `THIET-KE-QUAN-TRI.md` khu 3 |
 | ~~NHIỀU CÂY: `chonGiaPha()` xoá người trung tâm mặc định của mọi cây~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 1 |
 | ~~NHIỀU CÂY: công tắc Hiển thị không lưu ở đâu~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 2 |
 | ~~NHIỀU CÂY: `limit 1` không `order by` ở 8 chỗ~~ — ✓ sửa ở b100, **đã dán 05/09/2026 21:38** | `luoc-do/10-sua-nhieu-cay.sql` mục 4 |

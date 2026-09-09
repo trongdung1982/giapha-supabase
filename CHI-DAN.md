@@ -49,8 +49,9 @@ nó chính là thứ nó sinh ra để tránh.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
    tầng quyền hệ thống + tạo cây mới đã dán cả hai Supabase (b102–b104); mã
    cây nay **3 chữ số** (`NPG473`). `13` đã dán 08/09 (b105), khu Tài khoản
-   chạy 08/09 (b106). ⚠ **`14-loi-moi.sql` VIẾT XONG, ĐO 46/46, CHƯA DÁN** —
-   dán nó rồi mới làm b108. Dán lại `11` thì bắt buộc dán lại `14`.
+   chạy 08/09 (b106). `14-loi-moi.sql` 0.2.0 đã dán cả hai Supabase, **b108
+   (mời vào gia phả) chạy thật 09/09** — chủ dự án xác nhận Nhận/Từ chối đúng.
+   Dán lại `11` hoặc `10` thì bắt buộc dán lại `14`.
 
 ## Quy ước khung tài liệu này
 

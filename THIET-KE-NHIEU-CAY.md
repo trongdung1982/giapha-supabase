@@ -579,7 +579,12 @@ người thì tắt lẫn nhau về không được. Phép đo b107 phải có m
 ấy, và câu trả lời là **đếm trước khi tắt**: còn đúng một cờ đang bật thì hàm
 từ chối. Khoá cả nhà rồi vứt chìa là hỏng theo kiểu chỉ sửa được bằng SQL tay.
 
-### 6. ✓ CHỐT 09/09/2026 (b108) — XOÁ GIA PHẢ: HAI CHỮ KÝ + THÙNG RÁC 30 NGÀY
+### 6. ✓ CHỐT 09/09/2026 (b110) — XOÁ GIA PHẢ: HAI CHỮ KÝ + THÙNG RÁC 30 NGÀY
+
+<!-- ⚠ Nhãn bước sửa 09/09 (ket-thuc b108): mục này viết ra khi "xoá gia phả"
+     còn mang số b108, trước khi b108 đổi nghĩa thành "mời vào gia phả" và
+     chuỗi bước sau nó dồn thêm một nấc (b109→b110→…→b113). KE-HOACH.md là
+     nguồn đúng cho số bước; xem bảng Đính chính ở b108 nếu thấy lệch nữa. -->
 
 Chủ dự án chốt: *"chủ cây có quyền yêu cầu xoá cây do mình tạo ra"* — và chữ
 **yêu cầu** là nghĩa đen: **chủ cây xin, Quản trị hệ thống duyệt.** Cùng khuôn
@@ -633,6 +638,6 @@ phần mềm được phép `delete from public.trees`)*.
 
 ⚠ Ai gọi `don_thung_rac()` thì **chưa chốt**. Không có cron trong Supabase gói
 đang dùng; hai đường: nút trong khu Sao lưu để bấm tay, hoặc nối vào trigger
-Apps Script chạy đêm đã có (`sao-luu/SaoLuu.gs`). Hỏi chủ dự án ở b108, đừng
+Apps Script chạy đêm đã có (`sao-luu/SaoLuu.gs`). Hỏi chủ dự án ở b110, đừng
 tự chọn — đường thứ hai làm một việc phá dữ liệu chạy tự động lúc không ai
 ngồi xem.

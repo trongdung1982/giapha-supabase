@@ -55,6 +55,7 @@ thường, không phải thiếu sót.
 | 105 | 08/09/2026 | 6 hàm quản lý tài khoản của một cây, gồm bàn giao cây; luật không ai tự đặt quyền cho mình | `b105-quan-ly-thanh-vien.md` |
 | 106 | 09/09/2026 | Khu Tài khoản chạy: bảng, ba tấm lọc, năm việc đổi quyền; dời khối Đơn chờ duyệt khỏi Cài đặt | `b106-khu-tai-khoan.md` |
 | 107 | 09/09/2026 | Mời vào gia phả, cờ Quản trị hệ thống, xoá tài khoản — 8 hàm máy chủ, đo 59/59, chưa dán | `b107-moi-vao-gia-pha.md` |
+| 108 | 09/09/2026 | Mời vào gia phả CHẠY THẬT: Nhận/Từ chối ngay màn hình khởi động; vá `trang_thai_cua_toi()` | `b108-moi-nhan-tu-choi.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
