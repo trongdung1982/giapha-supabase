@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 16:35 · Bước gần nhất: **b109c** · Việc kế tiếp: **b110***
+*Cập nhật 09/09/2026 17:00 · Bước gần nhất: **b109d** · Việc kế tiếp: **b110***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -676,7 +676,21 @@ trước trên máy chủ thật**. Không đụng SQL.
 | **⚠ Ảnh chụp lừa được một lần** | `kq-15` cho thấy bảng mất tiêu đề cột → tôi đọc ra *"sticky hỏng vì `border-collapse:collapse`"*, một chuyện có thật và **sai ở đây**. Đo: `position` = sticky, lệch 0px, ô cuộn đứng yên. Thứ trôi là **cả trang**, do `scrollIntoView()` kéo bảng việc vào tầm nhìn. **Một tấm ảnh, hai nguyên nhân khác hẳn nhau** — ảnh nói "trông sai", không nói "sai ở đâu" |
 | **Đã đo** | `/kiem-tra` **9/9** *(`domains/` 0 file khác)* · `kiem-trang-quan-tri.mjs` **154/154** · **`do-cuon-bang.mjs` (mới)** năm câu sạch: bảng tự cuộn · tiêu đề dính lệch 0px · bảng việc cách đáy khung **14px** · ô cuộn không tự trôi · `do-goi-y.mjs` ba câu sạch · **17 ảnh nhìn bằng mắt** |
 | **File đụng tới** | `khu-thanh-vien.js` 0.5.0 · `khu-tai-khoan-he-thong.js` 0.4.0 · *(ngoài repo)* `kiem-thu/do-cuon-bang.mjs` + `.html` **mới** · `sb-gia.mjs` 0.6.0 *(`?nhieu=30`)* · `xem-khung-quan-tri.mjs` *(17 ảnh, kq-12→kq-16 là của bước này)* |
-| **⏳ Điểm dừng** | Chủ dự án bấm ô Vai trò ở **cả hai** tấm lọc trên máy chủ thật |
+| **✓ Điểm dừng** | Chủ dự án bấm ô Vai trò trên máy chủ thật — và trong lúc bấm, đổi ý một câu, dẫn thẳng sang b109d |
+
+### ✓ b109d — Câu dẫn tấm *Toàn hệ thống* nói CHÍNH MÌNH đang đăng nhập bằng ai — MÃ XONG
+
+Vòng thứ tư trong cùng ngày. Không đụng SQL — trường mới đọc qua RLS đã có
+sẵn từ `11-quyen-he-thong.sql`.
+
+| | |
+|---|---|
+| **Chủ dự án bấm thử b109c, đổi ý một câu** | Câu dẫn của tấm *Toàn hệ thống* (vừa viết lại ở b109c) đổi hẳn nội dung: không còn mô tả khu này liệt kê gì, mà nói **tên, email, mã tài khoản của CHÍNH người đang đăng nhập** |
+| **⚠ Vì sao đáng đổi** | Cờ Quản trị hệ thống có thể cấp cho **nhiều** tài khoản, và đây là màn hình DUY NHẤT sửa được cờ ấy cho người khác — nhầm tài khoản đang đăng nhập ở đúng màn hình này là hậu quả nặng nhất trong cả app |
+| **Làm gì** | `sb.js` 0.12.0 *(`layPhien()` thêm `hoTen`, đọc thẳng bảng `tai_khoan` qua RLS `for select … using (user_id = auth.uid())` của `11` mục 1 — KHÔNG hàm `security definer` mới)* · `khu-thanh-vien.js` 0.6.0 *(`danHeThong(phien)` thay hằng số `DAN_HE_THONG`)* |
+| **Đã đo** | `kiem-trang-quan-tri.mjs` **154/154** · `/kiem-tra` **9/9** · ảnh `kq-7.png` nhìn bằng mắt: *"Bạn đang đăng nhập bằng Nguyễn Trọng Dũng · trongdung1982@gmail.com · mã TK7Q2."* |
+| **File đụng tới** | `sb.js` 0.12.0 · `khu-thanh-vien.js` 0.6.0 · *(ngoài repo)* `sb-gia.mjs` 0.7.0 |
+| **⏳ Điểm dừng** | Chủ dự án bấm thử câu dẫn mới trên máy chủ thật |
 
 ### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
 

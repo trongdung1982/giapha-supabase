@@ -6,7 +6,15 @@
 //            GIỮ năm việc ấy để file kia dùng lại nguyên vẹn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-tai-khoan-he-thong (động)
-// Phiên bản: 0.5.0 · Cập nhật: 09/09/2026 16:10 (b109c)
+// Phiên bản: 0.6.0 · Cập nhật: 09/09/2026 17:10 (b109d)
+//            0.6.0 câu dẫn của tấm *Toàn hệ thống* đổi hẳn: không còn mô tả
+//            khu này liệt kê gì, mà nói **CHÍNH MÌNH đang đăng nhập bằng tài
+//            khoản nào** — tên, email, mã. Chủ dự án bấm thử b109c trên máy
+//            chủ thật rồi đổi ý cùng ngày: cờ Quản trị hệ thống có thể cấp
+//            cho nhiều tài khoản, và đây là màn hình sửa được cờ ấy cho người
+//            khác — nhầm tài khoản đang đăng nhập ở đây là nhầm chỗ nguy
+//            hiểm nhất app. `layPhien()` (`sb.js` 0.12.0) nay mang thêm
+//            `hoTen`, đọc thẳng bảng `tai_khoan` qua RLS sẵn có, không hàm mới.
 //            0.5.0 cột **Vai trò** của ba tấm lọc cây nay BẤM ĐƯỢC: nó mở
 //            `veBangVaiTroTungCay()` — một bảng hai cột *gia phả · vai trò*,
 //            bấm tiếp vào vai trò là vào thẳng bảng sửa quyền của cây ấy. Cùng
@@ -129,12 +137,27 @@ const DAN_CAY =
 // ⚠ CÂU NÀY NÓI NGƯỜI TA BẤM VÀO ĐÂU, nên nó phải đổi cùng lúc với chỗ bấm.
 //   Đã sai hai lần liên tiếp: bản b109 nói "Bấm Mở" sau khi nút Mở bị bỏ, bản
 //   b109b liệt kê bốn việc trong bảng sâu — mà bốn việc ấy tự hiện ra ngay khi
-//   mở. Chủ dự án cắt còn đúng phần không đoán được từ màn hình (09/09/2026):
-//   một dòng ở đây gồm những gì, và tấm lọc này khác ba tấm kia ở chỗ nào.
-//   Chỗ bấm thì để chú thích nhỏ dưới tiêu đề cột nói, ngay trên chính nó.
-const DAN_HE_THONG =
-  'Tên, email, mã tài khoản của MỌI tài khoản đã đăng ký phần mềm này — kể cả ' +
-  'người chưa vào gia phả nào.';
+//   mở. Chủ dự án cắt còn đúng phần không đoán được từ màn hình b109c
+//   (09/09/2026): một dòng ở đây gồm những gì, và tấm lọc này khác ba tấm kia
+//   ở chỗ nào — nhưng bấm thử trên máy chủ thật xong, chủ dự án đổi ý lần
+//   nữa (09/09/2026, cùng ngày): **thứ đáng đọc nhất ở đầu tấm lọc này không
+//   phải một câu mô tả, mà là biết CHÍNH MÌNH đang đăng nhập bằng tài khoản
+//   nào.** Có lý do thật: cờ Quản trị hệ thống có thể cấp cho NHIỀU tài
+//   khoản, và đây là màn hình duy nhất sửa được cờ ấy cho người khác — nhầm
+//   tài khoản đang đăng nhập ở đây là nhầm chỗ nguy hiểm nhất trong cả app.
+//
+// ⚠ Vì sao là HÀM chứ không phải HẰNG SỐ như `DAN_CAY`: nội dung của nó phụ
+//   thuộc `phien`, không cố định.
+function danHeThong(phien) {
+  const phan = [];
+  if (phien.hoTen) phan.push(phien.hoTen);
+  if (phien.email) phan.push(phien.email);
+  if (phien.maNgan) phan.push('mã ' + phien.maNgan);
+  // `phan.length` gần như không bao giờ rỗng — người đọc được tới đây đã
+  // đăng nhập, tức có email. Vẫn phòng hờ: trống thì không vẽ hàng ấy,
+  // `CLAUDE.md` mục 7, thay vì để một câu "Bạn: " cụt lủn.
+  return phan.length ? 'Bạn đang đăng nhập bằng ' + phan.join(' · ') + '.' : '';
+}
 
 /** Thẻ `<p>` chứa câu dẫn, giữ lại để `nap()` đổi chữ theo tấm lọc. */
 let oGioiThieu = null;
@@ -208,7 +231,7 @@ async function nap(than, phien) {
   if (locDangXem === 'hethong' && !coHeThong) locDangXem = 'tatca';
 
   if (oGioiThieu) {
-    oGioiThieu.textContent = locDangXem === 'hethong' ? DAN_HE_THONG : DAN_CAY;
+    oGioiThieu.textContent = locDangXem === 'hethong' ? danHeThong(phien) : DAN_CAY;
   }
 
   if (locDangXem === 'hethong') return napHeThong(than, phien);

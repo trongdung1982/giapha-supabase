@@ -5,7 +5,13 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.11.0 · Cập nhật: 09/09/2026 14:05 (b109b)
+// Phiên bản: 0.12.0 · Cập nhật: 09/09/2026 17:10 (b109d)
+//            0.12.0 `layPhien()` đọc thêm `hoTen` — họ tên của TÀI KHOẢN đang
+//            đăng nhập (không phải người trong sơ đồ). Đọc thẳng bảng
+//            `tai_khoan` bằng RLS `for select … using (user_id = auth.uid())`
+//            của `11` mục 1, KHÔNG qua hàm `security definer` nào — luật ấy
+//            đã cho một người đọc đúng dòng của chính mình từ trước b109d,
+//            chỉ chưa ai hỏi tới.
 //            0.11.0 `dsTaiKhoanHeThong()` đọc thêm `vaiCaoNhat` — vai cao
 //            nhất tài khoản ấy đang có ở ĐÂU ĐÓ. ⚠ Một dòng TÓM TẮT, không
 //            phải câu trả lời đầy đủ: quyền ở app này gắn với TỪNG cây.
@@ -162,7 +168,7 @@ export async function nguoiDangNhap() {
  *
  * @returns {Promise<{daDangNhap:boolean, email:string, vaiTro:string|null,
  *   docDuoc:boolean, suaDuoc:boolean, treeId:string|null,
- *   laQuanTriHeThong:boolean, maNgan:string,
+ *   laQuanTriHeThong:boolean, maNgan:string, hoTen:string,
  *   nguoiTrungTamMacDinh:string|null, hienNgayGio:boolean,
  *   tenHo:string, nguoiQuanLy:string,
  *   trangThai?:string, soCay?:number,
@@ -173,7 +179,7 @@ export async function layPhien() {
   const nen = {
     daDangNhap: false, email: '', vaiTro: null,
     docDuoc: false, suaDuoc: false, treeId: null,
-    laQuanTriHeThong: false, maNgan: '',
+    laQuanTriHeThong: false, maNgan: '', hoTen: '',
     nguoiTrungTamMacDinh: null, hienNgayGio: false,
     tenHo: TEN_HO, nguoiQuanLy: NGUOI_QUAN_LY, loi: null,
   };
@@ -192,19 +198,28 @@ export async function layPhien() {
   // người đang gọi. Đó là cả điểm của cuộc chuyển nhà — app không tự lọc, và
   // vì thế app không thể lọc sai.
   //
-  // ⚠ Ba câu hỏi đi CÙNG MỘT LƯỢT (b103). Hai câu sau thuộc tầng người, không
-  //   thuộc cây nào: có phải Quản trị hệ thống không, và mã ngắn của tài khoản
-  //   là gì. Hỏi nối tiếp thì mỗi lần mở app tốn thêm hai vòng mạng cho hai
-  //   con số nhỏ xíu — mà `layPhien()` chạy ở đầu MỌI trang.
-  const [{ data: ds, error }, { data: coQuyenHT }, { data: maTk }] = await Promise.all([
-    k.from('tree_members').select('tree_id, role').eq('user_id', nguoi.id),
-    k.rpc('la_quan_tri_he_thong'),
-    k.rpc('ma_tai_khoan_cua_toi'),
-  ]);
+  // ⚠ BỐN câu hỏi đi CÙNG MỘT LƯỢT (b103, +1 ở b109d). Ba câu sau thuộc tầng
+  //   người, không thuộc cây nào: có phải Quản trị hệ thống không, mã ngắn của
+  //   tài khoản là gì, và họ tên đã điền (nếu có). Hỏi nối tiếp thì mỗi lần mở
+  //   app tốn thêm ba vòng mạng cho ba mẩu tin nhỏ xíu — mà `layPhien()` chạy
+  //   ở đầu MỌI trang.
+  //
+  // ⚠ `hoTen` đọc THẲNG bảng `tai_khoan`, không qua hàm `security definer`
+  //   nào — luật RLS `for select … using (user_id = auth.uid())` của `11`
+  //   mục 1 đã cho một người đọc đúng dòng của chính mình từ trước, khác hẳn
+  //   `dsTaiKhoanHeThong()` vốn chỉ Quản trị hệ thống gọi được.
+  const [{ data: ds, error }, { data: coQuyenHT }, { data: maTk }, { data: hangTk }] =
+    await Promise.all([
+      k.from('tree_members').select('tree_id, role').eq('user_id', nguoi.id),
+      k.rpc('la_quan_tri_he_thong'),
+      k.rpc('ma_tai_khoan_cua_toi'),
+      k.from('tai_khoan').select('ho_ten').eq('user_id', nguoi.id).maybeSingle(),
+    ]);
 
   const laQuanTriHeThong = Boolean(coQuyenHT);
   const maNgan = maTk || '';
-  const nenNguoi = { ...nen, laQuanTriHeThong, maNgan };
+  const hoTen = (hangTk && hangTk.ho_ten) || '';
+  const nenNguoi = { ...nen, laQuanTriHeThong, maNgan, hoTen };
 
   if (error) {
     return { ...nenNguoi, daDangNhap: true, email: nguoi.email, loi: cauLoi(error) };
