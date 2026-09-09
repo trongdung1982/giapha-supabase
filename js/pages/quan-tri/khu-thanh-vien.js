@@ -6,7 +6,14 @@
 //            GIỮ năm việc ấy để file kia dùng lại nguyên vẹn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-tai-khoan-he-thong (động)
-// Phiên bản: 0.6.0 · Cập nhật: 09/09/2026 17:10 (b109d)
+// Phiên bản: 0.7.0 · Cập nhật: 09/09/2026 17:12 (b109e)
+//            0.7.0 dòng danh tính (`dongDanhTinh()`, b109d) nay hiện Ở CẢ BỐN
+//            TẤM LỌC, không riêng *Toàn hệ thống* — chủ dự án chỉ ra bất nhất
+//            ngay sau khi bấm thử b109d: ba tấm *Đang chờ · Đã duyệt · Tất cả*
+//            vẫn không nói ai đang xem, dù rủi ro "nhầm tài khoản đang đăng
+//            nhập khi đổi quyền" giống hệt ở cả bốn. Tách thành hai `<p>` độc
+//            lập: dòng danh tính cố định, câu dẫn theo tấm lọc (`DAN_CAY`) chỉ
+//            hiện ở ba tấm cây, ẩn hẳn ở *Toàn hệ thống*.
 //            0.6.0 câu dẫn của tấm *Toàn hệ thống* đổi hẳn: không còn mô tả
 //            khu này liệt kê gì, mà nói **CHÍNH MÌNH đang đăng nhập bằng tài
 //            khoản nào** — tên, email, mã. Chủ dự án bấm thử b109c trên máy
@@ -128,27 +135,26 @@ const VAI_CAP_DUOC = ['quan_tri', 'sua', 'xem'];
 //   mình đang nhìn một phần.
 let locDangXem = 'tatca';
 
-/** Câu dẫn dưới tựa khu — đổi theo tấm lọc đang mở. */
+/** Câu dẫn dưới tựa khu — đổi theo tấm lọc đang mở. Vắng ở tấm *Toàn hệ
+ *  thống*: dòng danh tính ngay bên trên đã là điều đáng nói nhất ở đó, và
+ *  đầu cột của bảng tự nói phần còn lại (`bấm để xem/sửa chi tiết`…). */
 const DAN_CAY =
   'Những tài khoản đăng nhập có tên trong gia phả đang mở. Vai trò gắn cho ' +
   'TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể quản ' +
   'trị gia phả mà không có mặt trong họ.';
 
-// ⚠ CÂU NÀY NÓI NGƯỜI TA BẤM VÀO ĐÂU, nên nó phải đổi cùng lúc với chỗ bấm.
-//   Đã sai hai lần liên tiếp: bản b109 nói "Bấm Mở" sau khi nút Mở bị bỏ, bản
-//   b109b liệt kê bốn việc trong bảng sâu — mà bốn việc ấy tự hiện ra ngay khi
-//   mở. Chủ dự án cắt còn đúng phần không đoán được từ màn hình b109c
-//   (09/09/2026): một dòng ở đây gồm những gì, và tấm lọc này khác ba tấm kia
-//   ở chỗ nào — nhưng bấm thử trên máy chủ thật xong, chủ dự án đổi ý lần
-//   nữa (09/09/2026, cùng ngày): **thứ đáng đọc nhất ở đầu tấm lọc này không
-//   phải một câu mô tả, mà là biết CHÍNH MÌNH đang đăng nhập bằng tài khoản
-//   nào.** Có lý do thật: cờ Quản trị hệ thống có thể cấp cho NHIỀU tài
-//   khoản, và đây là màn hình duy nhất sửa được cờ ấy cho người khác — nhầm
-//   tài khoản đang đăng nhập ở đây là nhầm chỗ nguy hiểm nhất trong cả app.
+// ⚠ HIỆN Ở CẢ BỐN TẤM LỌC, không riêng *Toàn hệ thống* — sửa 09/09/2026
+//   (b109e) sau khi chủ dự án chỉ ra bất nhất: b109d mới sửa mỗi tấm *Toàn hệ
+//   thống*, còn ba tấm *Đang chờ · Đã duyệt · Tất cả* vẫn không nói ai đang
+//   xem. Rủi ro ban đầu viện dẫn cho *Toàn hệ thống* — nhầm tài khoản đang
+//   đăng nhập khi đổi quyền — **ĐÚNG Y HỆT ở ba tấm kia**: cả ba đều mở được
+//   cùng bảng việc năm nút (đổi vai, gắn người, tin cậy, gỡ, bàn giao). Không
+//   có lý do gì để chỉ một trong bốn tấm nói ra ai đang cầm chuột.
 //
-// ⚠ Vì sao là HÀM chứ không phải HẰNG SỐ như `DAN_CAY`: nội dung của nó phụ
-//   thuộc `phien`, không cố định.
-function danHeThong(phien) {
+// ⚠ Đứng RIÊNG một dòng, KHÔNG gộp vào `DAN_CAY`/mô tả tấm lọc: danh tính
+//   không đổi theo tấm lọc đang mở, còn `DAN_CAY` thì có. Gộp chung một câu
+//   là buộc câu ấy phải viết lại mỗi khi một trong hai nửa đổi.
+function dongDanhTinh(phien) {
   const phan = [];
   if (phien.hoTen) phan.push(phien.hoTen);
   if (phien.email) phan.push(phien.email);
@@ -159,7 +165,10 @@ function danHeThong(phien) {
   return phan.length ? 'Bạn đang đăng nhập bằng ' + phan.join(' · ') + '.' : '';
 }
 
-/** Thẻ `<p>` chứa câu dẫn, giữ lại để `nap()` đổi chữ theo tấm lọc. */
+/** Thẻ `<p>` chứa dòng danh tính — CỐ ĐỊNH, không đổi theo tấm lọc. */
+let oDanhTinh = null;
+
+/** Thẻ `<p>` chứa câu dẫn theo TẤM LỌC, giữ lại để `nap()` đổi chữ. */
 let oGioiThieu = null;
 
 // ============================================================
@@ -179,11 +188,19 @@ export async function mountKhuThanhVien(el, phienVao) {
   h.className = 'qt-tua';
   h.textContent = 'Tài khoản & quyền';
 
+  // ⚠ Dòng danh tính đứng TRƯỚC câu dẫn, và không đổi theo tấm lọc — nó trả
+  //   lời "ai đang xem", chứ không phải "khu này liệt kê gì". Rỗng lúc mới vẽ
+  //   (chưa có `phien`); `nap()` điền chữ ngay khi đọc xong.
+  const ai = document.createElement('p');
+  ai.style.cssText = 'margin:0 0 6px;color:#2a2622;font-weight:600;line-height:1.5';
+  oDanhTinh = ai;
+
   // ⚠ Câu dẫn phải ĐỔI THEO tấm lọc đang mở, không phải viết một lần rồi thôi.
   //   Ba tấm đầu liệt kê tài khoản của CÂY ĐANG MỞ; tấm thứ tư liệt kê cả sổ
-  //   đăng ký. Để nguyên câu cũ khi sang tấm thứ tư là để một câu SAI đứng
-  //   ngay trên một cái bảng đúng — và người đọc tin câu chữ trước khi tin
-  //   cái bảng.
+  //   đăng ký (và ẩn hẳn câu này — dòng danh tính bên trên đã đủ, xem
+  //   `dongDanhTinh()`). Để nguyên câu cũ khi sang tấm thứ tư là để một câu
+  //   SAI đứng ngay trên một cái bảng đúng — và người đọc tin câu chữ trước
+  //   khi tin cái bảng.
   const dan = document.createElement('p');
   dan.textContent = DAN_CAY;
   dan.style.cssText = 'margin:0 0 16px;color:#6a625a;line-height:1.5';
@@ -193,7 +210,7 @@ export async function mountKhuThanhVien(el, phienVao) {
   than.textContent = 'Đang đọc danh sách…';
   than.style.cssText = 'color:#8a8078';
 
-  el.append(h, dan, than);
+  el.append(h, ai, dan, than);
 
   const phien = phienVao || await layPhien();
   if (phien.loi) {
@@ -230,8 +247,17 @@ async function nap(than, phien) {
   // đừng để màn hình đứng ở một tấm lọc không còn tồn tại.
   if (locDangXem === 'hethong' && !coHeThong) locDangXem = 'tatca';
 
+  // Danh tính hiện Ở CẢ BỐN TẤM LỌC — không phụ thuộc `locDangXem`.
+  if (oDanhTinh) oDanhTinh.textContent = dongDanhTinh(phien);
+
+  // Câu dẫn theo tấm lọc: ẩn hẳn ở *Toàn hệ thống* (dòng danh tính bên trên
+  // đã đủ), hiện `DAN_CAY` ở ba tấm cây. `display:none` chứ không chỉ để
+  // trống — một `<p>` rỗng vẫn ăn `margin-bottom:16px`, để lại một khoảng
+  // trắng vô cớ ngay dưới dòng danh tính.
   if (oGioiThieu) {
-    oGioiThieu.textContent = locDangXem === 'hethong' ? danHeThong(phien) : DAN_CAY;
+    const co = locDangXem !== 'hethong';
+    oGioiThieu.textContent = co ? DAN_CAY : '';
+    oGioiThieu.style.display = co ? '' : 'none';
   }
 
   if (locDangXem === 'hethong') return napHeThong(than, phien);

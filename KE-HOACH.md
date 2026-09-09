@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 17:00 · Bước gần nhất: **b109d** · Việc kế tiếp: **b110***
+*Cập nhật 09/09/2026 17:12 · Bước gần nhất: **b109e** · Việc kế tiếp: **b110***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -690,7 +690,20 @@ sẵn từ `11-quyen-he-thong.sql`.
 | **Làm gì** | `sb.js` 0.12.0 *(`layPhien()` thêm `hoTen`, đọc thẳng bảng `tai_khoan` qua RLS `for select … using (user_id = auth.uid())` của `11` mục 1 — KHÔNG hàm `security definer` mới)* · `khu-thanh-vien.js` 0.6.0 *(`danHeThong(phien)` thay hằng số `DAN_HE_THONG`)* |
 | **Đã đo** | `kiem-trang-quan-tri.mjs` **154/154** · `/kiem-tra` **9/9** · ảnh `kq-7.png` nhìn bằng mắt: *"Bạn đang đăng nhập bằng Nguyễn Trọng Dũng · trongdung1982@gmail.com · mã TK7Q2."* |
 | **File đụng tới** | `sb.js` 0.12.0 · `khu-thanh-vien.js` 0.6.0 · *(ngoài repo)* `sb-gia.mjs` 0.7.0 |
-| **⏳ Điểm dừng** | Chủ dự án bấm thử câu dẫn mới trên máy chủ thật |
+| **✓ Điểm dừng** | Chủ dự án bấm thử ngay, và chỉ ra bất nhất trong vài phút — dẫn thẳng sang b109e |
+
+### ✓ b109e — Dòng danh tính hiện Ở CẢ BỐN tấm lọc — MÃ XONG
+
+Vòng thứ năm trong ngày. Không đụng SQL — `hoTen` đã đọc được từ b109d.
+
+| | |
+|---|---|
+| **Chủ dự án chỉ ra** | *"bạn mới sửa ở tab toàn hệ thống, tab đang chờ, đã duyệt, tất cả chưa sửa"* — dòng danh tính chỉ hiện ở tấm *Toàn hệ thống* |
+| **⚠ Vì sao đây là hoàn tất, không phải việc mới** | Lý do b109d viện dẫn — nhầm tài khoản đang đăng nhập khi đổi quyền — **áp dụng y hệt** ở ba tấm cây: cả ba đều mở được cùng bảng việc năm nút (đổi vai, gắn người, tin cậy, gỡ, bàn giao). Viết đúng lý do rồi chỉ áp dụng cho một phần tư màn hình là để lý do ấy đứng sai chỗ |
+| **Làm gì** | Tách thành hai `<p>` độc lập: dòng danh tính (cố định, mọi tấm lọc) + `DAN_CAY` (chỉ ba tấm cây, **ẩn hẳn** bằng `display:none` ở *Toàn hệ thống* — không chỉ để trống, vì `<p>` rỗng vẫn ăn `margin-bottom` để lại khoảng trắng vô cớ) |
+| **Đã đo** | `kiem-trang-quan-tri.mjs` **154/154** · bốn phép `/kiem-tra` chạy tay · ảnh `kq-4.png` (tab Tất cả, hai dòng cùng hiện) và `kq-7.png` (tab Toàn hệ thống, không khoảng trắng thừa) nhìn bằng mắt |
+| **File đụng tới** | `khu-thanh-vien.js` 0.7.0 |
+| **⏳ Điểm dừng** | Chủ dự án bấm thử cả bốn tấm lọc trên máy chủ thật |
 
 ### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
 

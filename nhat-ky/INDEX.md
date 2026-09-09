@@ -60,6 +60,7 @@ thường, không phải thiếu sót.
 | 109b | 09/09/2026 | Ô gợi ý email/mã người ở ba màn hình; cột `ho_ten` và cột Quyền; vá cột tên luôn hiện mã | `b109b-o-goi-y.md` |
 | 109c | 09/09/2026 | Ô Vai trò mở bảng hai cột *cây · vai trò*, bấm tiếp là sửa; bảng dài tự cuộn trong khung | `b109c-o-vai-tro.md` |
 | 109d | 09/09/2026 | Câu dẫn tấm Toàn hệ thống nói CHÍNH MÌNH đang đăng nhập bằng ai; `layPhien()` thêm `hoTen` | `b109d-cau-dan-dang-nhap.md` |
+| 109e | 09/09/2026 | Dòng danh tính hiện Ở CẢ BỐN tấm lọc, không riêng Toàn hệ thống — sửa bất nhất chủ dự án chỉ ra | `b109e-danh-tinh-ca-bon-tam.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước
