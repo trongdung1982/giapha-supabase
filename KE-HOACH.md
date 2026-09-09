@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 13:40 · Bước gần nhất: **b109b** · Việc kế tiếp: **b110***
+*Cập nhật 09/09/2026 16:35 · Bước gần nhất: **b109c** · Việc kế tiếp: **b110***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -643,7 +643,7 @@ trước, trộn vào đây là một phiên không có điểm dừng.
 | **Vá thêm hai thứ bắt gặp trên đường** | `kiem-thu/sb-gia.mjs` (ngoài repo) **thiếu ba cửa Mời của b108** → trang giả để nhìn bằng mắt đã TRẮNG từ hôm qua mà không ai biết; nay 0.3.0. Và `14-loi-moi.sql` 0.2.1 thêm `drop function if exists` trước hai hàm trả bảng — bài học 42P13, **không đổi hành vi, không bắt buộc dán lại hôm nay** |
 | **File đụng tới** | `sb.js` 0.9.0 · `khu-thanh-vien.js` 0.3.0 · `khu-tai-khoan-he-thong.js` 0.1.0 *(mới)* · `luoc-do/14-loi-moi.sql` 0.2.1 · `kiem-thu/kiem-trang-quan-tri.mjs` 0.4.0 *(154 phép)* · `../kiem-thu/sb-gia.mjs` 0.3.0 · `../kiem-thu/xem-khung-quan-tri.mjs` *(12 ảnh, kq-7→kq-11 là của bước này)* |
 
-### ✓ b109b — Ô tìm/gợi ý thật cho form Mời — MÃ XONG, ⏳ CHỜ DÁN SQL
+### ✓ b109b — Ô tìm/gợi ý thật cho form Mời — XONG, SQL đã dán cả hai máy chủ
 
 | | |
 |---|---|
@@ -657,8 +657,26 @@ trước, trộn vào đây là một phiên không có điểm dừng.
 | **Đã đo** | Bàn thử SQL: bảng tự kiểm **13/13 ĐẠT** · `do-b109b.mjs` **40/40 ĐẠT** (22 hàng rào + 3 phép kiểm chứng ngược), chạy hai lần cùng kết quả. Trình duyệt: `/kiem-tra` **9/9** · `kiem-trang-quan-tri.mjs` **154/154** · `do-goi-y.mjs` ba câu sạch (0 cặp đè nhau · 0 thứ rơi khỏi mép · danh sách gợi ý mở đúng chỗ, nằm trọn trong cửa sổ) · 13 ảnh nhìn bằng mắt |
 | **✓ Đã dán 09/09/2026** | Chủ dự án dán `15` bản **0.1.0** lên cả hai Supabase, tự kiểm ĐẠT. Đã điền đủ họ tên. Bấm thử: bật/tắt cờ Quản trị hệ thống chạy; ô tìm người để mời **hiện đúng tên và email** |
 | **Chủ dự án đặt thêm hai việc, làm luôn trong phiên (0.2.0)** | ① Cột **Quyền** trong tấm lọc *Toàn hệ thống* — hiện vai **cao nhất**, bấm được để xem chi tiết theo từng cây *(vì quyền gắn với từng cây, một dòng tóm tắt mà không mở được đường xuống chi tiết là bắt người ta tin một nửa sự thật)*. ② **Bỏ cột nút riêng**, gộp chỗ bấm vào chính ô Tài khoản, kèm chú thích nhỏ dưới tiêu đề cột |
-| **⏳ CÒN LẠI — dán LẠI `15-tim-kiem.sql` bản 0.2.0** | Chỉ đổi một thứ: `ds_tai_khoan_he_thong()` thêm cột `vai_cao_nhat`. ⚠ Đổi danh sách cột nên `drop function` trước là bắt buộc (42P13) — file đã có sẵn. Dán đè an toàn, không mất dữ liệu. Tự kiểm nay ra **13 dòng ĐẠT** |
-| **Điểm dừng** | Gõ 2–3 chữ vào ô email/mã người → thấy gợi ý đúng, không phải gõ hết |
+| **✓ Đã dán bản 0.2.0 — 09/09/2026** | Chủ dự án dán lại `15` (thêm cột `vai_cao_nhat` cho `ds_tai_khoan_he_thong()`) trên cả hai Supabase, **tự kiểm 13 dòng ĐẠT** |
+| **Điểm dừng** | ✓ Gõ 2–3 chữ vào ô email/mã người → thấy gợi ý đúng, không phải gõ hết |
+
+### ✓ b109c — Ô Vai trò mở bảng *cây · vai trò*; bảng dài tự cuộn — MÃ XONG
+
+Vòng thứ ba trong cùng ngày, và cũng bắt đầu bằng chủ dự án **bấm thử bản
+trước trên máy chủ thật**. Không đụng SQL.
+
+| | |
+|---|---|
+| **Chủ dự án đặt bốn việc** | ① Bấm ô Vai trò thì hiện **bảng một bên tên cây, một bên vai trò**, bấm tiếp vào vai trò là **sửa được**. ② Cột *Quyền* đổi tên thành **Vai trò** cho khớp cột cùng nghĩa ở tấm *Tất cả* — và ô Vai trò ở tấm ấy cũng phải mở được bảng tương tự. ③ **Danh sách dài thì bảng thông tin ở dưới bị đẩy xuống thật sâu, phải kéo rất nhiều.** ④ Câu dẫn của tấm *Toàn hệ thống* rút gọn |
+| **⚠ Vì sao ô Vai trò không mở bảng sâu nữa** | b109b cho nó mở **đúng cái bảng sâu mà ô Tài khoản mở** — hai chỗ bấm cạnh nhau làm một việc. Nay tách: ô Vai trò là **đường ngắn nhất tới việc sửa quyền**, ô Tài khoản là đường tới mọi thứ về tài khoản ấy. Hai câu hỏi, hai chỗ bấm |
+| **⚠ Vì sao bảng hai cột nằm ở `khu-thanh-vien.js`** | Về nghĩa nó thuộc file sổ đăng ký, nhưng file ấy `import` **tĩnh** `khu-thanh-vien.js`; chiều ngược chỉ đi được bằng `import()` động. Bắt một cú bấm chờ tải cả mô-đun sổ đăng ký để vẽ một bảng hai cột là đắt vô cớ — với người **không** phải Quản trị hệ thống thì còn là tải đúng cái họ không có cửa dùng |
+| **⚠ Hàng rào giữ nguyên, KHÔNG hạ** | `ds_cay_cua_tai_khoan()` gác bằng `la_quan_tri_he_thong()`. Chủ cây A gọi nó nhận **mảng rỗng** — và đúng thế, vì *"người này còn chân ở cây nào khác"* là dữ liệu của cây khác. Với họ, bảng dựng **một dòng từ dữ liệu đã có trong tay**, không gọi máy chủ, kèm câu nói ra vì sao chỉ một dòng. ⚠ Cạm bẫy đã tránh: gọi hàm rồi vẽ *"chưa dính cây nào"* — đó là **bịa một câu trả lời từ một lời từ chối** |
+| **⚠ Vì sao cắt chiều cao bảng** | Bảng việc đứng **ngoài** bảng (b106, có lý do đo được), nên nó nằm sau dòng cuối. Ba chục dòng là bấm dòng thứ hai rồi cuộn qua hai mươi tám dòng. Nhét lại thành `<tr>` ẩn = làm lại lỗi b106; kéo bảng việc lên trên = hỏng ngược khi bấm dòng cuối. Chọn: **cắt `62vh`, cho bảng tự cuộn, tiêu đề cột dính**. Chỉ cắt từ **dòng thứ chín** — bốn dòng mà nhốt trong khung cuộn là đẻ thanh cuộn thừa, và trên điện thoại `62vh` chỉ đủ bốn năm dòng |
+| **⚠ Câu dẫn đã sai HAI LẦN liên tiếp** | Vì nó mô tả *người ta bấm vào đâu*, mà chỗ bấm đổi mỗi vòng: b109 để lại chữ "Bấm Mở" sau khi nút Mở bị bỏ; b109b liệt kê bốn việc tự hiện ra ngay khi mở. Nay rút còn phần **không đoán được từ màn hình**; chỗ bấm để chú thích nhỏ dưới tiêu đề cột nói — nó đứng ngay trên chính chỗ bấm nên không lạc hậu lặng lẽ được |
+| **⚠ Ảnh chụp lừa được một lần** | `kq-15` cho thấy bảng mất tiêu đề cột → tôi đọc ra *"sticky hỏng vì `border-collapse:collapse`"*, một chuyện có thật và **sai ở đây**. Đo: `position` = sticky, lệch 0px, ô cuộn đứng yên. Thứ trôi là **cả trang**, do `scrollIntoView()` kéo bảng việc vào tầm nhìn. **Một tấm ảnh, hai nguyên nhân khác hẳn nhau** — ảnh nói "trông sai", không nói "sai ở đâu" |
+| **Đã đo** | `/kiem-tra` **9/9** *(`domains/` 0 file khác)* · `kiem-trang-quan-tri.mjs` **154/154** · **`do-cuon-bang.mjs` (mới)** năm câu sạch: bảng tự cuộn · tiêu đề dính lệch 0px · bảng việc cách đáy khung **14px** · ô cuộn không tự trôi · `do-goi-y.mjs` ba câu sạch · **17 ảnh nhìn bằng mắt** |
+| **File đụng tới** | `khu-thanh-vien.js` 0.5.0 · `khu-tai-khoan-he-thong.js` 0.4.0 · *(ngoài repo)* `kiem-thu/do-cuon-bang.mjs` + `.html` **mới** · `sb-gia.mjs` 0.6.0 *(`?nhieu=30`)* · `xem-khung-quan-tri.mjs` *(17 ảnh, kq-12→kq-16 là của bước này)* |
+| **⏳ Điểm dừng** | Chủ dự án bấm ô Vai trò ở **cả hai** tấm lọc trên máy chủ thật |
 
 ### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
 
@@ -1151,10 +1169,12 @@ lần `/ket-thuc`, đừng chép con số của lần trước.*
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⏳⏳ **`15-tim-kiem.sql` CHƯA DÁN** — bảng tự kiểm phải ra **12 dòng ĐẠT**. Dán SAU `13` và `14`. ⚠ Nó **dán đè ba hàm đọc** của `13`/`14`, nên **dán lại `13` hoặc `14` thì bắt buộc dán lại `15`** | `nhat-ky/b109b-o-goi-y.md` |
+| ~~`15-tim-kiem.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase, bản 0.2.0, tự kiểm ĐẠT** (09/09/2026). ⚠ Vẫn giữ luật: nó **dán đè ba hàm đọc** của `13`/`14`, nên **dán lại `13` hoặc `14` thì bắt buộc dán lại `15`** | `nhat-ky/b109b-o-goi-y.md` |
 | ~~`14-loi-moi.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase**, b108 chạy thật 09/09 | `nhat-ky/b107-moi-vao-gia-pha.md` |
 | ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |
 | ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b110 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
+| ⚠ **`settings.js` vẫn gọi thứ này là *Quyền*** ở màn hình Cài đặt của mỗi người, trong khi khu Quản trị đã đổi hết sang **Vai trò** (b109c). Chủ dự án chỉ nói tới hai tấm lọc, nên chưa đụng — nhưng chính luật *"hai màn hình gọi một thứ bằng hai tên"* là lý do đổi tên lần này | `nhat-ky/b109c-o-vai-tro.md` |
+| ⚠ **`ds_thanh_vien()` không trả `moi_luc`**, nên ở ba tấm lọc cây **không phân biệt được** *đơn xin vào* với *lời mời chưa nhận* — bảng hai cột ở đó chỉ dám ghi "Đang chờ". Sửa được nhưng phải dán lại SQL, để dồn vào lần dán kế tiếp | `nhat-ky/b109c-o-vai-tro.md` |
 | ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |
 | ⚠ **b103 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`, mới chỉ dán lên Staging. Đã soi lướt: `12` và `13` **không thêm luật ghi nào**, nên lỗ hổng loại b102 không lặp ở đó — nhưng chưa rà kỹ, chưa đo | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |

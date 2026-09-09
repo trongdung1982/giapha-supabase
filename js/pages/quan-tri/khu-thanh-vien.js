@@ -6,7 +6,13 @@
 //            GIỮ năm việc ấy để file kia dùng lại nguyên vẹn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-tai-khoan-he-thong (động)
-// Phiên bản: 0.4.0 · Cập nhật: 09/09/2026 12:50 (b109b)
+// Phiên bản: 0.5.0 · Cập nhật: 09/09/2026 16:10 (b109c)
+//            0.5.0 cột **Vai trò** của ba tấm lọc cây nay BẤM ĐƯỢC: nó mở
+//            `veBangVaiTroTungCay()` — một bảng hai cột *gia phả · vai trò*,
+//            bấm tiếp vào vai trò là vào thẳng bảng sửa quyền của cây ấy. Cùng
+//            hàm ấy phục vụ cột Vai trò của tấm *Toàn hệ thống*. Cộng: bảng
+//            dài quá tám dòng thì tự cuộn TRONG khung (bảng việc ở dưới không
+//            còn bị đẩy xuống sâu), và câu dẫn tấm *Toàn hệ thống* rút gọn.
 //            0.4.0 ô *Mã người trong sơ đồ* nay có gợi ý (`o-goi-y.js`) — gõ
 //            tên là ra người, kèm năm sinh–mất và câu "đã gắn cho ai". Và cột
 //            *Người được gắn* từ nay hiện được TÊN: `ds_thanh_vien()` trước
@@ -77,7 +83,7 @@ import {
   layPhien, coTheQuanTri, dsThanhVien,
   doiVaiThanhVien, ganNguoiChoThanhVien, datTinCayThanhVien,
   goThanhVien, doiChuCay, duyetThanhVien, tuChoiThanhVien,
-  timNguoiTrongCay,
+  timNguoiTrongCay, dsCayCuaTaiKhoan,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import { ganGoiY, dongNguoi } from './o-goi-y.js';
@@ -120,14 +126,15 @@ const DAN_CAY =
   'TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể quản ' +
   'trị gia phả mà không có mặt trong họ.';
 
+// ⚠ CÂU NÀY NÓI NGƯỜI TA BẤM VÀO ĐÂU, nên nó phải đổi cùng lúc với chỗ bấm.
+//   Đã sai hai lần liên tiếp: bản b109 nói "Bấm Mở" sau khi nút Mở bị bỏ, bản
+//   b109b liệt kê bốn việc trong bảng sâu — mà bốn việc ấy tự hiện ra ngay khi
+//   mở. Chủ dự án cắt còn đúng phần không đoán được từ màn hình (09/09/2026):
+//   một dòng ở đây gồm những gì, và tấm lọc này khác ba tấm kia ở chỗ nào.
+//   Chỗ bấm thì để chú thích nhỏ dưới tiêu đề cột nói, ngay trên chính nó.
 const DAN_HE_THONG =
-  'MỌI tài khoản đã đăng ký phần mềm này, kể cả người chưa vào gia phả nào. ' +
-  // ⚠ Câu này nói NGƯỜI TA BẤM VÀO ĐÂU, nên nó phải đổi cùng lúc với chỗ bấm.
-  //   Bản trước nói "Bấm Mở" — nút ấy không còn từ b109b, chỗ bấm nay là chính
-  //   ô Tài khoản. Đúng bài học b37/b38: đổi hành vi thì đi tìm mọi câu chữ mô
-  //   tả hành vi ấy, và 154 phép kiểm không bắt được câu nào nói sai.
-  'Bấm vào một dòng để xem tài khoản ấy đứng ở đâu trong từng cây, mời họ vào một cây, ' +
-  'bật/tắt cờ Quản trị hệ thống, hoặc xoá hẳn tài khoản.';
+  'Tên, email, mã tài khoản của MỌI tài khoản đã đăng ký phần mềm này — kể cả ' +
+  'người chưa vào gia phả nào.';
 
 /** Thẻ `<p>` chứa câu dẫn, giữ lại để `nap()` đổi chữ theo tấm lọc. */
 let oGioiThieu = null;
@@ -273,7 +280,10 @@ async function nap(than, phien) {
   //   ý: hai bảng việc cùng mở là hai ô nhập mã người nằm cạnh nhau không nói
   //   rõ ô nào của ai.
   const oViec = document.createElement('div');
-  const boMoRong = { oViec, dangMo: null, nut: [] };
+  // `oVai` đứng riêng với `nut` vì hai chỗ bấm trả trạng thái về theo hai cách
+  // khác nhau: nút thao tác đổi CHỮ trên mình ("Sửa quyền" ↔ "Thu lại"), còn ô
+  // Vai trò chỉ đổi nền — gán đè chữ lên nó là xoá mất huy hiệu bên trong.
+  const boMoRong = { oViec, dangMo: null, nut: [], oVai: [] };
 
   const khung = veBang(hienRa, phien, duocDoiQuyen, napLai, boMoRong);
   than.append(khung);
@@ -412,6 +422,7 @@ function veBang(ds, phien, duocDoiQuyen, napLai, bo) {
   // của trang. Cùng cách hai khu kia làm.
   const khung = document.createElement('div');
   khung.style.cssText = 'overflow-x:auto;-webkit-overflow-scrolling:touch';
+  capChieuCao(khung, ds.length);
 
   const bang = document.createElement('table');
   bang.style.cssText =
@@ -456,12 +467,46 @@ function veDauBang() {
     th.textContent = chu;
     th.style.cssText =
       'padding:9px 10px;text-align:left;font-weight:600;color:#6a625a;' +
-      'font-size:12px;white-space:nowrap;' + them;
+      'font-size:12px;white-space:nowrap;' + CSS_DAU_BANG + them;
     tr.append(th);
   }
   thead.append(tr);
   return thead;
 }
+
+/**
+ * Bảng dài thì tự cuộn TRONG khung, thay vì đẩy mọi thứ dưới nó xuống sâu.
+ *
+ * ⚠ ĐÂY LÀ MỘT LỖI ĐO ĐƯỢC, KHÔNG PHẢI SỞ THÍCH. Bảng việc đứng NGOÀI bảng
+ *   (b106, có lý do riêng ở `moBangViec()`), nên nó nằm sau dòng cuối cùng.
+ *   Ba chục tài khoản là bấm dòng thứ hai rồi phải cuộn qua hai mươi tám dòng
+ *   mới thấy thứ vừa mở — chủ dự án nói đúng chữ ấy 09/09/2026. Kéo bảng việc
+ *   lên trên bảng thì hỏng ngược lại: bấm dòng cuối phải cuộn NGƯỢC lên.
+ *
+ * ⚠ Chỉ cắt khi bảng thật sự dài. Bốn dòng mà nhốt trong khung cuộn là đẻ ra
+ *   một thanh cuộn thứ hai chẳng để làm gì, và trên điện thoại `62vh` chỉ đủ
+ *   bốn năm dòng — cắt sớm là làm hỏng đúng màn hình chật nhất.
+ *
+ * @param {HTMLElement} khung  ô có `overflow-x:auto` bọc ngoài bảng
+ * @param {number} soDong      số dòng sắp vẽ
+ */
+export function capChieuCao(khung, soDong) {
+  if (soDong <= 8) return;
+  khung.style.overflowY = 'auto';
+  khung.style.maxHeight = '62vh';
+}
+
+/**
+ * Dòng tiêu đề DÍNH khi khung cuộn dọc — không có nó thì cuộn xuống dòng thứ
+ * mười lăm là mất tên cột, và cột *Vai trò* với cột *Tin cậy* trông giống hệt
+ * nhau khi cùng ghi "Có".
+ *
+ * `box-shadow` thay cho `border-bottom`: `border-collapse:collapse` gộp đường
+ * viền vào hàng, và đường viền đã gộp thì **cuộn đi mất** cùng thân bảng.
+ */
+export const CSS_DAU_BANG =
+  'position:sticky;top:0;z-index:1;background:#faf8f5;' +
+  'box-shadow:inset 0 -1px 0 #e6e0d8;';
 
 /**
  * Một dòng của bảng, cộng một cái nút mở bảng việc **ở dưới bảng** (`bo`).
@@ -512,7 +557,7 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
   // `nowrap`: tên vai dài nhất là *Thành viên họ tộc*, và để nó gãy làm hai
   //   dòng thì cột Vai trò cao gấp đôi mọi cột khác trên cùng một hàng — đo
   //   bằng ảnh chụp 1280px, không đoán.
-  const oVai = o(vaiTroBangChu(t.vai) || t.vai || '', 'padding:10px;white-space:nowrap');
+  const oVai = veOVaiTro(t, phien, duocDoiQuyen, napLai, bo);
 
   const oTin = o(t.tinCay ? 'Có' : 'Không',
     'padding:10px;text-align:center;color:' + (t.tinCay ? '#2f6b3a' : '#8a8078'));
@@ -568,6 +613,77 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
 }
 
 /**
+ * Ô **Vai trò** của ba tấm lọc cây — bấm được, mở bảng *gia phả · vai trò*.
+ *
+ * ⚠ Ở tấm lọc này ô ấy trông như thừa: cả bảng vốn nói về ĐÚNG MỘT cây, nên
+ *   bảng mở ra thường chỉ có một dòng. Nó vẫn có việc thật, và là việc chủ dự
+ *   án đặt tên 09/09/2026: *"bấm vào cũng xuất hiện bảng tương tự"*. Quyền ở
+ *   app này gắn với TỪNG cây, nên một chỗ bấm duy nhất — cùng hình, cùng chỗ,
+ *   ở cả hai tấm lọc — dạy đúng một câu: **vai trò không phải thuộc tính của
+ *   tài khoản.** Với Quản trị hệ thống thì bảng ấy dài ra thật.
+ */
+function veOVaiTro(t, phien, duocDoiQuyen, napLai, bo) {
+  const chu = vaiTroBangChu(t.vai) || t.vai || '';
+  const td = o('', 'padding:0;white-space:nowrap');
+
+  if (!chu) {
+    const d = document.createElement('div');
+    d.textContent = '—';
+    d.style.cssText = 'padding:10px;color:#a89f94';
+    td.append(d);
+    return td;
+  }
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = chu;
+  b.style.cssText =
+    'display:block;width:100%;padding:10px;border:0;background:none;' +
+    'font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:8px';
+  td.append(b);
+
+  const dat = (dangMo) => {
+    b.style.background = dangMo ? '#f2ece2' : 'none';
+    b.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+  };
+  bo.oVai.push(dat);
+
+  b.addEventListener('click', () => moBangVaiTro(bo, t, dat, () =>
+    veBangVaiTroTungCay(t, {
+      // Chỉ Quản trị hệ thống đọc được cả sổ — hàng rào nằm trong thân
+      // `ds_cay_cua_tai_khoan()`, xem khối chú thích của hàm ấy.
+      docCaSo: Boolean(phien.laQuanTriHeThong),
+      cayNay: {
+        treeId: phien.treeId,
+        // ⚠ `layPhien()` KHÔNG mang tên cây về ở phiên bình thường — nó chỉ có
+        //   `tenCay` khi người ta đang là *người được mời* (`sb.js` mục
+        //   layPhien). Đừng gọi `layDanhSachGiaPha()` chỉ để lấy một chữ: đó
+        //   là một vòng mạng cho mỗi lần vẽ khu, để đặt nhãn cho đúng cái cây
+        //   người ta đang mở và đã biết mình đang mở.
+        ten: phien.tenCay || 'Gia phả đang mở',
+        maCay: phien.maCay || '',
+        vai: t.vai,
+        daDuyet: t.daDuyet,
+        // ⚠ `null` chứ không phải "chưa được mời". `ds_thanh_vien()` không trả
+        //   `moi_luc`, nên ở tấm lọc cây KHÔNG phân biệt được *đơn xin vào* với
+        //   *lời mời chưa nhận*. Đoán bừa một trong hai là viết một câu sai lên
+        //   màn hình; `nhanCho` bên dưới nói đúng cái biết được, không hơn.
+        moiLuc: null,
+        nhanCho: 'Đang chờ',
+        moiVai: '',
+        maNguoi: t.maNguoi,
+        tenNguoi: t.tenNguoi,
+        tinCay: t.tinCay,
+        laChuCay: t.laChuCay,
+      },
+      duocDoiQuyen,
+      napLai,
+    })));
+
+  return td;
+}
+
+/**
  * Mở bảng việc của một dòng, **bên NGOÀI bảng** — không phải một `<tr>` ẩn
  * ngay dưới dòng vừa bấm.
  *
@@ -582,20 +698,16 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
  *   Phải nhìn bằng mắt, hoặc chụp ảnh ở đúng bề ngang thật.
  */
 function moBangViec(bo, t, bMo, veNoiDung) {
-  const dangMoDongNay = bo.dangMo === t.userId;
+  const dangMoDongNay = bo.dangMo === 'viec:' + t.userId;
 
-  // Đóng hết trước, kể cả khi sắp mở dòng khác: một chỗ đứng chung thì trả
-  // mọi nút về chữ cũ là cách duy nhất để không còn cái nút nào ghi "Thu lại"
-  // mà chẳng thu cái gì.
-  bo.oViec.innerHTML = '';
-  for (const n of bo.nut) n.textContent = n.dataset.chuDong;
+  dongHet(bo);
 
   if (dangMoDongNay) {
     bo.dangMo = null;
     return;
   }
 
-  bo.dangMo = t.userId;
+  bo.dangMo = 'viec:' + t.userId;
   bMo.textContent = 'Thu lại';
 
   const hop = document.createElement('div');
@@ -627,6 +739,302 @@ function moBangViec(bo, t, bMo, veNoiDung) {
 
   // `nearest` chứ không phải `start`: cuộn vừa đủ để thấy, không hất cái bảng
   // ra khỏi màn hình — người đang so mấy dòng với nhau thì cần thấy cả hai.
+  hop.scrollIntoView({ block: 'nearest' });
+}
+
+/**
+ * Đóng mọi thứ đang mở ở chỗ đứng chung, kể cả khi sắp mở dòng khác.
+ *
+ * Trả **mọi** nút về chữ cũ là cách duy nhất để không còn cái nút nào ghi
+ * "Thu lại" mà chẳng thu cái gì. `nut` và `oVai` phải đi riêng: nút thao tác
+ * đổi chữ trên mình, ô Vai trò chỉ đổi nền — gán đè chữ lên ô Vai trò là xoá
+ * mất huy hiệu bên trong nó.
+ */
+function dongHet(bo) {
+  bo.oViec.innerHTML = '';
+  for (const n of bo.nut) n.textContent = n.dataset.chuDong;
+  for (const dat of bo.oVai || []) dat(false);
+}
+
+/** Cùng một chỗ đứng, cùng luật "mỗi lúc một thứ" của `moBangViec()`. */
+function moBangVaiTro(bo, t, dat, veNoiDung) {
+  const dangMoDongNay = bo.dangMo === 'vai:' + t.userId;
+
+  dongHet(bo);
+
+  if (dangMoDongNay) {
+    bo.dangMo = null;
+    return;
+  }
+
+  bo.dangMo = 'vai:' + t.userId;
+  dat(true);
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:14px;padding:0 14px 14px;border:1px solid #e6e0d8;' +
+    'border-radius:10px;background:#faf8f5';
+
+  const tieu = document.createElement('div');
+  tieu.style.cssText = 'padding:12px 0 0;font-size:13px;color:#2a2622';
+  tieu.append(document.createTextNode('Vai trò của '));
+
+  const ai = document.createElement('span');
+  ai.textContent = t.email || '(không rõ email)';
+  ai.style.cssText = 'font-weight:600;word-break:break-all';
+  tieu.append(ai, document.createTextNode(' ở từng gia phả'));
+
+  hop.append(tieu, veNoiDung());
+  bo.oViec.append(hop);
+
+  hop.scrollIntoView({ block: 'nearest' });
+}
+
+// ============================================================
+// Bảng VAI TRÒ THEO TỪNG CÂY — dùng chung cho cả hai tấm lọc
+// ============================================================
+
+/**
+ * Một bảng hai cột: **một bên gia phả, một bên vai trò ở gia phả ấy**. Bấm
+ * tiếp vào ô vai trò là mở đúng bảng sửa quyền của cây ấy, ngay dưới bảng.
+ *
+ * ⚠ VÌ SAO NÓ Ở FILE NÀY, không phải ở `khu-tai-khoan-he-thong.js` — nơi câu
+ *   hỏi *"một người đứng ở đâu trong từng cây"* vốn thuộc về. File kia
+ *   `import` file này (để dùng lại năm việc của `13`), nên chiều ngược lại chỉ
+ *   đi được bằng `import()` ĐỘNG. Bắt một cú bấm chờ tải cả mô-đun sổ đăng ký
+ *   để vẽ một bảng hai cột là đắt vô cớ, và với người KHÔNG phải Quản trị hệ
+ *   thống thì đó còn là tải đúng cái mô-đun họ không có cửa dùng. Đặt ở đây
+ *   thì cả hai bên `import` tĩnh theo đúng chiều đã có.
+ *
+ * ⚠ HAI NGƯỜI GỌI, HAI NGUỒN DỮ LIỆU — và khác nhau vì HÀNG RÀO MÁY CHỦ, chứ
+ *   không phải vì tiện:
+ *     · Quản trị hệ thống → `dsCayCuaTaiKhoan()`, trả MỌI cây.
+ *     · Chủ cây / quản trị gia phả → đúng MỘT dòng, dựng từ dữ liệu đã có sẵn
+ *       trong tay về cây đang mở, không gọi máy chủ thêm lần nào.
+ *   Không phải bản rút gọn cho gọn: `ds_cay_cua_tai_khoan()` có
+ *   `where public.la_quan_tri_he_thong()` ngay trong thân (`14` mục 9, `15`
+ *   mục 5b) — chủ cây A gọi nó sẽ nhận về mảng RỖNG, vì họ không có quyền biết
+ *   người kia còn chân ở cây B nào. Gọi rồi vẽ ra "chưa dính cây nào" là bịa
+ *   một câu trả lời từ một lời từ chối.
+ *
+ * @param {object} t     tài khoản — cần `userId`, `email`, `maNgan`, `laChinhToi`
+ * @param {object} opt   `{docCaSo, cayNay, duocDoiQuyen, napLai}`
+ */
+export function veBangVaiTroTungCay(t, opt) {
+  const hop = document.createElement('div');
+  hop.style.cssText = 'padding:12px 0 2px;border-top:1px solid #ece6dd';
+
+  const than = document.createElement('div');
+  than.textContent = 'Đang đọc…';
+  than.style.cssText = 'color:#8a8078;font-size:12px';
+  hop.append(than);
+
+  const ve = (ds) => {
+    than.innerHTML = '';
+    than.style.cssText = '';
+
+    if (!ds.length) {
+      const d = document.createElement('div');
+      d.textContent = 'Tài khoản này chưa dính tới gia phả nào.';
+      d.style.cssText = 'font-size:12px;color:#8a8078';
+      than.append(d);
+      return;
+    }
+
+    const oSau = document.createElement('div');
+    const bo = { oSau, dangMo: null, nut: [] };
+    than.append(veBangHaiCot(ds, t, opt, bo), oSau);
+
+    // Nói ra CHỈ KHI nó đúng: người không phải Quản trị hệ thống đang nhìn
+    // đúng một cây, và họ phải biết đó không phải cả câu trả lời.
+    if (!opt.docCaSo) {
+      const n = document.createElement('div');
+      n.textContent =
+        'Chỉ có gia phả đang mở. Vai trò của tài khoản này ở những gia phả ' +
+        'khác thuộc về chủ các cây ấy — chỉ Quản trị hệ thống xem được cả sổ.';
+      n.style.cssText =
+        'margin-top:8px;font-size:12px;color:#8a8078;line-height:1.5;max-width:640px';
+      than.append(n);
+    }
+  };
+
+  if (opt.docCaSo) {
+    dsCayCuaTaiKhoan(t.userId).then((kq) => {
+      if (!kq.ok) {
+        than.innerHTML = '';
+        than.style.cssText = '';
+        than.append(veLoi(kq.loi || 'Không đọc được danh sách gia phả.', opt.napLai));
+        return;
+      }
+      ve(kq.ds || []);
+    });
+  } else {
+    ve(opt.cayNay ? [opt.cayNay] : []);
+  }
+
+  return hop;
+}
+
+function veBangHaiCot(ds, t, opt, bo) {
+  const khung = document.createElement('div');
+  khung.style.cssText = 'overflow-x:auto;-webkit-overflow-scrolling:touch';
+  capChieuCao(khung, ds.length);
+
+  const bang = document.createElement('table');
+  // `max-width` chứ không `min-width`: hai cột mà kéo hết bề ngang khu thì cột
+  // Vai trò trôi tít sang phải, cách tên cây cả gang tay — mắt phải bắc cầu
+  // qua khoảng trống để ghép đúng hàng.
+  bang.style.cssText =
+    'width:100%;max-width:560px;border-collapse:collapse;font-size:13px;' +
+    'background:#fffdf9;border:1px solid #e6e0d8;border-radius:10px';
+
+  const thead = document.createElement('thead');
+  const tr = document.createElement('tr');
+  tr.style.cssText = 'border-bottom:1px solid #e6e0d8';
+  for (const [chu, phu] of [['Gia phả', ''], ['Vai trò', 'bấm để sửa']]) {
+    const th = document.createElement('th');
+    th.style.cssText =
+      'padding:8px 10px;text-align:left;font-weight:600;color:#6a625a;' +
+      'font-size:12px;white-space:nowrap;' + CSS_DAU_BANG;
+    th.append(document.createTextNode(chu));
+    if (phu) {
+      const d = document.createElement('div');
+      d.textContent = phu;
+      d.style.cssText = 'font-weight:400;font-size:11px;color:#8a8078';
+      th.append(d);
+    }
+    tr.append(th);
+  }
+  thead.append(tr);
+  bang.append(thead);
+
+  const ruot = document.createElement('tbody');
+  for (const c of ds) veDongVaiTro(ruot, c, t, opt, bo);
+  bang.append(ruot);
+
+  khung.append(bang);
+  return khung;
+}
+
+function veDongVaiTro(ruot, c, t, opt, bo) {
+  const tr = document.createElement('tr');
+  tr.style.cssText = 'border-bottom:1px solid #f2eee8;vertical-align:top';
+
+  // BA trạng thái, phân biệt bằng `moiLuc` chứ KHÔNG bằng người mời: `moi_boi`
+  // khai `on delete set null`, nên xoá tài khoản người mời sẽ biến một lời mời
+  // thành thứ trông y hệt đơn xin vào (`14` mục 1).
+  const trangThai = c.daDuyet ? 'thanhvien' : (c.moiLuc ? 'duocmoi' : 'donxin');
+  // Người được mời mang vai `xem` ở cột `role` cho tới lúc nhận — đó là cả
+  // điểm của cột `moi_vai`. Hiện đúng vai họ SẼ nhận, đừng hiện `xem`.
+  const vaiHien = trangThai === 'duocmoi' ? (c.moiVai || c.vai) : c.vai;
+
+  const oCay = o('', 'padding:9px 10px;color:#2a2622');
+  const ten = document.createElement('div');
+  ten.textContent = c.ten || '(không tên)';
+  ten.style.fontWeight = '600';
+  oCay.append(ten);
+  if (c.maCay) {
+    const m = document.createElement('div');
+    m.textContent = c.maCay;
+    m.style.cssText = 'font-family:ui-monospace,monospace;font-size:11px;color:#5b4533';
+    oCay.append(m);
+  }
+
+  const noiDung = () => {
+    const d = document.createDocumentFragment();
+    const v = document.createElement('span');
+    v.textContent = vaiTroBangChu(vaiHien) || vaiHien || '—';
+    d.append(v);
+    if (c.laChuCay) d.append(huyHieu('Chủ gia phả', true));
+    if (trangThai === 'duocmoi') d.append(huyHieu('Chờ họ bấm Nhận', false));
+    else if (trangThai === 'donxin') d.append(huyHieu(c.nhanCho || 'Đơn chờ duyệt', false));
+    return d;
+  };
+
+  const oVai = o('', 'padding:0');
+
+  // ⚠ Lời mời KHÔNG bấm được, và đó là luật chứ không phải thiếu sót: sửa
+  //   quyền hộ một lời mời chưa nhận là bỏ mất chữ ký thứ hai — đúng thứ `14`
+  //   dựng cả cột `moi_vai` riêng để giữ.
+  const khoa = trangThai === 'duocmoi' || t.laChinhToi || !opt.duocDoiQuyen;
+
+  if (khoa) {
+    const d = document.createElement('div');
+    d.style.cssText = 'padding:9px 10px;white-space:nowrap';
+    d.append(noiDung());
+    if (t.laChinhToi) d.title = 'Tài khoản của chính bạn — không ai đặt quyền cho chính mình được.';
+    oVai.append(d);
+    tr.append(oCay, oVai);
+    ruot.append(tr);
+    return;
+  }
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.style.cssText =
+    'display:block;width:100%;padding:9px 10px;border:0;background:none;' +
+    'font:inherit;color:inherit;text-align:left;cursor:pointer;' +
+    'border-radius:8px;white-space:nowrap';
+  b.append(noiDung());
+  oVai.append(b);
+
+  tr.append(oCay, oVai);
+  ruot.append(tr);
+
+  const dat = (dangMo) => {
+    b.style.background = dangMo ? '#f2ece2' : 'none';
+    b.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+  };
+  bo.nut.push(dat);
+
+  // Hình dạng `t` mà năm việc của `13` chờ: quyền gắn vào TÀI KHOẢN, còn vai
+  // và mã người thì theo TỪNG CÂY. Ghép hai nguồn ấy lại đúng ở đây.
+  const tGhep = {
+    userId: t.userId,
+    email: t.email,
+    maNgan: t.maNgan,
+    laChinhToi: t.laChinhToi,
+    vai: c.vai,
+    daDuyet: c.daDuyet,
+    maNguoi: c.maNguoi,
+    tenNguoi: c.tenNguoi,
+    tinCay: c.tinCay,
+    laChuCay: c.laChuCay,
+  };
+
+  b.addEventListener('click', () => moSuaVai(bo, c, dat, () => (c.daDuyet
+    ? veBangViec(tGhep, c.treeId, opt.duocDoiQuyen, opt.napLai)
+    : veXetDon(tGhep, c.treeId, opt.duocDoiQuyen, opt.napLai))));
+}
+
+/** Cùng luật "một chỗ đứng chung, mỗi lúc một dòng" của `moBangViec()`. */
+function moSuaVai(bo, c, dat, veNoiDung) {
+  const dangMoDongNay = bo.dangMo === c.treeId;
+
+  bo.oSau.innerHTML = '';
+  for (const d of bo.nut) d(false);
+
+  if (dangMoDongNay) {
+    bo.dangMo = null;
+    return;
+  }
+
+  bo.dangMo = c.treeId;
+  dat(true);
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:12px;padding:0 12px 12px;border:1px solid #e6e0d8;' +
+    'border-radius:9px;background:#fffdf9';
+
+  const tieu = document.createElement('div');
+  tieu.textContent = (c.daDuyet ? 'Sửa quyền trong ' : 'Xét đơn vào ') +
+    (c.ten || '(không tên)');
+  tieu.style.cssText = 'padding:10px 0 0;font-size:13px;color:#2a2622;font-weight:600';
+
+  hop.append(tieu, veNoiDung());
+  bo.oSau.append(hop);
+
   hop.scrollIntoView({ block: 'nearest' });
 }
 
