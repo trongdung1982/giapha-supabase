@@ -1,6 +1,6 @@
 # THIẾT KẾ — Trang Quản trị (`QuanTri.html`)
 
-*Cập nhật 05/09/2026 · Chốt trước khi viết dòng mã đầu tiên*
+*Cập nhật 09/09/2026 (b109) · Chốt trước khi viết dòng mã đầu tiên*
 
 > **Tên file cố định, không có `_Vxx`** — lịch sử để git giữ.
 >
@@ -178,6 +178,30 @@ bấm lần nữa mới chạy — không `confirm()`)*:
 
 ⚠ **Máy chủ từ chối thì nói thật, đừng tự sửa màn hình cho giống thành công:**
 *"Không thực hiện được. Quyền hoặc dữ liệu đã đổi trên máy chủ."* + **Tải lại**.
+
+#### Tấm lọc thứ tư — *Toàn hệ thống* *(b109, 09/09/2026)*
+
+Ba tấm trên hỏi **"ai có quyền gì trong CÂY ĐANG MỞ"**. Tấm thứ tư hỏi câu
+ngược lại: **"phần mềm này có những tài khoản nào, và mỗi tài khoản đứng ở đâu
+trong TỪNG cây"** — nên nó liệt kê cả người đăng ký rồi bỏ đấy, thứ mà
+`ds_thanh_vien()` theo định nghĩa không bao giờ thấy. Chỉ **Quản trị hệ thống**
+thấy tấm này, và hàng rào nằm trong chính câu truy vấn của
+`ds_tai_khoan_he_thong()`.
+
+| | |
+|---|---|
+| **Mã ở đâu** | `js/pages/quan-tri/khu-tai-khoan-he-thong.js` — **file riêng**, không viết thêm vào `khu-thanh-vien.js`. Hai chế độ, hai câu hỏi, hai bảng khác cột |
+| **Nối bằng gì** | `khu-thanh-vien.js` nạp nó bằng `import()` **động**; nó `import` ngược lại để dùng năm việc của `13`. Tĩnh cả hai chiều là **vòng import**, và vòng import trong ES Modules gốc không ném lỗi lúc nạp — nó để một hàm thành `undefined`, chỉ vỡ lúc ai đó bấm đúng nút ấy |
+| **Cột** | Tài khoản *(+ huy hiệu QTHT / Bạn)* · Mã tài khoản · Số cây *(kèm dòng nhỏ "n chờ · n mời")* · Xác nhận email · Đăng ký · Đăng nhập gần nhất |
+| **Bảng sâu, bốn việc** | ① bảng các cây + năm việc của `13` theo từng dòng *(hoặc Duyệt/Từ chối nếu là đơn đang chờ)* · ② mời thẳng vào một cây · ③ bật/tắt cờ Quản trị hệ thống · ④ xoá hẳn tài khoản, gõ lại email |
+| **Khoá trên dòng của chính mình** | Ba việc: cờ QTHT · mời · xoá. Cộng nút mở năm việc trong bảng cây. **Khoá sẵn kèm lý do, không mở ra rồi mới giải thích** |
+| **⚠ Lời mời không có nút** | Dòng *"được mời"* không có thao tác nào — nhận hộ người khác là bỏ mất chữ ký thứ hai |
+
+⚠ **Khu này KHÔNG phá ranh giới mục 1.** Nó đọc `tree_members` và `trees`,
+không đọc `persons`. Ô *mã người* ở form Mời vì thế còn là ô gõ tay; ô tìm/gợi
+ý thật là **b109b**, và nó phải đi bằng một hàm tìm **có lọc, giới hạn số
+dòng, `security definer`** ở máy chủ — không phải nạp danh sách người về rồi
+lọc trong trình duyệt.
 
 ### Khu 3 — Kiểm duyệt
 

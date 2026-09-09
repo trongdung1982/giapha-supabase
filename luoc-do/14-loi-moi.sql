@@ -3,7 +3,11 @@
 -- Vai trò  : MỜI người vào gia phả (chiều ngược của "xin vào"), cờ Quản trị
 --            hệ thống bật được trên màn hình, và hai hàm cho khu Tài khoản
 --            nhìn TOÀN HỆ THỐNG chứ không chỉ cây đang mở.
--- Phiên bản: 0.2.0 · Cập nhật: 09/09/2026 (b108)
+-- Phiên bản: 0.2.1 · Cập nhật: 09/09/2026 (b109)
+--            0.2.1 thêm `drop function if exists` trước HAI hàm trả bảng của
+--            mục 8 và 9 — bài học 42P13, xem ghi chú tại chỗ. **Không đổi một
+--            dòng hành vi nào**, nên máy chủ đã dán 0.2.0 không bắt buộc dán
+--            lại hôm nay; dán lại trước lần thêm/bớt cột đầu tiên là được.
 --            0.2.0 vá `trang_thai_cua_toi()` — mục 6b — để người ĐƯỢC MỜI mở
 --            app thường (không phải trang Quản trị) thấy đúng lời mời của
 --            mình, thay vì câu "đơn của bạn đang chờ duyệt". Đây là chỗ
@@ -608,6 +612,14 @@ $$;
 -- đếm lời mời chưa nhận. Ba con số khác nhau, và gộp lại là mất đúng thứ khu
 -- Tài khoản cần nói.
 
+-- ⚠ `drop` TRƯỚC, đúng bài học 42P13 mà `ds_thanh_vien()` của `13` đã trả giá
+--    sáng 08/09: `create or replace` KHÔNG đổi được danh sách cột một hàm trả
+--    bảng — Postgres ném `cannot change return type of existing function` và
+--    lần dán vấp ở giữa file, để lại một máy chủ nửa vời. Hai dòng này hôm nay
+--    không đổi gì (hàm đang đúng như thế); chúng có việc vào ngày ai đó thêm
+--    một cột, tức đúng ngày không ai nhớ tới chúng nữa.
+drop function if exists public.ds_tai_khoan_he_thong();
+
 create or replace function public.ds_tai_khoan_he_thong()
 returns table (
   user_id            uuid,
@@ -655,6 +667,9 @@ $$;
 -- Một dòng cho mỗi cây tài khoản ấy dính tới, ở bất kỳ trạng thái nào trong
 -- ba trạng thái. Màn hình b108 dùng nó rồi gọi thẳng năm hàm của `13` —
 -- không hàm việc nào phải viết mới, vì chúng đã nhận `(p_tree, p_user)` sẵn.
+
+-- ⚠ `drop` trước, cùng lý do vừa ghi ở mục 8.
+drop function if exists public.ds_cay_cua_tai_khoan(uuid);
 
 create or replace function public.ds_cay_cua_tai_khoan(p_user uuid)
 returns table (

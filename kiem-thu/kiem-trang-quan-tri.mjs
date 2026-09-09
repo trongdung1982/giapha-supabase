@@ -2,10 +2,13 @@
 // giapha-supabase · kiem-thu/kiem-trang-quan-tri.mjs
 // Vai trò  : Kiểm TRANG QUẢN TRỊ — `QuanTri.html`, `js/app-quan-tri.js`,
 //            `js/pages/quan-tri/khung.js` · `khu-kiem-duyet.js` ·
-//            `khu-thanh-vien.js`, và những cửa của chúng trong
-//            `js/services/sb.js` (b98 + b101 + b106).
+//            `khu-thanh-vien.js` · `khu-tai-khoan-he-thong.js`, và những cửa
+//            của chúng trong `js/services/sb.js` (b98 + b101 + b106 + b109).
 // Chạy     : cd supabase/kiem-thu && node kiem-trang-quan-tri.mjs
-// Phiên bản: 0.3.0 · Cập nhật: 08/09/2026 20:40
+// Phiên bản: 0.4.0 · Cập nhật: 09/09/2026 10:05
+//            0.4.0 (b109) PHẦN I mới — tấm lọc *Toàn hệ thống*: bốn cửa của
+//            `14-loi-moi.sql`, ranh giới "không nạp cây", và phép canh việc
+//            CHÉP năm việc của `13` sang bản thứ hai. G12 · G13 bẻ hai phép ấy.
 //            0.3.0 (b106) PHẦN H mới — khu Tài khoản & quyền; PHẦN E đổi
 //            chiều lần thứ hai (khối Đơn chờ duyệt nay PHẢI đi).
 // ============================================================
@@ -65,8 +68,10 @@ const JS_ST = doc('../js/pages/settings.js');
 const JS_TV = doc('../js/pages/tree-view.js');
 const JS_GP = doc('../js/pages/quan-tri/khu-gia-pha.js');
 const JS_TK = doc('../js/pages/quan-tri/khu-thanh-vien.js');
+const JS_HT = doc('../js/pages/quan-tri/khu-tai-khoan-he-thong.js');
 const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
 const SQL_13 = boGhiChu(doc('../luoc-do/13-quan-ly-thanh-vien.sql'));
+const SQL_14 = boGhiChu(doc('../luoc-do/14-loi-moi.sql'));
 
 /** Tên file có thật ở gốc repo, giữ nguyên chữ hoa chữ thường. */
 const FILE_GOC = readdirSync(resolve(DAY, '..'));
@@ -469,6 +474,135 @@ kiem('chủ cây được mờ nút Đổi vai và Gỡ (laChuCay)',
 }
 
 // ============================================================
+// PHẦN I — tấm lọc Toàn hệ thống (b109)
+// ============================================================
+console.log('\nPHẦN I — Toàn hệ thống js/pages/quan-tri/khu-tai-khoan-he-thong.js');
+
+kiem('file có khối ghi chú đầu file đúng khuôn',
+     ghiChuDauFile(JS_HT), 'thiếu Vai trò / Lớp / Phụ thuộc / Phiên bản');
+
+kiem('file không chạm window.supabase — luật MỘT CỬA',
+     motCua(JS_HT), 'file gọi thẳng máy chủ');
+
+kiem('file không dùng alert/confirm',
+     !/\b(alert|confirm)\s*\(/.test(boGhiChuJs(JS_HT)),
+     'app này không dùng hộp thoại của trình duyệt ở đâu cả');
+
+// ⚠ PHÉP ĐÁNG TIỀN NHẤT CỦA PHẦN NÀY, và nó canh một thứ không có lỗi nào báo:
+//   **năm việc của `13` phải được DÙNG LẠI, không được chép sang bản thứ hai.**
+//   Chép thì hôm nay hai bản giống hệt nhau, và lệch dần từ lần sửa thứ hai —
+//   bản lệch sẽ là bản ở đây, bản ít người bấm hơn. Dấu hiệu duy nhất nhìn
+//   thấy được: file này tự `import` mấy cửa đổi quyền từ `sb.js`.
+{
+  const lenh = boGhiChuJs(JS_HT);
+  const tuGoi = ['doiVaiThanhVien', 'ganNguoiChoThanhVien', 'datTinCayThanhVien',
+                 'goThanhVien', 'doiChuCay', 'duyetThanhVien', 'tuChoiThanhVien']
+    .filter((t) => new RegExp('\\b' + t + '\\b').test(lenh));
+  kiem('năm việc của 13 được dùng lại, không chép sang bản thứ hai',
+       tuGoi.length === 0 && /veBangViec/.test(lenh) && /veXetDon/.test(lenh),
+       tuGoi.length ? 'file tự gọi: ' + tuGoi.join(', ') : 'không thấy dùng lại veBangViec/veXetDon');
+}
+
+// ⚠ RANH GIỚI của `THIET-KE-QUAN-TRI.md` mục 1: trang Quản trị KHÔNG nạp cây
+//   gia phả. Đường phá ranh giới ấy rẻ nhất là đọc bảng `persons` về rồi lọc
+//   trong trình duyệt để làm ô gợi ý — đúng thứ b109b phải làm bằng một hàm
+//   tìm có lọc ở máy chủ.
+kiem('không nạp cây gia phả — ranh giới của trang Quản trị',
+     !/persons/.test(boGhiChuJs(JS_HT)) &&
+     !/from\s+'\.\.\/\.\.\/(domains|services\/repo)/.test(boGhiChuJs(JS_HT)),
+     'file đọc dữ liệu người trong cây');
+
+// Lời mời có HAI chữ ký. Nhận hộ người khác là bỏ mất chữ ký thứ hai — máy chủ
+// cũng từ chối, nhưng một cái nút mời người ta thử là một cái nút sai.
+kiem('không có đường nhận lời mời hộ người khác',
+     !/nhanLoiMoi/.test(boGhiChuJs(JS_HT)), 'file gọi nhanLoiMoi');
+
+// Ô "gõ lại email" chỉ có nghĩa khi phép so hỏi HÀNG SẮP BỊ XOÁ. So ở trình
+// duyệt là so với đúng cái chữ màn hình vừa vẽ ra — nó luôn khớp.
+kiem('email xác nhận KHÔNG so ở trình duyệt',
+     !/oNhap\.value[^\n]*===/.test(boGhiChuJs(JS_HT)),
+     'file tự so email trước khi gọi máy chủ');
+
+kiem('hai việc nguy hiểm khoá sẵn trên dòng của chính mình',
+     (boGhiChuJs(JS_HT).match(/laChinhToi/g) || []).length >= 3,
+     'chưa khoá cờ Quản trị hệ thống / Xoá tài khoản trên dòng của mình');
+
+kiem('xoá tài khoản đi qua nút hai nhịp, nhánh nguy hiểm',
+     /nutHaiNhip\('Xoá hẳn tài khoản'/.test(JS_HT),
+     'việc phá huỷ chạy ngay từ nhịp đầu');
+
+// Bốn cửa của `14`, đối chiếu CHỮ KÝ SQL — bẫy số 1, khác file.
+const CUA_14 = [
+  { js: 'dsTaiKhoanHeThong',  sql: 'ds_tai_khoan_he_thong' },
+  { js: 'dsCayCuaTaiKhoan',   sql: 'ds_cay_cua_tai_khoan' },
+  { js: 'datQuanTriHeThong',  sql: 'dat_quan_tri_he_thong' },
+  { js: 'xoaTaiKhoan',        sql: 'xoa_tai_khoan' },
+];
+
+for (const c of CUA_14) {
+  kiem('sb.js xuất hàm ' + c.js + '()',
+       new RegExp('export\\s+async\\s+function\\s+' + c.js + '\\b').test(JS_SB),
+       'không thấy');
+
+  // ⚠ `ds_tai_khoan_he_thong()` KHÔNG có tham số nào, nên `lechThamSo()` —
+  //   hàm đi tìm cái khối `{ p_… }` trong lời gọi — không có gì để so và trả
+  //   `null`. Đó là *không áp dụng được*, không phải *hỏng*. Phép đúng cho ca
+  //   này là chiều ngược lại: lời gọi cũng phải KHÔNG gửi tham số nào, vì gửi
+  //   thừa một khoá là Supabase không tìm thấy hàm — đúng bẫy số 1.
+  const thamSo = thamSoSql(SQL_14, c.sql);
+  if (thamSo && thamSo.length === 0) {
+    kiem('  ' + c.sql + '() — hàm không tham số, lời gọi cũng không gửi gì',
+         new RegExp("\\.rpc\\(\\s*'" + c.sql + "'\\s*\\)").test(JS_SB),
+         'lời gọi gửi kèm tham số cho một hàm không nhận tham số nào');
+  } else {
+    const lech = lechThamSo(JS_SB, SQL_14, c.sql);
+    kiem('  ' + c.sql + '() — tên tham số khớp chữ ký SQL',
+         lech !== null && lech.length === 0,
+         lech === null ? 'không tìm thấy lời gọi hoặc chữ ký' : lech.join('; '));
+  }
+
+  kiem('  ' + c.sql + '() được cấp cho authenticated',
+       coCapQuyen(SQL_14, c.sql), 'thiếu grant execute … to authenticated');
+
+  kiem('  màn hình gọi ' + c.js + '()',
+       new RegExp('\\b' + c.js + '\\s*\\(').test(boGhiChuJs(JS_HT)),
+       'cửa có ở sb.js mà chưa lộ ra màn hình nào');
+}
+
+// Hai hàm trả BẢNG của `14` — cùng bài học 42P13 đã trả giá ở `ds_thanh_vien`.
+for (const ten of ['ds_tai_khoan_he_thong', 'ds_cay_cua_tai_khoan']) {
+  kiem(ten + '() có drop function trước create (bài học 42P13)',
+       new RegExp('drop\\s+function\\s+if\\s+exists\\s+public\\.' + ten, 'i').test(SQL_14),
+       'create or replace không đổi được danh sách cột trả về');
+}
+
+// Tấm lọc thứ tư phải GÁC bằng cờ, không phải hiện cho mọi người rồi để máy
+// chủ trả mảng rỗng — bảng rỗng không nói được "bạn không có quyền".
+kiem('tấm lọc Toàn hệ thống chỉ hiện cho người có cờ Quản trị hệ thống',
+     /ma: 'hethong'[\s\S]{0,80}chiQuanTriHeThong: true/.test(JS_TK) &&
+     /chiQuanTriHeThong && !coHeThong/.test(boGhiChuJs(JS_TK)),
+     'tấm lọc hiện cho cả người không có cờ');
+
+// ⚠ VÒNG IMPORT. File mới `import` ngược `khu-thanh-vien.js` để dùng lại năm
+//   việc — đúng chủ ý. Nên chiều còn lại BẮT BUỘC phải là `import()` động;
+//   tĩnh cả hai chiều là một vòng, và vòng ấy hỏng theo kiểu khó đọc nhất:
+//   một hàm thành `undefined` lúc chạy, không có câu lỗi nào lúc nạp.
+kiem('khu Tài khoản nạp file mới bằng import() ĐỘNG, không phải import tĩnh',
+     /await import\('\.\/khu-tai-khoan-he-thong\.js'\)/.test(JS_TK) &&
+     !/^import[\s\S]*?from\s+'\.\/khu-tai-khoan-he-thong\.js'/m.test(JS_TK),
+     'import tĩnh hai chiều — vòng import');
+
+kiem('file nạp hụt thì NÓI RA, không đứng im ở chữ "Đang đọc…"',
+     /catch\s*\([\s\S]{0,200}veLoi\(/.test(JS_TK),
+     'không bắt lỗi nạp module');
+
+{
+  const thieu = classThieuTrongCss(JS_HT, CSS);
+  kiem('mọi class qt- dùng trong file đều có trong quan-tri.css',
+       thieu.length === 0, 'thiếu định nghĩa: ' + thieu.join(', '));
+}
+
+// ============================================================
 // PHẦN G — KIỂM CHỨNG NGƯỢC: bẻ gãy mã rồi xem bài kiểm có bắt được không
 // ============================================================
 console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
@@ -561,6 +695,31 @@ console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
   kiem('bắt được việc bỏ mờ nút trên dòng của chính mình',
        (boGhiChuJs(hong11).match(/laChinhToi/g) || []).length < 5,
        'không bắt được');
+}
+
+// G12 — chép năm việc của `13` sang bản thứ hai thay vì dùng lại. Không có
+// lỗi nào báo, và hôm nay hai bản giống hệt nhau — chỗ hỏng chỉ mọc ra ở lần
+// sửa thứ hai, khi một bản được sửa còn bản kia thì không.
+{
+  const hong12 = JS_HT + "\nconst x = await doiVaiThanhVien(a, b, c);\n";
+  const lenh = boGhiChuJs(hong12);
+  const tuGoi = ['doiVaiThanhVien', 'goThanhVien', 'doiChuCay']
+    .filter((t) => new RegExp('\\b' + t + '\\b').test(lenh));
+  kiem('bắt được việc chép năm việc sang bản thứ hai',
+       tuGoi.length > 0, 'không bắt được — phép ở PHẦN I vô dụng');
+}
+
+// G13 — nối hai file bằng import TĨNH cả hai chiều. Vòng import trong ES
+// Modules gốc không ném lỗi lúc nạp: nó để một hàm thành `undefined` và chỉ
+// vỡ ra lúc ai đó bấm đúng cái nút gọi hàm ấy.
+{
+  const hong13 = "import { mountToanHeThong } from './khu-tai-khoan-he-thong.js';\n" +
+                 JS_TK.replace(/await import\('\.\/khu-tai-khoan-he-thong\.js'\)/,
+                               'null');
+  kiem('bắt được vòng import tĩnh hai chiều',
+       !/await import\('\.\/khu-tai-khoan-he-thong\.js'\)/.test(hong13) ||
+       /^import[\s\S]*?from\s+'\.\/khu-tai-khoan-he-thong\.js'/m.test(hong13),
+       'không bắt được — phép ở PHẦN I vô dụng');
 }
 
 // ------------------------------------------------------------

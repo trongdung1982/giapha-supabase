@@ -1,11 +1,15 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 08:55 · Bước gần nhất: **b108** · Việc kế tiếp: **b109***
+*Cập nhật 09/09/2026 11:10 · Bước gần nhất: **b109** · Việc kế tiếp: **b109b***
 
-> ✓ **b108 XONG, chạy thật.** Mời vào gia phả + Nhận/Từ chối — đã dán
-> `14-loi-moi.sql` 0.2.0 trên cả hai Supabase, chủ dự án xác nhận cả hai
-> chiều chạy đúng. **b109** (khu Tài khoản Toàn hệ thống + ô tìm/gợi ý thật
-> cho form Mời) chưa bắt đầu — không bị chặn gì, chỉ chưa làm.
+> ✓ **b109 MÃ XONG, chưa bấm thử.** Tấm lọc *Toàn hệ thống* + bảng sâu +
+> bốn việc. **Không dán SQL** — bốn hàm ấy đã nằm sẵn trên cả hai máy chủ từ
+> b107–b108. Việc còn lại của bước này là **chủ dự án mở trang Quản trị →
+> khu Tài khoản → tấm lọc *Toàn hệ thống*** và bấm thử.
+>
+> b109 chia đôi ngay đầu phiên: nửa sau — **b109b**, ô tìm/gợi ý cho form
+> Mời — chưa bắt đầu, và nó cần bàn thiết kế trước vì đụng ranh giới
+> *"QuanTri.html không nạp cây gia phả"*.
 
 > **Đây là file đổi nhanh nhất trong khung.** Tên file cố định, không có
 > `_Vxx` — lịch sử để git giữ. Muốn biết kế hoạch tuần trước thế nào thì
@@ -622,17 +626,32 @@ Chủ dự án đặt ba việc cùng lúc 08/09/2026, và cả ba đều quy v�
 | **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` — cái bảng `min-width:860px` cắt mất việc thứ ba trở đi, và 121 phép kiểm văn bản không bắt được. Khu mới đông cột hơn nên bẫy này còn sắc hơn |
 | **Chủ dự án bấm thử, đo ra hai việc còn thiếu** | ① Form Mời thiếu ô **mã người trong sơ đồ** dù `moi_vao_cay()` đã nhận tham số ấy từ đầu — vá ngay trong phiên (0.5.1). ② Ô email và ô mã người cần **tìm/gợi ý thật** (gõ vài chữ, hiện danh sách khớp), không phải ô gõ tay mù — dời sang b109, việc lớn hơn, cần hàm tìm kiếm mới ở máy chủ |
 
-### b109 — Khu Tài khoản Toàn hệ thống + bảng sâu, cộng ô tìm/gợi ý thật cho Mời
+### ✓ b109 — Khu Tài khoản: tấm lọc *Toàn hệ thống* + bảng sâu — MÃ XONG 09/09/2026
+
+⚠ **Chia đôi ngay đầu phiên, chủ dự án chốt.** Nửa sau (ô tìm/gợi ý cho form
+Mời) thành **b109b** — nó cần một hàm SQL mới và một câu thiết kế phải bàn
+trước, trộn vào đây là một phiên không có điểm dừng.
 
 | | |
 |---|---|
-| **Làm** | Khu Tài khoản: tấm lọc thứ tư **Toàn hệ thống** *(chỉ Quản trị hệ thống)* — mọi tài khoản đã đăng ký, cột **Số cây**, bấm vào mở bảng sâu theo từng cây. `ds_tai_khoan_he_thong()` và `ds_cay_cua_tai_khoan()` đã có sẵn ở `14-loi-moi.sql`, chưa hàm nào lộ ra màn hình |
-| **Bảng sâu làm được gì** | Đúng năm việc đã có của `13` *(đổi vai · gắn mã người · tin cậy · gỡ · bàn giao)*, chỉ khác là chọn cây theo dòng — **không hàm việc nào phải viết mới**. Cộng nút bật/tắt cờ **Quản trị hệ thống**, và nút **Mời thẳng vào một cây** |
-| **Bốn việc chủ dự án chốt cho bảng sâu** | ① xem từng cây + năm việc của `13` · ② mời thẳng vào một cây · ③ **xoá hẳn tài khoản** *(gõ lại email để xác nhận, hàm `xoa_tai_khoan()` đã có ở `14`)* · ④ cột chỉ đọc: đăng ký lúc nào, đăng nhập gần nhất, email đã xác nhận chưa |
-| **⚠⚠ Việc mới, chốt 09/09/2026 khi chủ dự án bấm thử b108** | Ô **email** và ô **mã người** ở form Mời (`veFormMoi()`, `khu-gia-pha.js`) phải là ô **tìm/gợi ý thật**: gõ vài chữ, hiện danh sách người/tài khoản khớp — không phải ô gõ tay mù như bản 0.5.1. Email lọc trong `ds_tai_khoan_he_thong()` *(đã có, chỉ Quản trị hệ thống gọi được — chủ cây thường sẽ không có gợi ý, cần bàn cách hạ quyền hoặc chấp nhận vậy)*; mã người cần **hàm tìm kiếm MỚI** — tìm theo tên/mã trong một cây cụ thể, trả về ít dòng, KHÔNG nạp cả cây |
-| **⚠⚠ Đụng đúng ranh giới kiến trúc, đọc trước khi viết** | `THIET-KE-QUAN-TRI.md` mục 1: *"`QuanTri.html` cố ý KHÔNG nạp cây gia phả"*. Một hàm tìm người theo tên là mở một khe hẹp qua ranh giới ấy — phải là **tìm có lọc, giới hạn số dòng, security definer gác đúng quyền xem cây**, không phải nạp danh sách rồi lọc ở trình duyệt. Bàn kỹ hình dạng hàm này TRƯỚC khi viết, đừng đoán |
-| **Điểm dừng** | Bấm vào một tài khoản trong tấm lọc Toàn hệ thống → thấy đúng số cây, làm được cả 4 việc; gõ 2-3 chữ vào ô email/mã người ở form Mời → thấy gợi ý đúng, không phải gõ hết |
-| **⚠ Nhớ từ b106** | Bảng việc đứng NGOÀI bảng, không nhét vào ô `colSpan` |
+| **Làm** | `sb.js` 0.9.0: bốn cầu nối còn thiếu của `14` — `dsTaiKhoanHeThong` · `dsCayCuaTaiKhoan` · `datQuanTriHeThong` · `xoaTaiKhoan`. **File mới** `khu-tai-khoan-he-thong.js` 0.1.0: sổ đăng ký bảy cột + bảng sâu theo từng cây + bốn việc. `khu-thanh-vien.js` 0.3.0: tấm lọc thứ tư, và sáu hàm việc đổi tham số `phien` → `treeId` |
+| **KHÔNG dán SQL** | Bốn hàm ấy đã nằm sẵn trên cả hai máy chủ từ b107–b108, chỉ chưa có màn hình nào gọi. Cả bước này là mã trình duyệt |
+| **Điểm dừng — CHƯA ĐẠT, chờ chủ dự án bấm thử trên máy chủ thật** | Bấm một tài khoản trong tấm lọc *Toàn hệ thống* → đúng số cây, làm được cả bốn việc |
+| **Năm việc của `13` được DÙNG LẠI, không chép** | Chúng vốn chỉ đọc `phien.treeId`, nên đổi tham số thành `treeId` là đủ để gọi lại theo TỪNG CÂY. Bộ kiểm có một phép canh đúng chỗ này (PHẦN I) và một phép bẻ gãy nó (G13) — chép sang bản thứ hai thì hôm nay hai bản giống hệt nhau, và lệch dần từ lần sửa thứ hai |
+| **Vì sao file mới, không viết thêm vào `khu-thanh-vien.js`** | Hai chế độ trả lời hai câu khác nhau — *"ai có quyền trong CÂY NÀY"* và *"sổ đăng ký của cả phần mềm"*. Chủ dự án chọn tách file. Nối bằng `import()` **động** một chiều: file mới `import` ngược lại để dùng năm việc, tĩnh cả hai chiều là một vòng import, mà vòng import trong ES Modules gốc **không ném lỗi lúc nạp** — nó để một hàm thành `undefined` và chỉ vỡ lúc ai đó bấm đúng nút ấy |
+| **⚠ Ba chỗ hỏng chỉ NHÌN mới thấy** | ① bảng `min-width:980px` làm **cột nút Mở rơi khỏi mép ngay trên màn hình 1280** — khu chỉ rộng ~925px vì thanh trái ăn 230px; hạ xuống 880. ② ô mã người 180px cắt mất chữ cuối lời gợi ý. ③ dòng *"được mời"* có một nút mờ ghi đúng câu cột bên cạnh vừa nói. **154 phép văn bản xanh suốt trong lúc cả ba chỗ ấy còn nguyên** — đúng bài học b106, và lần này bộ ảnh chụp bắt được trước khi chủ dự án phải bấm |
+| **Hai chỗ khoá còn thiếu, cũng do nhìn ra** | Dòng của chính mình: nút *Sửa quyền* trong bảng cây, và cả việc *Mời* — `moi_vao_cay()` từ chối tự mời (đường leo thang hai cú bấm), nên khoá sẵn thay vì để bấm rồi nhận câu từ chối |
+| **Vá thêm hai thứ bắt gặp trên đường** | `kiem-thu/sb-gia.mjs` (ngoài repo) **thiếu ba cửa Mời của b108** → trang giả để nhìn bằng mắt đã TRẮNG từ hôm qua mà không ai biết; nay 0.3.0. Và `14-loi-moi.sql` 0.2.1 thêm `drop function if exists` trước hai hàm trả bảng — bài học 42P13, **không đổi hành vi, không bắt buộc dán lại hôm nay** |
+| **File đụng tới** | `sb.js` 0.9.0 · `khu-thanh-vien.js` 0.3.0 · `khu-tai-khoan-he-thong.js` 0.1.0 *(mới)* · `luoc-do/14-loi-moi.sql` 0.2.1 · `kiem-thu/kiem-trang-quan-tri.mjs` 0.4.0 *(154 phép)* · `../kiem-thu/sb-gia.mjs` 0.3.0 · `../kiem-thu/xem-khung-quan-tri.mjs` *(12 ảnh, kq-7→kq-11 là của bước này)* |
+
+### b109b — Ô tìm/gợi ý thật cho form Mời
+
+| | |
+|---|---|
+| **Làm** | Ô **email** và ô **mã người** ở form Mời — cả ở `khu-gia-pha.js` lẫn ở bảng sâu mới — phải gõ vài chữ là hiện danh sách khớp |
+| **⚠ Phải bàn TRƯỚC khi viết** | Mã người cần **hàm tìm kiếm MỚI** ở máy chủ, và nó đụng đúng ranh giới *"`QuanTri.html` cố ý KHÔNG nạp cây gia phả"* (`THIET-KE-QUAN-TRI.md` mục 1). Phải là **tìm có lọc, giới hạn số dòng, `security definer` gác đúng quyền xem cây** — không phải nạp danh sách người về rồi lọc trong trình duyệt. Bộ kiểm PHẦN I có một phép canh đúng chỗ này |
+| **Câu chưa trả lời** | Ô email lọc trong `ds_tai_khoan_he_thong()`, mà hàm ấy **chỉ Quản trị hệ thống gọi được** — chủ cây thường sẽ không có gợi ý nào. Hạ quyền cho hàm ấy, viết một hàm tìm email riêng, hay chấp nhận vậy? Hỏi chủ dự án |
+| **Điểm dừng** | Gõ 2–3 chữ vào ô email/mã người → thấy gợi ý đúng, không phải gõ hết |
 
 ### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
 

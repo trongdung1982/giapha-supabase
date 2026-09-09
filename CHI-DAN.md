@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 08/09/2026 (b107)*
+*Nhánh Supabase · cập nhật 09/09/2026 (b109)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -20,7 +20,7 @@ nó chính là thứ nó sinh ra để tránh.
 | **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
-| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* |
+| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (12 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép |
 | Bàn thử SQL tại chỗ · phép ĐO hàng rào · tên/mã vai trò | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102`→`do-b107` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` · tên vai: `config.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
@@ -49,9 +49,9 @@ nó chính là thứ nó sinh ra để tránh.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
    tầng quyền hệ thống + tạo cây mới đã dán cả hai Supabase (b102–b104); mã
    cây nay **3 chữ số** (`NPG473`). `13` đã dán 08/09 (b105), khu Tài khoản
-   chạy 08/09 (b106). `14-loi-moi.sql` 0.2.0 đã dán cả hai Supabase, **b108
-   (mời vào gia phả) chạy thật 09/09** — chủ dự án xác nhận Nhận/Từ chối đúng.
-   Dán lại `11` hoặc `10` thì bắt buộc dán lại `14`.
+   chạy 08/09 (b106). `14-loi-moi.sql` đã dán cả hai Supabase, **b108 (mời
+   vào gia phả) chạy thật 09/09**. **b109** (tấm lọc *Toàn hệ thống*) mã
+   xong, **chưa bấm thử**, không dán SQL. Dán lại `11`/`10` → dán lại `14`.
 
 ## Quy ước khung tài liệu này
 

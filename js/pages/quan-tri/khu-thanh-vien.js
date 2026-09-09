@@ -2,9 +2,16 @@
 // giapha-supabase · js/pages/quan-tri/khu-thanh-vien.js
 // Vai trò  : Khu 2 của trang Quản trị — danh sách TÀI KHOẢN có tên trong gia
 //            phả đang mở, cộng năm việc đổi quyền và hai việc duyệt đơn.
+//            Cộng cửa sang tấm lọc *Toàn hệ thống* (file bên cạnh), và là chỗ
+//            GIỮ năm việc ấy để file kia dùng lại nguyên vẹn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
-// Phụ thuộc: services/sb, config
-// Phiên bản: 0.2.0 · Cập nhật: 08/09/2026 22:25
+// Phụ thuộc: services/sb, config, pages/quan-tri/khu-tai-khoan-he-thong (động)
+// Phiên bản: 0.3.0 · Cập nhật: 09/09/2026 09:40
+//            0.3.0 (b109) tấm lọc thứ tư **Toàn hệ thống**, chỉ hiện cho người
+//            có cờ Quản trị hệ thống · sáu hàm việc nhận thẳng `treeId` thay
+//            cho cả `phien` (chúng vốn chỉ đọc đúng trường ấy) nên bảng sâu
+//            của file bên cạnh gọi lại được chúng theo TỪNG CÂY, không phải
+//            chỉ cây đang mở · xuất mấy mẩu vẽ chung.
 //            0.2.0 sau lần chủ dự án bấm thử đầu tiên: bảng việc ra NGOÀI
 //            bảng (trước nó nằm trong khung 860px nên việc thứ ba trở đi rơi
 //            khỏi mép màn hình) · nút *Sửa quyền* khoá sẵn ở dòng không đổi
@@ -70,15 +77,25 @@ import {
 import { vaiTroBangChu } from '../../config.js';
 
 /**
- * Ba tấm lọc. Lọc ở TRÌNH DUYỆT, không gọi lại máy chủ — cả ba nhìn cùng một
- * danh sách, khác nhau đúng một cột `approved`, và danh sách ấy đếm bằng chục
- * chứ không bằng nghìn. Gọi lại một vòng mạng cho mỗi lần bấm tấm lọc là trả
- * tiền mạng để lấy về đúng những dòng vừa có trong tay.
+ * Bốn tấm lọc. **Ba tấm đầu lọc ở TRÌNH DUYỆT**, không gọi lại máy chủ — cả
+ * ba nhìn cùng một danh sách, khác nhau đúng một cột `approved`, và danh sách
+ * ấy đếm bằng chục chứ không bằng nghìn. Gọi lại một vòng mạng cho mỗi lần bấm
+ * tấm lọc là trả tiền mạng để lấy về đúng những dòng vừa có trong tay.
+ *
+ * Tấm thứ tư thì ngược lại: nó hỏi một câu khác nên nó phải gọi máy chủ.
  */
 const LOC = [
   { ma: 'cho',    chu: 'Đang chờ' },
   { ma: 'duyet',  chu: 'Đã duyệt' },
   { ma: 'tatca',  chu: 'Tất cả' },
+  // ⚠ Tấm thứ tư KHÔNG phải một tấm lọc của cùng danh sách — nó đổi hẳn câu
+  //   hỏi: ba tấm trên hỏi *"ai có quyền trong CÂY NÀY"*, tấm này hỏi *"sổ
+  //   đăng ký của cả phần mềm có những ai"*. Nên nó gọi hàm khác, vẽ bảng
+  //   khác cột, và nằm ở file khác (`khu-tai-khoan-he-thong.js`).
+  //   Nó vẫn đứng ở hàng tấm lọc vì đó là chỗ người ta đang đứng khi nghĩ ra
+  //   câu hỏi ấy — thêm một mục thứ năm vào thanh điều hướng bên trái là đẻ
+  //   ra một khu chỉ một người trong hệ thống mở được.
+  { ma: 'hethong', chu: 'Toàn hệ thống', chiQuanTriHeThong: true },
 ];
 
 /** Trần quyền cấp được cho tài khoản khác — `13` mục 8 chặn phần còn lại. */
@@ -90,6 +107,20 @@ const VAI_CAP_DUOC = ['quan_tri', 'sua', 'xem'];
 //   thành một khúc là giấu mất câu trả lời chính, và người mới vào không biết
 //   mình đang nhìn một phần.
 let locDangXem = 'tatca';
+
+/** Câu dẫn dưới tựa khu — đổi theo tấm lọc đang mở. */
+const DAN_CAY =
+  'Những tài khoản đăng nhập có tên trong gia phả đang mở. Vai trò gắn cho ' +
+  'TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể quản ' +
+  'trị gia phả mà không có mặt trong họ.';
+
+const DAN_HE_THONG =
+  'MỌI tài khoản đã đăng ký phần mềm này, kể cả người chưa vào gia phả nào. ' +
+  'Bấm Mở để xem tài khoản ấy đứng ở đâu trong từng cây, mời họ vào một cây, ' +
+  'bật/tắt cờ Quản trị hệ thống, hoặc xoá hẳn tài khoản.';
+
+/** Thẻ `<p>` chứa câu dẫn, giữ lại để `nap()` đổi chữ theo tấm lọc. */
+let oGioiThieu = null;
 
 // ============================================================
 // Cửa vào
@@ -108,12 +139,15 @@ export async function mountKhuThanhVien(el, phienVao) {
   h.className = 'qt-tua';
   h.textContent = 'Tài khoản & quyền';
 
+  // ⚠ Câu dẫn phải ĐỔI THEO tấm lọc đang mở, không phải viết một lần rồi thôi.
+  //   Ba tấm đầu liệt kê tài khoản của CÂY ĐANG MỞ; tấm thứ tư liệt kê cả sổ
+  //   đăng ký. Để nguyên câu cũ khi sang tấm thứ tư là để một câu SAI đứng
+  //   ngay trên một cái bảng đúng — và người đọc tin câu chữ trước khi tin
+  //   cái bảng.
   const dan = document.createElement('p');
-  dan.textContent =
-    'Những tài khoản đăng nhập có tên trong gia phả đang mở. Vai trò gắn cho ' +
-    'TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể quản ' +
-    'trị gia phả mà không có mặt trong họ.';
+  dan.textContent = DAN_CAY;
   dan.style.cssText = 'margin:0 0 16px;color:#6a625a;line-height:1.5';
+  oGioiThieu = dan;
 
   const than = document.createElement('div');
   than.textContent = 'Đang đọc danh sách…';
@@ -129,7 +163,10 @@ export async function mountKhuThanhVien(el, phienVao) {
     return;
   }
 
-  if (!phien.treeId) {
+  // ⚠ Cửa này chỉ chặn được người KHÔNG phải Quản trị hệ thống. Tấm lọc *Toàn
+  //   hệ thống* không đọc cây nào cả — chặn nó vì "chưa mở gia phả" là khoá
+  //   đúng người duy nhất có việc ở đó, và khoá bằng một lý do chẳng liên quan.
+  if (!phien.treeId && !phien.laQuanTriHeThong) {
     than.innerHTML = '';
     than.style.cssText = '';
     const r = document.createElement('div');
@@ -141,10 +178,24 @@ export async function mountKhuThanhVien(el, phienVao) {
     return;
   }
 
+  if (!phien.treeId) locDangXem = 'hethong';
+
   await nap(than, phien);
 }
 
 async function nap(than, phien) {
+  const coHeThong = Boolean(phien.laQuanTriHeThong);
+
+  // Cờ tắt đi giữa chừng (đổi tài khoản, hay ai đó vừa hạ cờ của mình) thì
+  // đừng để màn hình đứng ở một tấm lọc không còn tồn tại.
+  if (locDangXem === 'hethong' && !coHeThong) locDangXem = 'tatca';
+
+  if (oGioiThieu) {
+    oGioiThieu.textContent = locDangXem === 'hethong' ? DAN_HE_THONG : DAN_CAY;
+  }
+
+  if (locDangXem === 'hethong') return napHeThong(than, phien);
+
   // Hai câu hỏi đi cùng lượt — chúng không phụ thuộc nhau.
   const [kq, duocDoiQuyen] = await Promise.all([
     dsThanhVien(phien.treeId),
@@ -168,6 +219,11 @@ async function nap(than, phien) {
   //   của chủ nó. Nói đúng chuyện ấy, đừng vẽ một cái bảng trống — bảng trống
   //   nói "không có dữ liệu" và người đọc đi tìm lỗi ở chỗ khác.
   if (!ds.length) {
+    // Quản trị hệ thống vẫn phải thấy hàng tấm lọc: đường sang *Toàn hệ thống*
+    // đi qua đó, và cây này rỗng không nói gì về sổ đăng ký của cả phần mềm.
+    if (coHeThong) {
+      than.append(veThanhLoc(0, true, (moi) => { locDangXem = moi; napLai(); }));
+    }
     const r = document.createElement('div');
     r.className = 'qt-chua-lam';
     r.textContent =
@@ -180,7 +236,7 @@ async function nap(than, phien) {
 
   if (!duocDoiQuyen) than.append(veNhacChiXem());
 
-  than.append(veThanhLoc(ds, () => napLai(), (moi) => {
+  than.append(veThanhLoc(ds.filter((t) => !t.daDuyet).length, coHeThong, (moi) => {
     locDangXem = moi;
     napLai();
   }));
@@ -227,6 +283,52 @@ async function nap(than, phien) {
   than.append(oViec);
 }
 
+/**
+ * Tấm lọc thứ tư — **Toàn hệ thống**. Cả phần vẽ nằm ở
+ * `khu-tai-khoan-he-thong.js`, và nó tới đây bằng `import()` ĐỘNG, không phải
+ * `import` ở đầu file. Hai lý do, lý do thứ hai mới là lý do thật:
+ *
+ *   1. Chỉ đúng một hạng người mở được tấm lọc này. Nạp sẵn cả file cho mọi
+ *      người quản trị gia phả là bắt họ tải một thứ họ không có cửa dùng.
+ *   2. **Không có vòng import.** File kia `import` ngược lại chỗ này để dùng
+ *      lại năm việc của `13` và mấy mẩu vẽ chung — đúng chủ ý, vì "không hàm
+ *      việc nào phải viết mới" chính là điều làm b109 nhỏ. Tĩnh cả hai chiều
+ *      là một vòng; động một chiều thì không.
+ *
+ * ⚠ File nạp hụt (gõ sai chữ hoa trong tên file — GitHub Pages phân biệt hoa
+ *   thường, còn Windows thì không) phải NÓI RA. Không bắt thì màn hình đứng
+ *   nguyên ở chữ "Đang đọc…" và chẳng có câu lỗi nào ở đâu cả.
+ */
+async function napHeThong(than, phien) {
+  than.innerHTML = '';
+  than.style.cssText = '';
+
+  const napLai = () => nap(than, phien);
+
+  than.append(veThanhLoc(null, true, (moi) => {
+    locDangXem = moi;
+    napLai();
+  }));
+
+  const cho = document.createElement('div');
+  cho.textContent = 'Đang đọc sổ tài khoản…';
+  cho.style.cssText = 'color:#8a8078';
+  than.append(cho);
+
+  let mo;
+  try {
+    mo = await import('./khu-tai-khoan-he-thong.js');
+  } catch (e) {
+    cho.remove();
+    than.append(veLoi('Không nạp được phần Toàn hệ thống: ' + (e && e.message
+      ? e.message : 'lỗi không rõ'), napLai));
+    return;
+  }
+
+  cho.remove();
+  await mo.mountToanHeThong(than, napLai);
+}
+
 function hopLoc(t) {
   if (locDangXem === 'cho') return !t.daDuyet;
   if (locDangXem === 'duyet') return t.daDuyet;
@@ -255,14 +357,19 @@ function veNhacChiXem() {
 // Ba tấm lọc
 // ============================================================
 
-/** Ngôn ngữ hình lấy nguyên của `veThanhLoc()` trong khu Kiểm duyệt. */
-function veThanhLoc(ds, _napLai, doiLoc) {
+/**
+ * Ngôn ngữ hình lấy nguyên của `veThanhLoc()` trong khu Kiểm duyệt.
+ *
+ * @param {number|null} soCho  số đơn đang chờ; `null` khi chưa đọc danh sách
+ *                             cây (lúc đang đứng ở tấm *Toàn hệ thống*)
+ * @param {boolean} coHeThong  người này có cờ Quản trị hệ thống không
+ */
+function veThanhLoc(soCho, coHeThong, doiLoc) {
   const hang = document.createElement('div');
   hang.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px';
 
-  const soCho = ds.filter((t) => !t.daDuyet).length;
-
   for (const l of LOC) {
+    if (l.chiQuanTriHeThong && !coHeThong) continue;
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.loc = l.ma;
@@ -443,8 +550,8 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
   } else {
     bo.nut.push(bMo);
     bMo.addEventListener('click', () => moBangViec(bo, t, bMo, () => (t.daDuyet
-      ? veBangViec(t, phien, duocDoiQuyen, napLai)
-      : veXetDon(t, phien, duocDoiQuyen, napLai))));
+      ? veBangViec(t, phien.treeId, duocDoiQuyen, napLai)
+      : veXetDon(t, phien.treeId, duocDoiQuyen, napLai))));
   }
 
   oThao.append(bMo);
@@ -517,7 +624,7 @@ function moBangViec(bo, t, bMo, veNoiDung) {
 // Bảng việc của một tài khoản ĐÃ DUYỆT — năm việc, đều hai nhịp
 // ============================================================
 
-function veBangViec(t, phien, duocDoiQuyen, napLai) {
+export function veBangViec(t, treeId, duocDoiQuyen, napLai) {
   const hop = document.createElement('div');
   hop.style.cssText =
     'display:flex;flex-direction:column;gap:12px;padding:12px 0 2px;' +
@@ -527,11 +634,11 @@ function veBangViec(t, phien, duocDoiQuyen, napLai) {
   const vuong = lyDoVuong(t, duocDoiQuyen);
   if (vuong) hop.append(dongNhac(vuong));
 
-  hop.append(viecDoiVai(t, phien, duocDoiQuyen, napLai));
-  hop.append(viecGanNguoi(t, phien, duocDoiQuyen, napLai));
-  hop.append(viecTinCay(t, phien, duocDoiQuyen, napLai));
-  hop.append(viecGo(t, phien, duocDoiQuyen, napLai));
-  hop.append(viecBanGiao(t, phien, duocDoiQuyen, napLai));
+  hop.append(viecDoiVai(t, treeId, duocDoiQuyen, napLai));
+  hop.append(viecGanNguoi(t, treeId, duocDoiQuyen, napLai));
+  hop.append(viecTinCay(t, treeId, duocDoiQuyen, napLai));
+  hop.append(viecGo(t, treeId, duocDoiQuyen, napLai));
+  hop.append(viecBanGiao(t, treeId, duocDoiQuyen, napLai));
   return hop;
 }
 
@@ -558,7 +665,7 @@ function lyDoVuong(t, duocDoiQuyen) {
 }
 
 /** Đổi vai — trần là `quan_tri`, và chủ cây thì không hạ vai được. */
-function viecDoiVai(t, phien, duocDoiQuyen, napLai) {
+export function viecDoiVai(t, treeId, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi || t.laChuCay || t.vai === 'sao_luu';
 
   const chon = document.createElement('select');
@@ -576,7 +683,7 @@ function viecDoiVai(t, phien, duocDoiQuyen, napLai) {
 
   const bao = dongBao();
   const b = nutHaiNhip('Đổi vai', 'Bấm lần nữa để đổi vai', khoa, async () => {
-    const kq = await doiVaiThanhVien(phien.treeId, t.userId, chon.value);
+    const kq = await doiVaiThanhVien(treeId, t.userId, chon.value);
     return xong(kq, bao, napLai, 'Không đổi được vai trò.');
   });
 
@@ -588,7 +695,7 @@ function viecDoiVai(t, phien, duocDoiQuyen, napLai) {
 }
 
 /** Gắn / đổi / gỡ mã người. Để trống là GỠ, và đó là lựa chọn hợp lệ. */
-function viecGanNguoi(t, phien, duocDoiQuyen, napLai) {
+export function viecGanNguoi(t, treeId, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi;
 
   const oNhap = document.createElement('input');
@@ -602,7 +709,7 @@ function viecGanNguoi(t, phien, duocDoiQuyen, napLai) {
 
   const bao = dongBao();
   const b = nutHaiNhip('Lưu mã người', 'Bấm lần nữa để lưu', khoa, async () => {
-    const kq = await ganNguoiChoThanhVien(phien.treeId, t.userId, oNhap.value);
+    const kq = await ganNguoiChoThanhVien(treeId, t.userId, oNhap.value);
     return xong(kq, bao, napLai, 'Không gắn được mã người.');
   });
 
@@ -613,7 +720,7 @@ function viecGanNguoi(t, phien, duocDoiQuyen, napLai) {
 }
 
 /** Bật / tắt **tin cậy** — cửa leo thang sắc nhất, nên nói thẳng nó làm gì. */
-function viecTinCay(t, phien, duocDoiQuyen, napLai) {
+export function viecTinCay(t, treeId, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi;
   const bat = !t.tinCay;
 
@@ -623,7 +730,7 @@ function viecTinCay(t, phien, duocDoiQuyen, napLai) {
     'Bấm lần nữa để ' + (bat ? 'bật' : 'tắt'),
     khoa,
     async () => {
-      const kq = await datTinCayThanhVien(phien.treeId, t.userId, bat);
+      const kq = await datTinCayThanhVien(treeId, t.userId, bat);
       return xong(kq, bao, napLai, 'Không đổi được chế độ tin cậy.');
     });
 
@@ -634,12 +741,12 @@ function viecTinCay(t, phien, duocDoiQuyen, napLai) {
 }
 
 /** Gỡ khỏi gia phả — chỉ xoá dòng trong cây, không xoá tài khoản. */
-function viecGo(t, phien, duocDoiQuyen, napLai) {
+export function viecGo(t, treeId, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi || t.laChuCay || t.vai === 'sao_luu';
 
   const bao = dongBao();
   const b = nutHaiNhip('Gỡ khỏi gia phả', 'Bấm lần nữa để gỡ', khoa, async () => {
-    const kq = await goThanhVien(phien.treeId, t.userId);
+    const kq = await goThanhVien(treeId, t.userId);
     return xong(kq, bao, napLai, 'Không gỡ được tài khoản.');
   }, true);
 
@@ -653,13 +760,13 @@ function viecGo(t, phien, duocDoiQuyen, napLai) {
  * giao không giao ngược lại được; chỉ chủ mới (hoặc Quản trị hệ thống) làm
  * được. Nên câu cảnh báo phải đứng TRƯỚC nhịp thứ hai, không đứng sau.
  */
-function viecBanGiao(t, phien, duocDoiQuyen, napLai) {
+export function viecBanGiao(t, treeId, duocDoiQuyen, napLai) {
   const khoa = !duocDoiQuyen || t.laChinhToi || t.laChuCay || t.vai === 'sao_luu';
 
   const bao = dongBao();
   const b = nutHaiNhip('Bàn giao gia phả cho tài khoản này',
     'Bấm lần nữa để bàn giao — không hoàn tác được', khoa, async () => {
-      const kq = await doiChuCay(phien.treeId, t.userId);
+      const kq = await doiChuCay(treeId, t.userId);
       return xong(kq, bao, napLai, 'Không bàn giao được gia phả.');
     }, true);
 
@@ -678,7 +785,7 @@ function viecBanGiao(t, phien, duocDoiQuyen, napLai) {
  * người vào cây là cấp quyền ĐỌC. Nên nó gác bằng đúng `coTheQuanTri()` như
  * năm việc trên, chứ không bằng `coTheKiemDuyet()`.
  */
-function veXetDon(t, phien, duocDoiQuyen, napLai) {
+export function veXetDon(t, treeId, duocDoiQuyen, napLai) {
   const hop = document.createElement('div');
   hop.style.cssText =
     'display:flex;flex-direction:column;gap:12px;padding:12px 0 2px;' +
@@ -711,13 +818,13 @@ function veXetDon(t, phien, duocDoiQuyen, napLai) {
 
   const bDuyet = nutHaiNhip('Duyệt', 'Bấm lần nữa để duyệt', !duocDoiQuyen,
     async () => {
-      const kq = await duyetThanhVien(phien.treeId, t.email, oNhap.value.trim());
+      const kq = await duyetThanhVien(treeId, t.email, oNhap.value.trim());
       return xong(kq, bao, napLai, 'Không duyệt được đơn.');
     });
 
   const bTuChoi = nutHaiNhip('Từ chối', 'Bấm lần nữa để từ chối', !duocDoiQuyen,
     async () => {
-      const kq = await tuChoiThanhVien(phien.treeId, t.email);
+      const kq = await tuChoiThanhVien(treeId, t.email);
       return xong(kq, bao, napLai, 'Không từ chối được đơn.');
     }, true);
 
@@ -740,7 +847,7 @@ function veXetDon(t, phien, duocDoiQuyen, napLai) {
  * dùng không nhìn thấy hậu quả ngay — quyền đọc, phạm vi sửa, đường đi qua
  * kiểm duyệt — nên chỗ duy nhất nói ra hậu quả là dòng chữ này.
  */
-function hangViec(nhanChu, dsPhanTu, giaiThich, bao) {
+export function hangViec(nhanChu, dsPhanTu, giaiThich, bao) {
   const hop = document.createElement('div');
 
   const nhan = document.createElement('div');
@@ -775,7 +882,7 @@ function hangViec(nhanChu, dsPhanTu, giaiThich, bao) {
  *   vô thời hạn là cái bẫy: người ta cuộn đi, quay lại, bấm một cái tưởng là
  *   nhịp đầu — và việc chạy luôn.
  */
-function nutHaiNhip(chuDau, chuHoi, khoa, chay, nguyHiem) {
+export function nutHaiNhip(chuDau, chuHoi, khoa, chay, nguyHiem) {
   const b = nut(chuDau, false);
   if (nguyHiem) b.style.color = '#8a3a2a';
   b.disabled = !!khoa;
@@ -826,20 +933,20 @@ function nutHaiNhip(chuDau, chuHoi, khoa, chay, nguyHiem) {
  *
  * @returns {boolean} `true` khi đã gọi `napLai()` — nơi gọi thôi động vào nút.
  */
-function xong(kq, bao, napLai, cauMacDinh) {
+export function xong(kq, bao, napLai, cauMacDinh) {
   if (kq && kq.ok) { napLai(); return true; }
   bao.textContent = (kq && kq.loi) || cauMacDinh;
   bao.style.color = '#a83220';
   return false;
 }
 
-function dongBao() {
+export function dongBao() {
   const d = document.createElement('div');
   d.style.cssText = 'margin-top:6px;font-size:12px;line-height:1.45;min-height:0';
   return d;
 }
 
-function dongNhac(chu) {
+export function dongNhac(chu) {
   const d = document.createElement('div');
   d.textContent = chu;
   d.style.cssText =
@@ -848,14 +955,14 @@ function dongNhac(chu) {
   return d;
 }
 
-function o(chu, css) {
+export function o(chu, css) {
   const td = document.createElement('td');
   if (chu) td.textContent = chu;
   td.style.cssText = css;
   return td;
 }
 
-function huyHieu(chu, dam) {
+export function huyHieu(chu, dam) {
   const s = document.createElement('span');
   s.textContent = chu;
   s.style.cssText =
@@ -866,7 +973,7 @@ function huyHieu(chu, dam) {
   return s;
 }
 
-function nut(chu, dam) {
+export function nut(chu, dam) {
   const b = document.createElement('button');
   b.type = 'button';
   b.textContent = chu;
@@ -880,7 +987,7 @@ function nut(chu, dam) {
   return b;
 }
 
-function veLoi(chu, thuLai) {
+export function veLoi(chu, thuLai) {
   const hop = document.createElement('div');
   hop.style.cssText =
     'padding:14px 16px;border:1px solid #f1c0b9;background:#fdf2f0;' +
@@ -898,7 +1005,7 @@ function veLoi(chu, thuLai) {
 }
 
 /** `dd/mm/yyyy HH:mm` — khuôn thời gian duy nhất của dự án. */
-function gioVietNam(iso) {
+export function gioVietNam(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';

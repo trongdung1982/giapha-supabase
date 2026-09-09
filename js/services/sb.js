@@ -5,7 +5,11 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.8.0 · Cập nhật: 09/09/2026 (b108)
+// Phiên bản: 0.9.0 · Cập nhật: 09/09/2026 (b109)
+//            0.9.0 bốn cửa TOÀN HỆ THỐNG của `14-loi-moi.sql` mục 7–10:
+//            `dsTaiKhoanHeThong()` · `dsCayCuaTaiKhoan()` ·
+//            `datQuanTriHeThong()` · `xoaTaiKhoan()`. Tới b108 cả bốn hàm SQL
+//            ấy đã dán trên máy chủ mà chưa có cầu nối nào — xem khối cuối file.
 //            0.8.0 `moiVaoCay()` · `nhanLoiMoi()` · `tuChoiLoiMoi()` — chiều
 //            NGƯỢC của xin vào (`luoc-do/14-loi-moi.sql`). `layDanhSachGiaPha()`
 //            đọc thêm `duocMoi`/`moiVai`/`emailNguoiMoi`; `layPhien()` mang
@@ -1126,6 +1130,155 @@ export async function doiChuCay(treeId, userIdMoi) {
     return { ok: false, loi: noiTuChoi(data, 'Không bàn giao được gia phả.') };
   }
   return { ok: true, loi: null, emailMoi: data.emailMoi || '' };
+}
+
+// ============================================================
+// TOÀN HỆ THỐNG — sổ đăng ký · cờ Quản trị hệ thống · xoá tài khoản (b109)
+// ============================================================
+//
+// Bốn cửa của `luoc-do/14-loi-moi.sql` mục 7–10. Cả bốn **chỉ Quản trị hệ
+// thống gọi được**, và câu ấy hỏi ở MÁY CHỦ, trong thân từng hàm SQL. Bốn hàm
+// dưới đây cố ý **không hỏi trước** — hỏi trước là dựng chỗ trả lời thứ hai
+// cho một câu đã có chỗ trả lời, và chỗ thứ hai ấy nằm trong trình duyệt, nơi
+// F12 sửa được. Cùng luật đã ghi ở `taoGiaPhaMoi()` và `moiVaoCay()`.
+//
+// ⚠ `dsTaiKhoanHeThong()` khác `dsThanhVien()` ở trên đúng một chữ mà khác hẳn
+//   về nghĩa: hàm kia trả về những tài khoản có chân trong MỘT cây — nó phục
+//   vụ việc gắn người trong cây ấy. Hàm này trả về **cả sổ đăng ký của phần
+//   mềm**, gồm cả người tạo tài khoản rồi bỏ đấy, không dính tới cây nào.
+
+/**
+ * Mọi tài khoản đã đăng ký. Không phải Quản trị hệ thống thì máy chủ trả về
+ * mảng rỗng — `where public.la_quan_tri_he_thong()` ngay trong câu truy vấn.
+ *
+ * ⚠ `laChinhToi` tính ở ĐÂY, đúng chỗ `dsThanhVien()` tính, và vì đúng lý do
+ *   ấy: hai cửa `dat_quan_tri_he_thong()` và `xoa_tai_khoan()` đều từ chối khi
+ *   người bị tác động là người đang gọi, nên màn hình phải mờ sẵn nút trên
+ *   dòng của mình. So bằng `user_id`, KHÔNG so bằng email.
+ */
+export async function dsTaiKhoanHeThong() {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
+
+  const [{ data, error }, nguoi] = await Promise.all([
+    k.rpc('ds_tai_khoan_he_thong'),
+    nguoiDangNhap(),
+  ]);
+  if (error) return { ok: false, loi: cauLoi(error), ds: [] };
+
+  const toi = (nguoi && nguoi.id) || null;
+  const ds = (data || []).map((r) => ({
+    userId: r.user_id,
+    email: r.email || '',
+    maNgan: r.ma_ngan || '',
+    laQuanTriHeThong: Boolean(r.la_quan_tri_he_thong),
+    duocTaoCay: Boolean(r.duoc_tao_cay),
+    // Ba con số khác nhau và KHÔNG gộp được: chân thật · đơn đang chờ · lời
+    // mời chưa nhận. Gộp lại là mất đúng thứ khu này sinh ra để nói.
+    soCay: Number(r.so_cay) || 0,
+    soCho: Number(r.so_cho) || 0,
+    soMoi: Number(r.so_moi) || 0,
+    soCayLamChu: Number(r.so_cay_lam_chu) || 0,
+    taoLuc: r.tao_luc || null,
+    dangNhapGanNhat: r.dang_nhap_gan_nhat || null,
+    daXacNhanEmail: Boolean(r.da_xac_nhan_email),
+    laChinhToi: Boolean(toi && r.user_id === toi),
+  }));
+  return { ok: true, loi: null, ds };
+}
+
+/**
+ * Một dòng cho mỗi cây mà tài khoản này dính tới, ở bất kỳ trạng thái nào
+ * trong ba trạng thái của `tree_members`: thành viên thật · đơn đang chờ ·
+ * lời mời chưa nhận.
+ *
+ * ⚠ Phân biệt ba trạng thái bằng `daDuyet` và `moiLuc`, KHÔNG bằng `moiBoi`:
+ *   `moi_boi` khai `on delete set null`, nên xoá tài khoản người mời sẽ biến
+ *   một lời mời thành một thứ trông y hệt đơn xin vào. `14` mục 1 ghi rõ, và
+ *   đó là chỗ dễ viết sai nhất của cả file ấy vì nó chỉ lộ ra khi có người bị
+ *   xoá tài khoản — tức không bao giờ lộ ra trong lúc kiểm.
+ */
+export async function dsCayCuaTaiKhoan(userId) {
+  const k = layKhach();
+  if (!k || !userId) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
+
+  const { data, error } = await k.rpc('ds_cay_cua_tai_khoan', { p_user: userId });
+  if (error) return { ok: false, loi: cauLoi(error), ds: [] };
+
+  const ds = (data || []).map((r) => ({
+    treeId: r.tree_id,
+    ten: r.ten || '',
+    maCay: r.tree_code || '',
+    vai: r.vai || '',
+    daDuyet: Boolean(r.approved),
+    moiLuc: r.moi_luc || null,
+    moiVai: r.moi_vai || '',
+    maNguoi: r.person_id || '',
+    tenNguoi: r.ten_nguoi || '',
+    tinCay: Boolean(r.tin_cay),
+    laChuCay: Boolean(r.la_chu_cay),
+    thamGia: r.added_at || null,
+  }));
+  return { ok: true, loi: null, ds };
+}
+
+/**
+ * Bật/tắt cờ `tai_khoan.la_quan_tri_he_thong` — **cửa thứ sáu** của luật
+ * *không ai tự đặt quyền cho mình* (`THIET-KE-NHIEU-CAY.md` mục 11.5).
+ *
+ * ⚠ Máy chủ còn một phép mà năm cửa kia không cần: **không tắt được người
+ *   cuối cùng**. Hai Quản trị hệ thống tắt lẫn nhau về không là khoá cả nhà
+ *   rồi vứt chìa — sửa lại chỉ còn đường dán SQL tay.
+ */
+export async function datQuanTriHeThong(userId, bat) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_quan_tri_he_thong', {
+    p_user: userId, p_bat: !!bat,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không đặt được cờ Quản trị hệ thống.') };
+  }
+  return { ok: true, loi: null, bat: Boolean(data.bat) };
+}
+
+/**
+ * **Xoá hẳn một tài khoản** — `delete from auth.users`. Việc duy nhất trong
+ * cả phần mềm phá huỷ một lối đăng nhập, và không có nút hoàn tác.
+ *
+ * ⚠ Bảy cửa gác nằm ở máy chủ, kể cả phép so `emailXacNhan`. Đừng so ở đây:
+ *   người bấm gõ lại email từ một danh sách TOÀN HỆ THỐNG nơi hai dòng trông
+ *   na ná nhau, nên phép so ấy phải hỏi chính hàng sắp bị xoá, không hỏi cái
+ *   ô chữ mà màn hình vừa vẽ ra.
+ *
+ * ⚠ `chuMoi` để trống nghĩa là **người đang bấm nút nhận những cây tài khoản
+ *   kia đang làm chủ**, và việc sang tên chạy trong cùng giao dịch với lệnh
+ *   xoá — cây không bao giờ tồn tại ở trạng thái không chủ.
+ *
+ * @param {string} userId
+ * @param {string} emailXacNhan  email gõ lại, phải khớp hàng sắp xoá
+ * @param {string} [chuMoi]      tài khoản nhận cây; trống = người đang bấm
+ */
+export async function xoaTaiKhoan(userId, emailXacNhan, chuMoi = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('xoa_tai_khoan', {
+    p_user: userId,
+    p_email_xac_nhan: String(emailXacNhan || ''),
+    p_chu_moi: chuMoi || null,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không xoá được tài khoản.') };
+  }
+  return {
+    ok: true, loi: null,
+    email: data.email || '',
+    soChanDaGo: Number(data.soChanDaGo) || 0,
+    soCayDaChuyen: Number(data.soCayDaChuyen) || 0,
+    emailChuMoi: data.emailChuMoi || '',
+  };
 }
 
 // ============================================================
