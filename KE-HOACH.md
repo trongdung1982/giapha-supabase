@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 11:40 · Bước gần nhất: **b109** · Việc kế tiếp: **b109b***
+*Cập nhật 09/09/2026 13:40 · Bước gần nhất: **b109b** · Việc kế tiếp: **b110***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -643,13 +643,19 @@ trước, trộn vào đây là một phiên không có điểm dừng.
 | **Vá thêm hai thứ bắt gặp trên đường** | `kiem-thu/sb-gia.mjs` (ngoài repo) **thiếu ba cửa Mời của b108** → trang giả để nhìn bằng mắt đã TRẮNG từ hôm qua mà không ai biết; nay 0.3.0. Và `14-loi-moi.sql` 0.2.1 thêm `drop function if exists` trước hai hàm trả bảng — bài học 42P13, **không đổi hành vi, không bắt buộc dán lại hôm nay** |
 | **File đụng tới** | `sb.js` 0.9.0 · `khu-thanh-vien.js` 0.3.0 · `khu-tai-khoan-he-thong.js` 0.1.0 *(mới)* · `luoc-do/14-loi-moi.sql` 0.2.1 · `kiem-thu/kiem-trang-quan-tri.mjs` 0.4.0 *(154 phép)* · `../kiem-thu/sb-gia.mjs` 0.3.0 · `../kiem-thu/xem-khung-quan-tri.mjs` *(12 ảnh, kq-7→kq-11 là của bước này)* |
 
-### b109b — Ô tìm/gợi ý thật cho form Mời
+### ✓ b109b — Ô tìm/gợi ý thật cho form Mời — MÃ XONG, ⏳ CHỜ DÁN SQL
 
 | | |
 |---|---|
 | **Làm** | Ô **email** và ô **mã người** ở form Mời — cả ở `khu-gia-pha.js` lẫn ở bảng sâu mới — phải gõ vài chữ là hiện danh sách khớp |
 | **⚠ Phải bàn TRƯỚC khi viết** | Mã người cần **hàm tìm kiếm MỚI** ở máy chủ, và nó đụng đúng ranh giới *"`QuanTri.html` cố ý KHÔNG nạp cây gia phả"* (`THIET-KE-QUAN-TRI.md` mục 1). Phải là **tìm có lọc, giới hạn số dòng, `security definer` gác đúng quyền xem cây** — không phải nạp danh sách người về rồi lọc trong trình duyệt. Bộ kiểm PHẦN I có một phép canh đúng chỗ này |
-| **Câu chưa trả lời** | Ô email lọc trong `ds_tai_khoan_he_thong()`, mà hàm ấy **chỉ Quản trị hệ thống gọi được** — chủ cây thường sẽ không có gợi ý nào. Hạ quyền cho hàm ấy, viết một hàm tìm email riêng, hay chấp nhận vậy? Hỏi chủ dự án |
+| **✓ Câu đã trả lời — 09/09/2026** | **Viết hàm tìm riêng**, không hạ quyền `ds_tai_khoan_he_thong()`. Ba phép đo loại hai đường kia: hàm ấy trả 12 cột gồm cờ quyền và không có tham số lọc; còn `ds_tai_khoan()` của `13` chỉ thấy người ĐÃ có chân trong cây — mà người sắp được mời thì theo định nghĩa chưa có. Hàm mới gác bằng đúng `co_the_quan_tri()` của `moi_vao_cay()`: ai mời được thì hôm nay đã có sẵn máy dò email qua ba câu từ chối khác nhau của hàm ấy, nên nó **không thêm quyền, chỉ đổi tốc độ** — và tốc độ bị chặn bằng tối thiểu 2 ký tự, trần 8 dòng, không trả cờ quyền nào |
+| **Chủ dự án chốt thêm: PHƯƠNG ÁN B** | Thêm cột `tai_khoan.ho_ten`, vì **một tài khoản trong app này chưa có tên** — tên chỉ tồn tại khi đã gắn vào người trong một cây, mà người hay được mời nhất là người vừa cấp tài khoản, chưa gắn vào đâu. Không có cột ấy thì ô gợi ý email chỉ hiện được tám dòng email na ná nhau. Kèm yêu cầu: **hiện cả mã người như phần mềm gia phả để chắc chắn đúng người** |
+| **Làm gì** | `luoc-do/15-tim-kiem.sql` 0.1.0 *(cột `ho_ten` · `dat_ho_ten_tai_khoan` · `bo_dau` · `ten_day_du` · `tim_tai_khoan` · `tim_nguoi_trong_cay`, cộng dán đè ba hàm đọc)* · `sb.js` 0.10.0 *(ba cầu nối)* · **file mới** `js/pages/quan-tri/o-goi-y.js` 0.1.0 · `khu-gia-pha.js` 0.6.0 · `khu-thanh-vien.js` 0.4.0 · `khu-tai-khoan-he-thong.js` 0.2.0 |
+| **⚠⚠ LỖI ĐANG CHẠY, ĐO ĐƯỢC TRÊN ĐƯỜNG** | `ds_thanh_vien()` (`13`) và `ds_cay_cua_tai_khoan()` (`14`) lấy tên người bằng `p.vn->>'name'` — đo trên 740 bản ghi thật: **null ở cả 740 dòng**. Tên thật nằm ở mảng `names`. Nên cột *"Người được gắn (mã + tên)"* của khu Thành viên **chưa bao giờ hiện được một cái tên nào**; nó rơi xuống mã, rồi màn hình thấy tên trùng mã nên giấu luôn. Không ai báo vì màn hình trông vẫn "đúng", chỉ thiếu. `15` mục 3b thêm `ten_day_du()` và dán đè cả hai hàm |
+| **⚠ Chỗ hỏng thứ hai, chỉ NHÌN mới thấy** | Huy hiệu *Quản trị hệ thống* là `span` **inline** có `padding`: khi ô hẹp lại đủ để nó xuống dòng, nền của nó tràn lên **đè chữ email ở dòng trên**. Có sẵn từ b109, chỉ lộ ra khi b109b thêm dòng họ tên vào cùng ô. Sửa: `display:inline-block`. ⚠ Ảnh 1280px **không đủ phân giải** để phân biệt "đè" với "sát nhau" — phải đo bằng `getBoundingClientRect()`, và đó là lý do có `kiem-thu/do-goi-y.mjs` |
+| **Đã đo** | Bàn thử SQL: bảng tự kiểm **11/11 ĐẠT** · `do-b109b.mjs` **36/36 ĐẠT** (18 hàng rào + 3 phép kiểm chứng ngược), chạy hai lần cùng kết quả. Trình duyệt: `/kiem-tra` **9/9** · `kiem-trang-quan-tri.mjs` **154/154** · `do-goi-y.mjs` ba câu sạch (0 cặp đè nhau · 0 thứ rơi khỏi mép · danh sách gợi ý mở đúng chỗ, nằm trọn trong cửa sổ) · 13 ảnh nhìn bằng mắt |
+| **⏳ CÒN LẠI — chủ dự án dán `15-tim-kiem.sql`** | Đụng bảng `tai_khoan` (thêm cột) và định nghĩa lại 5 hàm. Dán SAU `13` và `14`. Bảng tự kiểm cuối file phải ra **12 dòng ĐẠT** |
 | **Điểm dừng** | Gõ 2–3 chữ vào ô email/mã người → thấy gợi ý đúng, không phải gõ hết |
 
 ### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
@@ -660,7 +666,7 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 
 | | |
 |---|---|
-| **Làm** | `luoc-do/15-thung-rac-cay.sql` — 4 cột trên `trees` + 5 hàm: `xin_xoa_cay` · `huy_xin_xoa_cay` · `duyet_xoa_cay` · `phuc_hoi_cay` · `don_thung_rac`. Cộng màn hình: nút *Xin xoá* ở khu Gia phả, hàng chờ + **Thùng rác** ở khu Gia phả của Quản trị hệ thống |
+| **Làm** | `luoc-do/16-thung-rac-cay.sql` — ⚠ **số 16, không phải 15**: b109b đã lấy số 15 (`15-tim-kiem.sql`, dán 09/09/2026). — 4 cột trên `trees` + 5 hàm: `xin_xoa_cay` · `huy_xin_xoa_cay` · `duyet_xoa_cay` · `phuc_hoi_cay` · `don_thung_rac`. Cộng màn hình: nút *Xin xoá* ở khu Gia phả, hàng chờ + **Thùng rác** ở khu Gia phả của Quản trị hệ thống |
 | **Điểm dừng** | Xin xoá một cây thử → cây **vẫn dùng được bình thường** trong lúc chờ → duyệt → không ai đọc được nữa → phục hồi → đọc lại được đủ 59 người |
 | **⚠ Đơn xin xoá KHÔNG khoá cây** | Đơn còn có thể bị từ chối, và trong lúc chờ thì cả dòng họ vẫn đang dùng. Khoá sớm là biến một lá đơn thành một lệnh |
 | **⚠⚠ Chỗ khó nằm ở tầng nền móng** | Thêm điều kiện *"chưa vào thùng rác"* vào **`co_the_xem_cay()`** — an toàn. **KHÔNG động vào `la_thanh_vien()`**: sửa gọn một dòng ở đó chính là lỗ hổng b102 (sao lưu đêm ra file rỗng, không báo lỗi). Và có lý do thứ hai mạnh hơn: **bản sao lưu PHẢI tiếp tục chép cây trong thùng rác**, không thì 30 ngày ấy là 30 ngày không có bản sao nào. *Thùng rác đóng cửa với người, không đóng cửa với máy sao lưu* |
@@ -1143,7 +1149,8 @@ lần `/ket-thuc`, đừng chép con số của lần trước.*
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⏳ **`14-loi-moi.sql` CHƯA DÁN** — bảng tự kiểm cuối file phải ra **8 dòng ĐẠT**. Dán lại `11` thì bắt buộc dán lại `14` | `nhat-ky/b107-moi-vao-gia-pha.md` |
+| ⏳⏳ **`15-tim-kiem.sql` CHƯA DÁN** — bảng tự kiểm phải ra **12 dòng ĐẠT**. Dán SAU `13` và `14`. ⚠ Nó **dán đè ba hàm đọc** của `13`/`14`, nên **dán lại `13` hoặc `14` thì bắt buộc dán lại `15`** | `nhat-ky/b109b-o-goi-y.md` |
+| ~~`14-loi-moi.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase**, b108 chạy thật 09/09 | `nhat-ky/b107-moi-vao-gia-pha.md` |
 | ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |
 | ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b110 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
 | ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |

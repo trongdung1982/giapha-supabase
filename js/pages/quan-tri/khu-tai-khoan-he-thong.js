@@ -4,7 +4,11 @@
 //            phần mềm, và bảng sâu theo từng cây của một tài khoản.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-thanh-vien
-// Phiên bản: 0.1.0 · Cập nhật: 09/09/2026 09:40 (b109)
+// Phiên bản: 0.2.0 · Cập nhật: 09/09/2026 12:55 (b109b)
+//            0.2.0 ô *mã người* của form Mời nay có gợi ý (`o-goi-y.js`), và
+//            thêm việc **Họ tên** — chỗ DUY NHẤT điền tên cho một tài khoản.
+//            Tên hiện chồng trên email trong ô Tài khoản, KHÔNG thành cột mới
+//            (bảng này đã phải hạ `min-width` xuống 880 ở b109).
 // ============================================================
 //
 // ═══ FILE NÀY TRẢ LỜI MỘT CÂU KHÁC HẲN FILE BÊN CẠNH ═══
@@ -38,20 +42,23 @@
 //   sao cũng chỉ để mờ nút cho lịch sự — hàng rào thật nằm trong thân bảy hàm
 //   SQL của `13`, `THIET-KE-QUAN-TRI.md` mục 5 câu cuối.
 //
-// ═══ ⚠ RANH GIỚI CHƯA BỊ PHÁ ═══
+// ═══ ⚠ RANH GIỚI VẪN CHƯA BỊ PHÁ — kể cả sau b109b ═══
 //
 // `THIET-KE-QUAN-TRI.md` mục 1: *"`QuanTri.html` cố ý KHÔNG nạp cây gia phả"*.
-// File này giữ nguyên ranh giới ấy — nó đọc `tree_members` và `trees`, không
-// đọc `persons`. Ô *mã người* ở form Mời vì thế còn là ô gõ tay: ô tìm/gợi ý
-// thật cần một hàm tìm kiếm MỚI ở máy chủ (tìm có lọc, giới hạn số dòng), và
-// đó là việc của **b109b** — đừng vá tạm bằng cách nạp danh sách người về rồi
-// lọc trong trình duyệt, vì làm thế là mở toang đúng ranh giới trên.
+// File này giữ nguyên ranh giới ấy. Ô *mã người* ở form Mời nay CÓ gợi ý
+// (b109b), nhưng nó đi bằng `timNguoiTrongCay()` — một hàm `security definer`
+// **lọc ở máy chủ và trả tối đa 10 dòng**. Trang này vẫn không giữ một danh
+// sách người nào trong bộ nhớ.
+//
+// ⚠ Ngày nào có ai thấy mình sắp viết `layCayGiaPha()` ở đây "cho tiện lọc"
+//   thì dừng lại và đọc lại mục 1. Cây thật có 681 người, và lý do số 2 khiến
+//   trang này là trang riêng biến mất ngay lúc nó nạp cây.
 //
 // ⚠ **Không `alert()`, không `confirm()`.** Cả app không dùng ở đâu cả.
 
 import {
   dsTaiKhoanHeThong, dsCayCuaTaiKhoan, datQuanTriHeThong, xoaTaiKhoan,
-  moiVaoCay, layDanhSachGiaPha,
+  moiVaoCay, layDanhSachGiaPha, timNguoiTrongCay, datHoTenTaiKhoan,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import {
@@ -59,6 +66,7 @@ import {
   hangViec, nutHaiNhip, xong, dongBao, dongNhac,
   o, huyHieu, nut, veLoi, gioVietNam,
 } from './khu-thanh-vien.js';
+import { ganGoiY, dongNguoi } from './o-goi-y.js';
 
 /** Trần quyền mời được — đúng trần của `moi_vao_cay()` ở `14` mục 2. */
 const VAI_MOI_DUOC = ['quan_tri', 'sua', 'xem'];
@@ -187,10 +195,21 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
   const tr = document.createElement('tr');
   tr.style.cssText = 'border-bottom:1px solid #f2eee8;vertical-align:top';
 
+  // ⚠ HỌ TÊN ĐỨNG TRONG CÙNG Ô VỚI EMAIL, KHÔNG THÀNH CỘT RIÊNG. Bảng này
+  //   đã phải hạ `min-width` xuống 880 ở b109 vì cột nút rơi khỏi mép trên
+  //   màn hình 1280 — khu chỉ rộng ~925px, thanh trái ăn 230px. Thêm một cột
+  //   là làm lại đúng chỗ hỏng ấy. Xếp chồng hai dòng thì không tốn bề ngang.
   const oTk = o('', 'padding:10px;color:#2a2622;word-break:break-all');
   const email = document.createElement('span');
   email.textContent = tk.email || '(không rõ email)';
-  email.style.fontWeight = '600';
+  email.style.fontWeight = tk.hoTen ? '400' : '600';
+  if (tk.hoTen) {
+    const ten = document.createElement('div');
+    ten.textContent = tk.hoTen;
+    ten.style.cssText = 'font-weight:600';
+    oTk.append(ten);
+    email.style.cssText = 'font-size:12px;color:#6a625a';
+  }
   oTk.append(email);
   if (tk.laQuanTriHeThong) oTk.append(huyHieu('Quản trị hệ thống', true));
   if (tk.laChinhToi) oTk.append(huyHieu('Bạn', false));
@@ -322,11 +341,53 @@ function veBangSau(tk, ds, dsCay, napLai) {
       'cả với Quản trị hệ thống. Nhờ một Quản trị hệ thống khác làm.'));
   }
 
+  hop.append(viecDatHoTen(tk, napLai));
   hop.append(viecCoQuanTriHeThong(tk, napLai));
   hop.append(veCacCay(tk, napLai));
   hop.append(viecMoiVaoCay(tk, dsCay, napLai));
   hop.append(viecXoaTaiKhoan(tk, ds, napLai));
   return hop;
+}
+
+/**
+ * Đặt HỌ TÊN cho tài khoản — `15-tim-kiem.sql` mục 1 và 2.
+ *
+ * ⚠ ĐÂY LÀ CHỖ DUY NHẤT TRONG CẢ PHẦN MỀM ĐIỀN TÊN NÀY, và nếu để trống thì
+ *   ô gợi ý email ở form Mời chỉ hiện được tám dòng email na ná nhau. Người
+ *   hay cần mời nhất — tài khoản vừa cấp, chưa gắn vào ai — chính là người
+ *   chưa có tên ở đâu khác để mượn.
+ *
+ * ⚠ MỘT NHỊP, KHÔNG HAI NHỊP. Bốn việc kia ở panel này đều hai nhịp vì chúng
+ *   đổi quyền hoặc phá dữ liệu. Tên thì gõ sai chỉ việc gõ lại — bắt bấm hai
+ *   lần cho "đồng bộ" là làm nhờn đúng cái nhịp thứ hai đang bảo vệ bốn việc
+ *   kia.
+ *
+ * ⚠ KHÔNG khoá trên dòng của chính mình. Đây không phải cờ quyền, nên luật
+ *   *không ai đặt quyền cho chính mình* không với tới. Máy chủ cũng cho.
+ */
+function viecDatHoTen(tk, napLai) {
+  const oNhap = document.createElement('input');
+  oNhap.type = 'text';
+  oNhap.value = tk.hoTen || '';
+  oNhap.placeholder = 'Nguyễn Văn Hùng — để trống là xoá tên';
+  oNhap.maxLength = 100;
+  oNhap.style.cssText =
+    'padding:6px 9px;border:1px solid #dcd5cb;border-radius:7px;background:#fff;' +
+    'font:inherit;font-size:13px;min-width:240px';
+
+  const bao = dongBao();
+  const b = nut('Lưu họ tên', false);
+  b.addEventListener('click', async () => {
+    b.disabled = true;
+    const kq = await datHoTenTaiKhoan(tk.userId, oNhap.value);
+    b.disabled = false;
+    return xong(kq, bao, napLai, 'Không lưu được họ tên.');
+  });
+
+  return hangViec('Họ tên', [oNhap, b],
+    'Tên để NHẬN MẶT tài khoản trong ô gợi ý — không phải tên người trong sơ ' +
+    'đồ gia phả, và một tài khoản chưa gắn vào ai vẫn có tên này. Bỏ trống ' +
+    'thì lúc mời người ấy, ô gợi ý chỉ hiện được địa chỉ email.', bao);
 }
 
 /** Cửa thứ SÁU của luật không-tự-đặt-quyền — `14` mục 7. */
@@ -385,10 +446,21 @@ function viecMoiVaoCay(tk, dsCay, napLai) {
 
   const oNhap = document.createElement('input');
   oNhap.type = 'text';
-  oNhap.placeholder = 'P0012 — để trống cũng được';
+  oNhap.placeholder = 'gõ tên hoặc mã — để trống cũng được';
+  oNhap.autocomplete = 'off';
   oNhap.style.cssText =
     'padding:6px 9px;border:1px solid #dcd5cb;border-radius:7px;background:#fff;' +
     'font:inherit;font-size:13px;font-family:ui-monospace,monospace;min-width:215px';
+
+  // ⚠ Đọc `chonCay.value` LÚC GỌI, không lúc gắn: người ta đổi cây trong ô
+  //   chọn bên trái thì gợi ý phải đổi theo cây ấy. Chụp giá trị lại ở đây là
+  //   sinh ra cảnh gợi ý người của cây A trong lúc lời mời đi vào cây B —
+  //   hỏng im lặng, vì cả hai mã người đều "trông đúng".
+  ganGoiY(oNhap, {
+    tim: async (chuoi) => (await timNguoiTrongCay(chonCay.value, chuoi)).ds,
+    ve: dongNguoi,
+    giaTri: (m) => m.maNguoi,
+  });
 
   const bao = dongBao();
 

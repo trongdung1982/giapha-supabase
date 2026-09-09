@@ -6,7 +6,11 @@
 //            GIỮ năm việc ấy để file kia dùng lại nguyên vẹn.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-tai-khoan-he-thong (động)
-// Phiên bản: 0.3.0 · Cập nhật: 09/09/2026 09:40
+// Phiên bản: 0.4.0 · Cập nhật: 09/09/2026 12:50 (b109b)
+//            0.4.0 ô *Mã người trong sơ đồ* nay có gợi ý (`o-goi-y.js`) — gõ
+//            tên là ra người, kèm năm sinh–mất và câu "đã gắn cho ai". Và cột
+//            *Người được gắn* từ nay hiện được TÊN: `ds_thanh_vien()` trước
+//            b109b đọc `vn->>'name'` (luôn null) nên luôn rơi xuống mã người.
 //            0.3.0 (b109) tấm lọc thứ tư **Toàn hệ thống**, chỉ hiện cho người
 //            có cờ Quản trị hệ thống · sáu hàm việc nhận thẳng `treeId` thay
 //            cho cả `phien` (chúng vốn chỉ đọc đúng trường ấy) nên bảng sâu
@@ -73,8 +77,10 @@ import {
   layPhien, coTheQuanTri, dsThanhVien,
   doiVaiThanhVien, ganNguoiChoThanhVien, datTinCayThanhVien,
   goThanhVien, doiChuCay, duyetThanhVien, tuChoiThanhVien,
+  timNguoiTrongCay,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
+import { ganGoiY, dongNguoi } from './o-goi-y.js';
 
 /**
  * Bốn tấm lọc. **Ba tấm đầu lọc ở TRÌNH DUYỆT**, không gọi lại máy chủ — cả
@@ -701,11 +707,28 @@ export function viecGanNguoi(t, treeId, duocDoiQuyen, napLai) {
   const oNhap = document.createElement('input');
   oNhap.type = 'text';
   oNhap.value = t.maNguoi || '';
-  oNhap.placeholder = 'P0012 — để trống là gỡ gắn';
+  oNhap.placeholder = 'gõ tên hoặc mã — để trống là gỡ gắn';
   oNhap.disabled = khoa;
+  oNhap.autocomplete = 'off';
   oNhap.style.cssText =
     'padding:6px 9px;border:1px solid #dcd5cb;border-radius:7px;background:#fff;' +
     'font:inherit;font-size:13px;font-family:ui-monospace,monospace;min-width:190px';
+
+  // ⚠ Ô GỢI Ý QUAN TRỌNG NHẤT TRONG BA Ô, vì hậu quả gõ nhầm ở đây nặng nhất:
+  //   mã người quyết `pham_vi_sua()`, nên gắn nhầm là mở quyền sửa cho cả một
+  //   nhánh — và máy chủ KHÔNG kiểm mã có thật hay không, gõ sai thì gắn treo
+  //   mà không báo lỗi. Dòng gợi ý nói sẵn người ấy đã gắn cho ai chưa.
+  //
+  //   Không gỡ bộ nghe ở đây: hàng việc này sống cùng bảng, và mỗi lần
+  //   `napLai()` là cả khu vẽ lại từ đầu nên `oNhap` bị vứt cùng lúc. Khác
+  //   `veFormMoi()` — chỗ ấy đóng/mở form nhiều lần trên cùng một trang.
+  if (!khoa) {
+    ganGoiY(oNhap, {
+      tim: async (chuoi) => (await timNguoiTrongCay(treeId, chuoi)).ds,
+      ve: dongNguoi,
+      giaTri: (m) => m.maNguoi,
+    });
+  }
 
   const bao = dongBao();
   const b = nutHaiNhip('Lưu mã người', 'Bấm lần nữa để lưu', khoa, async () => {
@@ -965,8 +988,14 @@ export function o(chu, css) {
 export function huyHieu(chu, dam) {
   const s = document.createElement('span');
   s.textContent = chu;
+  // ⚠ `inline-block`, KHÔNG `inline`. Một `span` inline có `padding` mà bị
+  //   xuống dòng thì nền của nó tràn lên đè chữ ở dòng trên — không phải lỗi
+  //   trình duyệt, đó là cách hộp inline vỡ qua hai dòng. Ảnh chụp b109b bắt
+  //   được: huy hiệu *Quản trị hệ thống* đè lên đúng địa chỉ email bên cạnh,
+  //   và chỉ lộ ra khi ô hẹp lại đủ để huy hiệu phải xuống dòng.
   s.style.cssText =
-    'margin-left:7px;font-size:11px;font-weight:500;padding:2px 7px;border-radius:10px;' +
+    'display:inline-block;margin-left:7px;font-size:11px;font-weight:500;' +
+    'padding:2px 7px;border-radius:10px;' +
     'white-space:nowrap;' +
     (dam ? 'background:#2a2622;color:#fffdf9'
          : 'background:#f3ece1;color:#7a5a28;border:1px solid #e2d5bf');

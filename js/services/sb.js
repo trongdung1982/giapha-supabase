@@ -5,7 +5,12 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.9.0 · Cập nhật: 09/09/2026 (b109)
+// Phiên bản: 0.10.0 · Cập nhật: 09/09/2026 (b109b)
+//            0.10.0 ba cửa TÌM KIẾM của `15-tim-kiem.sql`: `timTaiKhoan()` ·
+//            `timNguoiTrongCay()` · `datHoTenTaiKhoan()`. Và `dsThanhVien()`
+//            với `dsCayCuaTaiKhoan()` nay nhận được TÊN người thật ở
+//            `tenNguoi` — trước b109b hai hàm SQL sau lưng chúng đọc nhầm
+//            `vn->>'name'` (luôn null) nên trường ấy luôn bằng mã người.
 //            0.9.0 bốn cửa TOÀN HỆ THỐNG của `14-loi-moi.sql` mục 7–10:
 //            `dsTaiKhoanHeThong()` · `dsCayCuaTaiKhoan()` ·
 //            `datQuanTriHeThong()` · `xoaTaiKhoan()`. Tới b108 cả bốn hàm SQL
@@ -1170,6 +1175,9 @@ export async function dsTaiKhoanHeThong() {
   const ds = (data || []).map((r) => ({
     userId: r.user_id,
     email: r.email || '',
+    // ⚠ Tên của TÀI KHOẢN (`15-tim-kiem.sql` mục 1), không phải tên người
+    //   trong sơ đồ. Tài khoản chưa gắn vào ai vẫn có tên này.
+    hoTen: r.ho_ten || '',
     maNgan: r.ma_ngan || '',
     laQuanTriHeThong: Boolean(r.la_quan_tri_he_thong),
     duocTaoCay: Boolean(r.duoc_tao_cay),
@@ -1279,6 +1287,104 @@ export async function xoaTaiKhoan(userId, emailXacNhan, chuMoi = '') {
     soCayDaChuyen: Number(data.soCayDaChuyen) || 0,
     emailChuMoi: data.emailChuMoi || '',
   };
+}
+
+// ============================================================
+// BA CỬA TÌM KIẾM — `luoc-do/15-tim-kiem.sql`
+// ============================================================
+//
+// ⚠ CẢ HAI HÀM TÌM LỌC Ở MÁY CHỦ, KHÔNG LỌC Ở ĐÂY. Đừng bao giờ "cho tiện"
+//   bằng cách gọi `dsTaiKhoanHeThong()` một lần rồi lọc trong trình duyệt:
+//   hàm ấy chỉ Quản trị hệ thống gọi được (chủ cây sẽ không có gợi ý nào), nó
+//   trả cả cờ quyền và giờ đăng nhập (ô gợi ý chỉ cần hai chữ), và nó không
+//   có tham số lọc nên mỗi lần gõ một chữ là tải cả sổ đăng ký về máy.
+//   `THIET-KE-QUAN-TRI.md` khu 2 đã cấm đúng đường ấy.
+//
+// ⚠ MÁY CHỦ TRẢ VỀ RỖNG KHÔNG PHẢI LÀ LỖI. Người không quản trị cây thì hai
+//   hàm SQL trả 0 dòng thay vì báo lỗi — hàng rào nằm trong chính câu truy
+//   vấn. Nên nơi gọi không được vẽ câu "Không tải được"; ô gợi ý trống là
+//   trạng thái hợp lệ.
+
+/**
+ * Gợi ý TÀI KHOẢN cho ô email của form Mời. Trả tối đa 8 dòng.
+ *
+ * Gác bằng đúng hàng rào của `moiVaoCay()` — chủ cây và Quản trị hệ thống.
+ * Gõ dưới 2 ký tự thì máy chủ trả rỗng, nên nơi gọi không cần tự đếm.
+ *
+ * `trangThai` nói người này đang đứng ở đâu TRONG CÂY ĐANG HỎI, để dòng gợi ý
+ * nói trước vì sao một email sẽ bị từ chối thay vì để bấm xong mới biết:
+ *   `chua` · `thanh_vien` · `cho_duyet` · `da_moi` · `chinh_minh`
+ */
+export async function timTaiKhoan(treeId, chuoi) {
+  const k = layKhach();
+  if (!k || !treeId) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
+
+  const { data, error } = await k.rpc('tim_tai_khoan', {
+    p_tree: treeId, p_chuoi: String(chuoi || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error), ds: [] };
+
+  const ds = (data || []).map((r) => ({
+    userId: r.user_id,
+    email: r.email || '',
+    hoTen: r.ho_ten || '',
+    maNgan: r.ma_ngan || '',
+    maNguoi: r.person_id || '',
+    tenNguoi: r.ten_nguoi || '',
+    trangThai: r.trang_thai || 'chua',
+  }));
+  return { ok: true, loi: null, ds };
+}
+
+/**
+ * Gợi ý NGƯỜI TRONG CÂY cho ô mã người. Trả tối đa 10 dòng.
+ *
+ * ⚠ Hàm này KHÔNG phá ranh giới *"QuanTri.html cố ý không nạp cây gia phả"*
+ *   (`THIET-KE-QUAN-TRI.md` mục 1): nó lọc ở máy chủ và trả về mười dòng bốn
+ *   chữ, không nạp 681 người về rồi lọc tại chỗ. Ngày ai đó thấy mình sắp
+ *   viết `layCayGiaPha()` trong `pages/quan-tri/` thì dừng lại đọc mục ấy.
+ *
+ * `ganChoEmail` là thứ phải hiện ngay lúc chọn: gắn nhầm mã người là đổi
+ * thẳng `pham_vi_sua()`, tức mở quyền sửa cho cả một nhánh.
+ */
+export async function timNguoiTrongCay(treeId, chuoi) {
+  const k = layKhach();
+  if (!k || !treeId) return { ok: false, loi: 'Chưa nối được máy chủ.', ds: [] };
+
+  const { data, error } = await k.rpc('tim_nguoi_trong_cay', {
+    p_tree: treeId, p_chuoi: String(chuoi || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error), ds: [] };
+
+  const ds = (data || []).map((r) => ({
+    maNguoi: r.id || '',
+    ten: r.ten || '',
+    namSinh: r.nam_sinh || '',
+    namMat: r.nam_mat || '',
+    gioi: r.gioi || 'U',
+    ganChoEmail: r.gan_cho_email || '',
+  }));
+  return { ok: true, loi: null, ds };
+}
+
+/**
+ * Đặt HỌ TÊN cho một tài khoản. Chỉ Quản trị hệ thống, máy chủ gác.
+ *
+ * ⚠ Đây KHÔNG phải tên người trong sơ đồ gia phả — nó là tên để nhận mặt một
+ *   tài khoản trong ô gợi ý, và một tài khoản có thể chưa gắn vào người nào.
+ *   Hai thứ khác nhau, đừng đồng bộ chúng với nhau.
+ */
+export async function datHoTenTaiKhoan(userId, hoTen) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_ho_ten_tai_khoan', {
+    p_user: userId, p_ho_ten: String(hoTen || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không đặt được họ tên.') };
+  }
+  return { ok: true, loi: null, hoTen: data.hoTen || '' };
 }
 
 // ============================================================

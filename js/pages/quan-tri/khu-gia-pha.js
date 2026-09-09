@@ -5,7 +5,12 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.5.1 · Cập nhật: 09/09/2026 (b108)
+// Phiên bản: 0.6.0 · Cập nhật: 09/09/2026 (b109b)
+//            0.6.0 hai ô của `veFormMoi()` nay CÓ GỢI Ý: gõ vài chữ của tên
+//            hoặc email thì hiện danh sách khớp (`o-goi-y.js`, lọc ở máy chủ
+//            bằng `15-tim-kiem.sql`). Trước bản này cả hai là ô gõ tay mù —
+//            phải nhớ đúng từng chữ một địa chỉ email và mã `P0231` của một
+//            người trong cây 681 người.
 //            0.5.1 `veFormMoi()` thêm ô *Mã người trong sơ đồ* — chủ dự án
 //            bấm thử bản 0.5.0 thấy thiếu, dù `moiVaoCay()`/`moi_vao_cay()`
 //            đã nhận tham số này từ đầu.
@@ -51,9 +56,11 @@ import {
   layDanhSachGiaPha, layCayMacDinh, datCayMacDinh,
   datChoNguoiLaThayTen, chonGiaPha, xinVaoCay, taoGiaPhaMoi,
   moiVaoCay, nhanLoiMoi, tuChoiLoiMoi,
+  timTaiKhoan, timNguoiTrongCay,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import { sinhMaCay } from '../../utils/id.js';
+import { ganGoiY, dongTaiKhoan, dongNguoi } from './o-goi-y.js';
 
 /**
  * Vẽ khu Gia phả.
@@ -367,10 +374,14 @@ function veFormMoi(td, c, napLai) {
 
   const oEmail = document.createElement('input');
   oEmail.type = 'email';
-  oEmail.placeholder = 'email@đã-đăng-ký.gì-đó';
+  oEmail.placeholder = 'gõ vài chữ của tên hoặc email';
   oEmail.style.cssText =
     'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
     'border-radius:6px;font:inherit;font-size:12px';
+  // ⚠ `autocomplete=off`: trình duyệt tự điền địa chỉ cũ đè lên đúng chỗ ô
+  //   gợi ý của mình sắp vẽ, và hai danh sách chồng nhau thì không ai đọc được
+  //   cái nào.
+  oEmail.autocomplete = 'off';
 
   // ⚠ Không bắt buộc — để trống thì `moi_vao_cay()` mời mà không gắn ai vào
   //   sơ đồ. Có gõ thì nó là mã NGƯỜI TRONG CÂY (`P0012`), không phải mã tài
@@ -383,10 +394,27 @@ function veFormMoi(td, c, napLai) {
 
   const oMa = document.createElement('input');
   oMa.type = 'text';
-  oMa.placeholder = 'P0012 — để trống nếu chưa biết';
+  oMa.placeholder = 'gõ tên hoặc mã — để trống nếu chưa biết';
+  oMa.autocomplete = 'off';
   oMa.style.cssText =
     'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
     'border-radius:6px;font:inherit;font-size:12px;font-family:ui-monospace,monospace';
+
+  // ⚠ HAI Ô GỢI Ý, và cả hai đều lọc Ở MÁY CHỦ. Đừng đổi sang nạp danh sách
+  //   về rồi lọc tại chỗ: cây này có 681 người, và `THIET-KE-QUAN-TRI.md`
+  //   mục 1 nói `QuanTri.html` cố ý không nạp cây gia phả.
+  const goGoiY = [
+    ganGoiY(oEmail, {
+      tim: async (chuoi) => (await timTaiKhoan(c.fileId, chuoi)).ds,
+      ve: dongTaiKhoan,
+      giaTri: (m) => m.email,
+    }),
+    ganGoiY(oMa, {
+      tim: async (chuoi) => (await timNguoiTrongCay(c.fileId, chuoi)).ds,
+      ve: dongNguoi,
+      giaTri: (m) => m.maNguoi,
+    }),
+  ];
 
   const oVai = document.createElement('select');
   oVai.style.cssText =
@@ -402,15 +430,22 @@ function veFormMoi(td, c, napLai) {
   const hangNut = document.createElement('div');
   hangNut.style.cssText = 'display:flex;gap:6px;justify-content:flex-end';
 
+  // ⚠ Gỡ ô gợi ý TRƯỚC khi vẽ lại khu. `ganGoiY()` treo bộ nghe lên `window`
+  //   (cuộn · đổi cỡ) và thả danh sách vào `document.body` — hai thứ nằm
+  //   NGOÀI cái ô sắp bị `innerHTML = ''` xoá đi. Không gỡ thì mỗi lần mở
+  //   form là thêm hai bộ nghe không ai dọn, và một danh sách gợi ý có thể
+  //   còn treo lơ lửng sau khi cái ô sinh ra nó đã biến mất.
+  const dongForm = () => { goGoiY.forEach((go) => go()); napLai(); };
+
   const bThoi = nut('Thôi', false);
-  bThoi.addEventListener('click', () => napLai());
+  bThoi.addEventListener('click', dongForm);
 
   const bMoi = nut('Gửi lời mời', true);
   bMoi.addEventListener('click', async () => {
     bMoi.disabled = true;
     bMoi.textContent = 'Đang mời…';
     const kq = await moiVaoCay(c.fileId, oEmail.value, oVai.value, oMa.value);
-    if (kq.ok) { napLai(); return; }
+    if (kq.ok) { dongForm(); return; }
     bMoi.disabled = false;
     bMoi.textContent = 'Gửi lời mời';
     hop.append(dongLoi(kq.loi || 'Không mời được.'));

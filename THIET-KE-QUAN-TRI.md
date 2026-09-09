@@ -197,11 +197,12 @@ thấy tấm này, và hàng rào nằm trong chính câu truy vấn của
 | **Khoá trên dòng của chính mình** | Ba việc: cờ QTHT · mời · xoá. Cộng nút mở năm việc trong bảng cây. **Khoá sẵn kèm lý do, không mở ra rồi mới giải thích** |
 | **⚠ Lời mời không có nút** | Dòng *"được mời"* không có thao tác nào — nhận hộ người khác là bỏ mất chữ ký thứ hai |
 
-⚠ **Khu này KHÔNG phá ranh giới mục 1.** Nó đọc `tree_members` và `trees`,
-không đọc `persons`. Ô *mã người* ở form Mời vì thế còn là ô gõ tay; ô tìm/gợi
-ý thật là **b109b**, và nó phải đi bằng một hàm tìm **có lọc, giới hạn số
-dòng, `security definer`** ở máy chủ — không phải nạp danh sách người về rồi
-lọc trong trình duyệt.
+⚠ **Khu này KHÔNG phá ranh giới mục 1** — kể cả sau b109b. Ô *mã người* ở
+form Mời nay CÓ gợi ý, nhưng nó đi bằng `tim_nguoi_trong_cay()`: một hàm
+`security definer` **lọc ở máy chủ, trần 10 dòng**, gác bằng
+`co_the_quan_tri()`. Trang này vẫn không giữ một danh sách người nào trong bộ
+nhớ. Ngày nào có ai thấy mình sắp nạp cả cây về "cho tiện lọc" thì dừng lại
+đọc lại mục 1 — cây thật có 681 người.
 
 ### Khu 3 — Kiểm duyệt
 
@@ -327,6 +328,24 @@ Bốn điều mỗi hàm phải tự canh trong thân hàm:
 3. Vai mới phải thuộc tập hợp lệ, và **không cho đặt `sao_luu` từ giao diện**.
 4. `go_thanh_vien` **chỉ xoá dòng trong `tree_members`**, tuyệt đối không đụng
    `auth.users`.
+
+### ✓ ĐÃ CÓ — `luoc-do/15-tim-kiem.sql` (b109b, 09/09/2026)
+
+| Hàm | Tham số | Trả về | Ai gọi được |
+|---|---|---|---|
+| `tim_tai_khoan` | `p_tree, p_chuoi` | `table(user_id, email, ho_ten, ma_ngan, person_id, ten_nguoi, trang_thai)`, **trần 8 dòng** | `co_the_quan_tri()` — đúng hàng rào của `moi_vao_cay()` |
+| `tim_nguoi_trong_cay` | `p_tree, p_chuoi` | `table(id, ten, nam_sinh, nam_mat, gioi, gan_cho_email)`, **trần 10 dòng** | `co_the_quan_tri()` |
+| `dat_ho_ten_tai_khoan` | `p_user, p_ho_ten` | `jsonb` | chỉ Quản trị hệ thống |
+| `bo_dau` · `ten_day_du` | `text` · `jsonb` | `text` | ai cũng gọi được — hàm thuần, không đọc bảng |
+
+Ba điều file ấy canh, và cả ba đều có phép đo mượn danh nghĩa
+(`kiem-thu/ban-thu-sql/do-b109b.mjs`, 36 phép):
+
+1. **Gác bằng đúng hàng rào của nút nó phục vụ.** Quản trị gia phả *được
+   phong* KHÔNG dò được danh bạ — họ cũng không mời được ai.
+2. **Không `like` một chỗ nào**, chỉ `position()`. Một chữ `%` trong ô gõ mà
+   đi vào mẫu `like` là lấy về tám dòng đầu của cả danh bạ.
+3. **Trần số dòng nằm trong hàm**, không ở trình duyệt.
 
 ### Cần cho khu 3 và khu 4
 

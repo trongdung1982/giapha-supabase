@@ -64,7 +64,7 @@ tạo cây mới · mã ngắn của tài khoản là gì*.
 
 | Bảng | Vai | Ghi chú |
 |---|---|---|
-| `tai_khoan` | Một dòng một tài khoản. `ma_ngan` (6 ký tự, `unique`) · `la_quan_tri_he_thong` · `duoc_tao_cay` | Trigger `sau_khi_tao_user` trên `auth.users` tự sinh dòng. ⚠ xem cảnh báo dưới |
+| `tai_khoan` | Một dòng một tài khoản. `ma_ngan` (6 ký tự, `unique`) · `ho_ten` *(b109b — tên để NHẬN MẶT tài khoản trong ô gợi ý, KHÔNG phải tên người trong sơ đồ; đặt bằng `dat_ho_ten_tai_khoan()`, chỉ Quản trị hệ thống)* · `la_quan_tri_he_thong` · `duoc_tao_cay` | Trigger `sau_khi_tao_user` trên `auth.users` tự sinh dòng. ⚠ xem cảnh báo dưới |
 | `cau_hinh` | **Đúng một dòng** (mẹo `boolean primary key check`). Giữ `cay_mac_dinh` | Ghi chỉ qua `dat_cay_mac_dinh()` |
 
 Và hai cột mới trên `trees`: `chu_so_huu` (người dựng cây) ·
