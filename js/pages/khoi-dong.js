@@ -3,8 +3,14 @@
 // Vai trò  : Màn hình mở đầu — chờ máy chủ trả danh tính và quyền,
 //            báo lỗi rõ ràng nếu người dùng chưa đăng nhập hoặc chưa có quyền.
 // Lớp      : pages
-// Phụ thuộc: services/repo, services/sb, pages/dang-nhap, pages/tree-view
-// Phiên bản: 0.11.0 · Cập nhật: 09/09/2026 (b108)
+// Phụ thuộc: services/repo, services/sb, utils/date, pages/dang-nhap,
+//            pages/tree-view
+// Phiên bản: 0.12.0 · Cập nhật: 09/09/2026 (b110)
+//            0.12.0 nhánh `daxoa` — cây đang mở vừa bị xoá. ⚠ Người rơi vào
+//            đây CÓ ĐỦ QUYỀN; thiếu là thiếu cái cây. Không có nhánh này thì
+//            họ mở ra một sơ đồ trống không lời giải thích, hoặc nghe câu
+//            "chưa được cấp quyền" — sai hẳn. Màn hình kể ĐÍCH DANH tên cây,
+//            người xin và người duyệt, đúng chữ chủ dự án chốt 09/09/2026.
 //            0.11.0 nhánh `duocmoi` — người ĐƯỢC MỜI (b107) thấy Nhận/Từ chối
 //            ngay tại màn hình khởi động, thay vì câu "đơn đang chờ duyệt".
 // ============================================================
@@ -39,6 +45,7 @@ import { xinVaoCay, nhanLoiMoi, tuChoiLoiMoi } from '../services/sb.js';
 import { mountDangNhap } from './dang-nhap.js';
 import { mountTreeView } from './tree-view.js';
 import { rongHop, vaiTroBangChu } from '../config.js';
+import { stampNow } from '../utils/date.js';
 
 /**
  * Hiện màn hình chờ, gọi repo.khoiTao(), rồi chuyển sang tree-view.
@@ -103,6 +110,42 @@ function hienManHinhCho(el) {
  */
 function hienManHinhKhongCoQuyen(el, phien) {
   el.innerHTML = '';
+
+  // ⚠ ĐỨNG ĐẦU MỌI NHÁNH (b110). Người rơi vào đây **có đủ quyền** — họ có
+  //   chân trong cây, có khi còn là Quản trị hệ thống. Cái thiếu không phải
+  //   quyền mà là cái cây: nó vừa bị xoá. Để nhánh nào bên dưới nuốt mất ca
+  //   này là nói với một quản trị viên rằng họ "chưa được cấp quyền xem" —
+  //   sai hẳn, và họ sẽ đi tìm người cấp quyền cho mình.
+  //
+  // ⚠ Chủ dự án chốt hình dạng của màn hình này (09/09/2026): *"nếu người nào
+  //   đang có chân trong cây này thì nhận thông báo cây đã bị xoá bởi… vậy
+  //   không lo màn hình trắng"*. Nên nó phải kể ĐÍCH DANH — tên cây, ai xin,
+  //   ai duyệt. Một câu "gia phả đã bị xoá" trống không thì người đọc vẫn
+  //   phải đi hỏi vòng quanh, tức vẫn là một ngõ cụt, chỉ lịch sự hơn.
+  if (phien.trangThai === 'daxoa') {
+    el.append(khung([
+      tieuDe('Gia phả này đã bị xoá'),
+      doan('“' + (phien.tenCay || 'Gia phả bạn đang mở') + '”' +
+           (phien.maCay ? ' (' + phien.maCay + ')' : '') +
+           ' đã được đưa vào thùng rác' +
+           (phien.daXoaLuc ? ' lúc ' + stampNow(new Date(phien.daXoaLuc)) : '')
+           + '.'),
+      phien.emailXinXoa
+        ? doan('Người xin xoá: ' + phien.emailXinXoa +
+               (phien.emailDuyet ? ' — Quản trị hệ thống duyệt: ' +
+                                   phien.emailDuyet : '') + '.')
+        : null,
+      phien.lyDo ? doan('Lý do: “' + phien.lyDo + '”') : null,
+      doan(phien.laQuanTriHeThong
+        ? 'Còn phục hồi được trong 30 ngày. Bạn là Quản trị hệ thống — mở ' +
+          'trang Quản trị, khu Gia phả, khối Thùng rác.'
+        : 'Còn phục hồi được trong 30 ngày. Nếu đây là nhầm lẫn, nhắn cho ' +
+          'Quản trị hệ thống. Muốn sang gia phả khác thì mở trang Quản trị.'),
+      veNutQuanTri(),
+      phien.email ? nhoMo('Bạn đang đăng nhập bằng: ' + phien.email) : null,
+    ]));
+    return;
+  }
 
   // ⚠ ĐỨNG TRƯỚC nhánh 'cho' — cả hai đều là dòng approved=false, nhưng
   //   người ĐƯỢC MỜI (b107) chưa nộp đơn nào và cần bấm Nhận/Từ chối NGAY
@@ -323,6 +366,27 @@ function doan(chu) {
   p.textContent = chu;
   p.style.margin = '0 0 10px';
   return p;
+}
+
+/**
+ * Nút sang trang Quản trị, khu Gia phả.
+ *
+ * ⚠ Có nút này thì màn hình *"gia phả nằm trong thùng rác"* mới là một lối
+ *   đi chứ không phải một ngõ cụt — đúng lý lẽ đã dùng khi thêm nút
+ *   *Mở trang Quản trị* vào Cài đặt ở b103 (gỡ khối Duyệt đi mà quên nút là
+ *   lấy mất lối vào DUY NHẤT của cả trang ấy).
+ */
+function veNutQuanTri() {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = 'Mở trang Quản trị';
+  b.style.cssText =
+    'margin:14px 0 0;padding:9px 16px;border-radius:7px;font:inherit;' +
+    'cursor:pointer;border:1px solid #2a2622;background:#2a2622;color:#fffdf9';
+  b.addEventListener('click', () => {
+    window.location.href = 'QuanTri.html#gia-pha';
+  });
+  return b;
 }
 
 function nhoMo(chu) {

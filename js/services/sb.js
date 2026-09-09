@@ -5,7 +5,12 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.12.0 · Cập nhật: 09/09/2026 17:10 (b109d)
+// Phiên bản: 0.13.0 · Cập nhật: 09/09/2026 (b110)
+//            0.13.0 năm cửa THÙNG RÁC GIA PHẢ của `16-thung-rac-cay.sql`:
+//            `xinXoaCay()` · `huyXinXoaCay()` · `duyetXoaCay()` ·
+//            `phucHoiCay()` · `donThungRac()`. Và `layDanhSachGiaPha()` đọc
+//            thêm bốn cột trạng thái xoá. ⚠ `donThungRac()` là cửa xoá cứng
+//            duy nhất của cả app — đọc khối chú thích ngay trên nó.
 //            0.12.0 `layPhien()` đọc thêm `hoTen` — họ tên của TÀI KHOẢN đang
 //            đăng nhập (không phải người trong sơ đồ). Đọc thẳng bảng
 //            `tai_khoan` bằng RLS `for select … using (user_id = auth.uid())`
@@ -235,6 +240,18 @@ export async function layPhien() {
     const treeId = (ds && ds.length)
       ? await cayDangChon(k, nguoi.id, ds)
       : await cayDauTien(k);
+
+    // b110 — cây đang mở vừa vào thùng rác. Quản trị hệ thống cũng KHÔNG đọc
+    // được nó (`16` mục 3, cố ý), nên đi tiếp là mở ra một sơ đồ trống.
+    const tinRac = treeId ? await tinThungRac(treeId) : {};
+    if (tinRac.daXoa) {
+      return {
+        ...nenNguoi, daDangNhap: true, email: nguoi.email || '',
+        vaiTro: 'quan_tri_he_thong', docDuoc: false, suaDuoc: false,
+        trangThai: 'daxoa', treeId, ...tinRac,
+      };
+    }
+
     return {
       ...nenNguoi,
       daDangNhap: true,
@@ -301,6 +318,20 @@ export async function layPhien() {
   const treeId = await cayDangChon(k, nguoi.id, ds);
   const vaiTro = (ds.find((m) => m.tree_id === treeId) || ds[0]).role;
 
+  // b110 — cây đang mở vừa bị xoá. `docDuoc` ở nhánh này vốn là hằng `true`
+  // vì "có dòng tree_members" từng đủ để kết luận đọc được; từ b110 thì không
+  // còn đủ. Đây là chỗ chủ dự án chỉ thẳng: *"người nào đang có chân trong
+  // cây này thì nhận thông báo cây đã bị xoá bởi… vậy không lo màn hình
+  // trắng"* — nên phải lấy về cả TÊN CÂY và NGƯỜI XOÁ, không chỉ một chữ có.
+  const tinRac = await tinThungRac(treeId);
+  if (tinRac.daXoa) {
+    return {
+      ...nenNguoi, daDangNhap: true, email: nguoi.email || '',
+      vaiTro, docDuoc: false, suaDuoc: false,
+      trangThai: 'daxoa', treeId, ...tinRac,
+    };
+  }
+
   return {
     ...nenNguoi,
     daDangNhap: true,
@@ -318,6 +349,28 @@ export async function layPhien() {
     treeId,
     ...(await caiDatCay(k, nguoi.id, treeId)),
   };
+}
+
+/**
+ * Máy chủ trả lời: cây này có trong thùng rác không, và nếu có thì **ai đã
+ * xoá nó**. Trả `{}` khi không — hoặc khi người hỏi không có quyền biết.
+ *
+ * ⚠ Hỏi để BIẾT NÓI GÌ, không phải để gác. Hàng rào ở `co_the_xem_cay()` và
+ *   `co_the_sua()` (`16` mục 3 và 4) — người này đằng nào cũng đọc ra 0 dòng.
+ *   Không hỏi câu này thì họ vẫn bị chặn, chỉ là bị chặn bằng một sơ đồ trống
+ *   không có lấy một chữ giải thích, và đó đúng là kiểu hỏng
+ *   `THIET-KE-QUAN-TRI.md` gọi tên: *"Lưu báo thành công mà màn hình trống"*.
+ *
+ * ⚠ Từ b110 bản 0.2.0, đây là đường DUY NHẤT để một thành viên biết cây của
+ *   mình vừa bị xoá: cây đã biến khỏi `ds_gia_pha()` và RLS `doc_trees` cũng
+ *   đóng, nên không còn chỗ nào đọc ra cái tên ấy nữa.
+ */
+async function tinThungRac(treeId) {
+  const k = layKhach();
+  if (!k || !treeId) return {};
+  const { data, error } = await k.rpc('tin_thung_rac', { p_tree: treeId });
+  if (error || !data) return {};
+  return data;
 }
 
 /** Máy chủ trả lời: người đang đăng nhập có sửa được cây này không. */
@@ -553,6 +606,16 @@ export async function layDanhSachGiaPha() {
     duocMoi: Boolean(r.duoc_moi),
     moiVai: r.moi_vai || null,
     emailNguoiMoi: r.email_nguoi_moi || '',
+    // Bốn cột b110 — `luoc-do/16-thung-rac-cay.sql` mục 5.
+    //
+    // ⚠ `xinXoaLuc` CÓ mà `daXoaLuc` trống nghĩa là *đang chờ duyệt*, và cây
+    //   lúc ấy **vẫn dùng được bình thường**. Đừng suy từ `xinXoaLuc` ra
+    //   "cây đã đóng" — máy chủ không đóng gì cả ở trạng thái ấy, và một màn
+    //   hình đóng sớm hơn máy chủ là màn hình nói dối.
+    xinXoaLuc: r.xin_xoa_luc || null,
+    xinXoaLyDo: r.xin_xoa_ly_do || '',
+    emailXinXoa: r.email_xin_xoa || '',
+    daXoaLuc: r.da_xoa_luc || null,
   }));
   return { ok: true, loi: null, ds };
 }
@@ -841,6 +904,88 @@ export async function tuChoiLoiMoi(treeId) {
   const k = layKhach();
   if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
   const { data, error } = await k.rpc('tu_choi_loi_moi', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+// ============================================================
+// Thùng rác gia phả — `luoc-do/16-thung-rac-cay.sql`
+// ============================================================
+//
+// Hai chữ ký, như việc vào cây: **chủ cây xin, Quản trị hệ thống duyệt.**
+// Không cú bấm nào xoá được một gia phả.
+//
+// ⚠ Trạng thái đọc ở `layDanhSachGiaPha()`, hai cột `xinXoaLuc` · `daXoaLuc`.
+//   Không có hàm riêng để hỏi — thêm một đường thứ hai trả lời cùng một câu
+//   là thêm một chỗ để hai bản lệch nhau.
+
+/**
+ * Chữ ký thứ nhất — xin xoá gia phả. Chỉ người đứng tên cây và Quản trị hệ
+ * thống gọi được; máy chủ tự hỏi, hàm này không hỏi trước.
+ *
+ * ⚠ Nộp đơn **không khoá cây**. Cả họ vẫn đọc và sửa bình thường cho tới khi
+ *   đơn được duyệt — đơn còn có thể bị từ chối, và khoá sớm là biến một lá
+ *   đơn thành một lệnh.
+ */
+export async function xinXoaCay(treeId, lyDo = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('xin_xoa_cay', {
+    p_tree: treeId, p_ly_do: String(lyDo || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/** Rút đơn. Chỉ rút được khi đơn CHƯA duyệt — đã vào thùng rác thì phải phục hồi. */
+export async function huyXinXoaCay(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('huy_xin_xoa_cay', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/**
+ * Chữ ký thứ hai — duyệt đơn, cây vào thùng rác. Chỉ Quản trị hệ thống.
+ *
+ * ⚠ Máy chủ từ chối khi cây CHƯA có đơn, kể cả với Quản trị hệ thống. Đó là
+ *   chỗ luật hai chữ ký thật sự nằm.
+ */
+export async function duyetXoaCay(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('duyet_xoa_cay', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/** Lấy một cây ra khỏi thùng rác. Chỉ Quản trị hệ thống. */
+export async function phucHoiCay(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('phuc_hoi_cay', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/**
+ * Dọn thùng rác — **xoá cứng, không có đường lùi**. Chỉ Quản trị hệ thống,
+ * chỉ bấm tay, và nhận cả loạt mã cây một lần (chủ dự án chốt 09/09/2026).
+ *
+ * ⚠ Máy chủ BỎ QUA cây chưa đủ 30 ngày nằm trong thùng rác và kể tên chúng
+ *   ở `boQua`, chứ không từ chối cả loạt. Nơi gọi phải đọc `boQua` và nói
+ *   ra — im lặng ở đây là người bấm tưởng đã dọn xong cả năm cây.
+ *
+ * ⚠ Ảnh trong kho KHÔNG đi theo `delete` của Postgres. Máy chủ trả `dsAnh`,
+ *   danh sách đường dẫn vừa mồ côi; gọi `xoaAnhThat(dsAnh)` ngay sau.
+ */
+export async function donThungRac(dsTreeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const ds = (dsTreeId || []).filter(Boolean);
+  if (!ds.length) return { ok: false, loi: 'Chưa chọn gia phả nào để dọn.' };
+  const { data, error } = await k.rpc('don_thung_rac', { p_ds: ds });
   if (error) return { ok: false, loi: cauLoi(error) };
   return data || { ok: false, loi: 'Máy chủ không trả lời.' };
 }

@@ -70,6 +70,49 @@ tạo cây mới · mã ngắn của tài khoản là gì*.
 Và hai cột mới trên `trees`: `chu_so_huu` (người dựng cây) ·
 `cho_nguoi_la_thay_ten` (công tắc tầng 1, **mặc định TẮT**).
 
+### 2d. Năm cột THÙNG RÁC trên `trees` — 09/09/2026, `luoc-do/16-thung-rac-cay.sql`
+
+`xin_xoa_luc` · `xin_xoa_boi` · `xin_xoa_ly_do` · `da_xoa_luc` · `da_xoa_boi`.
+Cả cây cũng xoá mềm, đúng luật mục 4 bên dưới — chỉ khác là ở đây cái bị xoá
+là cả một gia phả, nên hai chữ ký thay cho một cú bấm.
+
+| `xin_xoa_luc` | `da_xoa_luc` | Nghĩa | Ai đọc được cây |
+|---|---|---|---|
+| trống | trống | bình thường | như thường |
+| **có** | trống | đang xin xoá | ⚠ **vẫn như thường** |
+| có | **có** | trong thùng rác | không ai, **trừ vai `sao_luu`**; và cây **biến hẳn** khỏi `ds_gia_pha()` của người thường |
+| — | có, quá 30 ngày | dọn hẳn được | — |
+
+⚠ **Dòng hai là chỗ dễ làm sai nhất.** Đơn xin xoá **không khoá cây**: đơn còn
+có thể bị từ chối, và trong lúc chờ thì cả họ vẫn đang dùng. Không hàm quyết
+quyền nào được hỏi `xin_xoa_luc` — chỉ `da_xoa_luc`.
+
+⚠⚠ **Dòng ba: `sao_luu` là ngoại lệ, và nó bắt buộc.** Sáu bảng nội dung gác
+bằng `co_the_xem_cay()` (mục 2a), nên khoá thùng rác ở đó mà không chừa lối
+cho vai sao lưu thì **bản sao lưu đêm ra file THIẾU đúng cái cây mong manh
+nhất, và không báo lỗi**. Ba mươi ngày trong thùng rác là ba mươi ngày bản sao
+lưu làm đường lùi duy nhất. *Thùng rác đóng cửa với người, không đóng cửa với
+máy sao lưu.*
+
+Hai hàm bị sửa và **chỉ hai**: `co_the_xem_cay()` khoá đọc *(có lối cho
+`sao_luu`)* · `co_the_sua()` khoá ghi *(không lối cho ai — nó gác cả ba cửa
+ghi: `luu_cay()`, `ghi_anh`, `xoa_anh`)*. **KHÔNG đụng `la_thanh_vien()`**
+(gác bốn bảng sao lưu vẫn phải chép) và **KHÔNG đụng `vai_tro()`**.
+
+⚠ **Cây trong thùng rác KHÔNG hiện trong danh sách** (chủ dự án chốt
+09/09/2026) — chỉ Quản trị hệ thống còn thấy, để có chỗ bấm Phục hồi. Thành
+viên biết chuyện qua **`tin_thung_rac(p_tree)`**: một lời nhắn kể tên cây,
+ngày xoá, email người xin và người duyệt, hiện ở màn hình khởi động
+(`khoi-dong.js` nhánh `daxoa`). Hàm ấy là `security definer` nên **tự gác** —
+phải có chân trong cây hoặc mang cờ Quản trị hệ thống; thiếu mệnh đề ấy là
+người lạ dò được tên mọi gia phả từng bị xoá kèm email hai người liên quan.
+
+`don_thung_rac(p_ds uuid[])` là **chỗ duy nhất trong cả phần mềm được phép
+`delete from public.trees`** — chỉ Quản trị hệ thống, chỉ bấm tay, chỉ cây đã
+quá 30 ngày. ⚠ Ảnh trong kho Storage **không** cascade theo; hàm trả `dsAnh`
+để màn hình gọi `xoaAnhThat()`. ⚠ `change_log` **thì cascade** — khác hẳn
+`xoa_tai_khoan()`, vì ở đây nhật ký nói về cái cây đang bị xoá.
+
 > ⚠⚠ **`tai_khoan` giữ CỜ QUYỀN, nên nó CHỈ có luật ĐỌC.**
 >
 > Đừng chép khuôn `rieng_user_settings` sang đây. Khuôn ấy (`for all` … `using
@@ -221,6 +264,10 @@ Không có xoá cứng ở đường thường. Xoá là `deleted = true`, và b
 
 Chỉ **Dọn thùng rác** (`domains/purge.js`) mới làm bản ghi biến mất khỏi mảng,
 và chỉ nó mới sinh ra `ops.persons.xoa` — đường xoá thật duy nhất.
+
+⚠ **Hai cái "thùng rác", đừng lẫn.** `domains/purge.js` dọn NGƯỜI trong một
+cây. `don_thung_rac()` của `16` dọn CẢ CÂY — xem mục 2d. Chúng ở hai tầng
+khác nhau và không gọi nhau.
 
 ⚠ Xoá một người **KHÔNG đụng một chữ nào vào `unions`**. Lý do thật không phải
 "đường đọc đã lọc rồi", mà là: **hoàn tác phải trả lại ĐÚNG thứ đã có.** Gỡ mã

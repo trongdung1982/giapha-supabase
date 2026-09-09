@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 09/09/2026 (b109b)*
+*Nhánh Supabase · cập nhật 09/09/2026 (b110)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -15,13 +15,13 @@ nó chính là thứ nó sinh ra để tránh.
 | Mới vào nhánh này lần đầu | + `KIEN-TRUC.md` **cả file** |
 | Đụng `services/` | `KIEN-TRUC.md` mục 1, 3 · `DU-LIEU.md` mục 1, 6 |
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
-| **Mời vào cây · cờ QT hệ thống · xoá tài khoản · xoá gia phả** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký)* · **11.5** *(cờ QTHT: cửa thứ SÁU của luật không-tự-đặt-quyền)* · **11.6** *(xoá cây: chủ xin — QTHT duyệt — thùng rác 30 ngày; ⚠ ĐỪNG sửa `la_thanh_vien()`, sao lưu phải chép được cây trong thùng rác)* · `luoc-do/14-loi-moi.sql` |
+| **Mời vào cây · cờ QT hệ thống · xoá tài khoản · xoá gia phả** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký)* · **11.5** *(cờ QTHT)* · **11.6** *(xoá cây: chủ xin — QTHT duyệt — thùng rác 30 ngày)* · `luoc-do/14-loi-moi.sql` · **`16-thung-rac-cay.sql`** ⚠ *mục 11.6 nói **sai đường vá**: sửa `co_the_xem_cay()` mà không chừa lối cho vai `sao_luu` là sao lưu đêm ra file THIẾU cây trong thùng rác, không báo lỗi — sáu bảng nội dung gác bằng chính hàm ấy. Đọc khối đầu `16` trước khi đụng. Và ĐỪNG sửa `la_thanh_vien()`* |
 | Đụng phân quyền, RLS | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.3** *(bảng 5 hạng — chốt 08/09)* · `luoc-do/13-quan-ly-thanh-vien.sql` *(ai đổi được quyền · luật KHÔNG tự đặt quyền cho mình)* · `DU-LIEU.md` mục 2 + **2a** + **2b** · `11-quyen-he-thong.sql` ⚠ *(cờ quyền: CHỈ luật đọc)* · `06` · `07` · `02-rls.sql` |
 | **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
 | **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ô gợi ý: `o-goi-y.js` + `luoc-do/15-tim-kiem.sql` · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (12 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép. ⚠ Ảnh 1280px KHÔNG phân giải nổi "đè lên nhau" với "sát nhau" — đo bằng `node ../kiem-thu/do-goi-y.mjs` |
-| Bàn thử SQL tại chỗ · phép ĐO hàng rào · tên/mã vai trò | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102`→`do-b107` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` · tên vai: `config.js` hàm `vaiTroBangChu()` |
+| Bàn thử SQL tại chỗ · phép ĐO hàng rào · tên/mã vai trò | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102`→`do-b110` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` · tên vai: `config.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
 | Đụng ảnh | `KIEN-TRUC.md` mục 7 ⚠ có câu chưa chốt |
@@ -51,7 +51,10 @@ nó chính là thứ nó sinh ra để tránh.
    cây nay **3 chữ số** (`NPG473`). `13` đã dán 08/09 (b105), khu Tài khoản
    chạy 08/09 (b106); `14` đã dán, **b108·b109·b109b chạy thật 09/09**. ⏳ **`15`
    bản 0.2.0 CHƯA DÁN** (cột `vai_cao_nhat`) — tự kiểm phải ra 13 ĐẠT.
-   Dán lại `11`/`10` → dán lại `14`; dán lại `13`/`14` → **dán lại `15`**.
+   ✓ **`16` (thùng rác cây, b110) ĐÃ DÁN cả hai 09/09** — tự kiểm 11 mục đạt.
+   ⏳ Nhưng **chưa ai bấm thử** vòng xin → duyệt → phục hồi trên app.
+   Chuỗi dán lại: `11`/`10` → `14` → **`16`** · và `13`/`14` → `15`.
+   Quên `16` sau khi dán `11`/`14` là **cây trong thùng rác mở lại cho cả họ**.
 
 ## Quy ước khung tài liệu này
 
@@ -66,13 +69,10 @@ nó chính là thứ nó sinh ra để tránh.
   *"vì sao"* dài hơn phần *"làm gì"* — cái "làm gì" đọc mã là ra, cái "vì sao"
   mất đi thì không đoán lại được.
 
-## Hai thư mục, đừng lẫn
-
-Bảng so `supabase/` với `../tai-lieu/` nay nằm ở **`CLAUDE.md` mục 10** — file
-ấy mọi phiên đều đọc sẵn, nên giữ bản thứ hai ở đây chỉ là hai chỗ để lệch nhau.
-
-⚠ Mọi file thả vào `supabase/` **đều đi lên mạng**, và lịch sử git giữ lại cả
-bản đã xoá sau này. Hỏi câu ấy trước khi thêm file.
+- ⚠ Mọi file thả vào `supabase/` **đều đi lên mạng**, và lịch sử git giữ lại
+  cả bản đã xoá sau này. Hỏi câu ấy trước khi thêm file.
+  *(Bảng so `supabase/` với `../tai-lieu/` ở `CLAUDE.md` mục 10 — mọi phiên
+  đều đọc sẵn file ấy, giữ bản thứ hai ở đây là hai chỗ để lệch nhau.)*
 
 ## Lệnh
 

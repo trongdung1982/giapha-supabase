@@ -72,6 +72,7 @@ const JS_HT = doc('../js/pages/quan-tri/khu-tai-khoan-he-thong.js');
 const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
 const SQL_13 = boGhiChu(doc('../luoc-do/13-quan-ly-thanh-vien.sql'));
 const SQL_14 = boGhiChu(doc('../luoc-do/14-loi-moi.sql'));
+const SQL_16 = boGhiChu(doc('../luoc-do/16-thung-rac-cay.sql'));
 
 /** Tên file có thật ở gốc repo, giữ nguyên chữ hoa chữ thường. */
 const FILE_GOC = readdirSync(resolve(DAY, '..'));
@@ -603,6 +604,155 @@ kiem('file nạp hụt thì NÓI RA, không đứng im ở chữ "Đang đọc�
 }
 
 // ============================================================
+// PHẦN F2 — THÙNG RÁC GIA PHẢ (b110, `16-thung-rac-cay.sql`)
+// ============================================================
+console.log('\nPHẦN F2 — thùng rác gia phả');
+
+// Năm cửa của `16`, đối chiếu CHỮ KÝ SQL — bẫy số 1, khác file.
+const CUA_16 = [
+  { js: 'xinXoaCay',    sql: 'xin_xoa_cay' },
+  { js: 'huyXinXoaCay', sql: 'huy_xin_xoa_cay' },
+  { js: 'duyetXoaCay',  sql: 'duyet_xoa_cay' },
+  { js: 'phucHoiCay',   sql: 'phuc_hoi_cay' },
+  { js: 'donThungRac',  sql: 'don_thung_rac' },
+];
+
+for (const c of CUA_16) {
+  kiem('sb.js xuất hàm ' + c.js + '()',
+       new RegExp('export\\s+async\\s+function\\s+' + c.js + '\\b').test(JS_SB),
+       'không thấy');
+
+  const lech = lechThamSo(JS_SB, SQL_16, c.sql);
+  kiem('  ' + c.sql + '() — tên tham số khớp chữ ký SQL',
+       lech !== null && lech.length === 0,
+       lech === null ? 'không tìm thấy lời gọi hoặc chữ ký' : lech.join('; '));
+
+  kiem('  ' + c.sql + '() được cấp cho authenticated',
+       coCapQuyen(SQL_16, c.sql), 'thiếu grant execute … to authenticated');
+
+  kiem('  màn hình gọi ' + c.js + '()',
+       new RegExp('\\b' + c.js + '\\s*\\(').test(boGhiChuJs(JS_GP)),
+       'cửa có ở sb.js mà chưa lộ ra màn hình nào');
+}
+
+// `tin_thung_rac()` là hàm nội bộ của `sb.js` (không xuất ra), nhưng lời gọi
+// vẫn đi qua RPC nên vẫn dính bẫy số 1 — tên tham số sai một chữ thì Supabase
+// không tìm thấy hàm, và `tinThungRac()` nuốt lỗi để trả `{}`. Hỏng đúng theo
+// hướng dễ chịu: cây đã xoá lại mở ra một sơ đồ trống.
+{
+  const lech = lechThamSo(JS_SB, SQL_16, 'tin_thung_rac');
+  kiem('tin_thung_rac() — tên tham số khớp chữ ký SQL',
+       lech !== null && lech.length === 0,
+       lech === null ? 'không tìm thấy lời gọi hoặc chữ ký' : lech.join('; '));
+}
+
+kiem('tin_thung_rac() được cấp cho authenticated',
+     coCapQuyen(SQL_16, 'tin_thung_rac'),
+     'thiếu grant execute … to authenticated');
+
+// ⚠ `tin_thung_rac()` là `security definer`. Thiếu mệnh đề gác thì người lạ
+//   dò được tên mọi gia phả từng bị xoá kèm email hai người liên quan — cùng
+//   hình dạng Bẫy 3 của `11` (lộ email cả họ).
+kiem('tin_thung_rac() tự gác bằng la_thanh_vien hoặc cờ Quản trị hệ thống',
+     /create\s+or\s+replace\s+function\s+public\.tin_thung_rac[\s\S]{0,900}?la_thanh_vien[\s\S]{0,200}?la_quan_tri_he_thong/i
+       .test(SQL_16),
+     'người lạ dò được tên mọi gia phả đã xoá và email người liên quan');
+
+// Chủ dự án chốt 09/09/2026: *"không hiện cây trong thùng rác"*. Bản 0.1.0
+// thêm nhánh `la_thanh_vien` vào `where` của `ds_gia_pha()`; nhánh ấy đã gỡ.
+//
+// ⚠ Phải CẮT LẤY THÂN HÀM rồi mới tìm, không quét bằng một biểu thức mở.
+//   Bản đầu của phép này viết `ds_gia_pha[\s\S]*?la_thanh_vien` và báo HỎNG
+//   trên một file đúng: dấu `*?` tuy lười vẫn chạy tiếp qua hết thân hàm để
+//   bắt chữ `la_thanh_vien` nằm trong `tin_thung_rac()` ở mục 5b ngay sau đó.
+//   Cùng họ bài học "thứ mình dùng để đo cũng hỏng được".
+{
+  const than = thanHamSql(SQL_16, 'ds_gia_pha');
+  kiem('ds_gia_pha() KHÔNG hiện cây trong thùng rác cho người thường',
+       than !== null && !/la_thanh_vien/.test(than),
+       than === null ? 'không tìm thấy thân hàm ds_gia_pha'
+         : 'cây đã xoá vẫn nằm trong bảng chọn — mời người ta bấm vào thứ không mở được');
+}
+
+// Màn hình khởi động phải có nhánh riêng, và phải kể ĐÍCH DANH. Không có nó
+// thì thành viên của cây vừa bị xoá đi thẳng vào `mountTreeView()` và nhìn
+// một sơ đồ trống — đúng thứ chủ dự án gọi là "màn hình trắng".
+{
+  const js = boGhiChuJs(doc('../js/pages/khoi-dong.js'));
+  kiem('màn hình khởi động có nhánh riêng cho cây đã bị xoá',
+       /daxoa/.test(js),
+       'người có đủ quyền sẽ thấy sơ đồ trống hoặc câu "chưa được cấp quyền"');
+  kiem('lời nhắn kể đích danh tên cây và người xoá',
+       /tenCay/.test(js) && /emailXinXoa/.test(js) && /emailDuyet/.test(js),
+       'câu "gia phả đã bị xoá" trống không vẫn là một ngõ cụt');
+}
+
+// ⚠⚠ PHÉP ĐẮT NHẤT CỦA CẢ PHẦN NÀY, và nó canh một chỗ hỏng IM LẶNG: sáu
+//    bảng nội dung gác bằng `co_the_xem_cay()`, nên khoá thùng rác ở đó mà
+//    không chừa lối cho vai `sao_luu` thì bản sao lưu đêm vẫn chạy, vẫn sinh
+//    file đủ chín bảng, chỉ **thiếu đúng cái cây đang mong manh nhất** — và
+//    không có gì báo lỗi. Đúng họ với lỗ hổng b102.
+kiem('co_the_xem_cay() chừa lối cho máy sao lưu đọc cây trong thùng rác',
+     /create\s+or\s+replace\s+function\s+public\.co_the_xem_cay[\s\S]{0,700}?la_may_sao_luu/i
+       .test(SQL_16),
+     'sao lưu đêm sẽ ra file THIẾU cây trong thùng rác, không báo lỗi');
+
+kiem('co_the_xem_cay() thật sự hỏi tới thùng rác',
+     /create\s+or\s+replace\s+function\s+public\.co_the_xem_cay[\s\S]{0,700}?trong_thung_rac/i
+       .test(SQL_16),
+     'cây trong thùng rác vẫn đọc được');
+
+kiem('co_the_sua() khoá chiều ghi vào cây trong thùng rác',
+     /create\s+or\s+replace\s+function\s+public\.co_the_sua\s*\(p_tree[\s\S]{0,600}?trong_thung_rac/i
+       .test(SQL_16),
+     'cây trong thùng rác vẫn ghi được');
+
+// `la_thanh_vien()` gác `tree_members` · `change_log` · `imports` ·
+// `user_settings` — bốn bảng sao lưu vẫn phải chép được. Đụng vào là lặp lại
+// đúng lỗ hổng b102.
+kiem('16 KHÔNG định nghĩa lại la_thanh_vien()',
+     !/create\s+or\s+replace\s+function\s+public\.la_thanh_vien/i.test(SQL_16),
+     'đụng vào hàm nền móng mà b102 đã trả giá một lần để giữ');
+
+kiem('16 KHÔNG định nghĩa lại vai_tro()',
+     !/create\s+or\s+replace\s+function\s+public\.vai_tro/i.test(SQL_16),
+     'vai_tro() là nền móng, và 05-sao-luu.sql dùng nó ở hai luật');
+
+// Hàm trả BẢNG — cùng bài học 42P13 đã trả giá trên máy chủ thật 08/09/2026.
+kiem('ds_gia_pha() có drop function trước create (bài học 42P13)',
+     /drop\s+function\s+if\s+exists\s+public\.ds_gia_pha/i.test(SQL_16),
+     'create or replace không đổi được danh sách cột trả về');
+
+// Xoá cứng là việc duy nhất trong app không lùi được. `anon` gọi được nó là
+// mở cửa cho cả internet — `revoke` phải đứng trước `grant`.
+kiem('don_thung_rac() có revoke khỏi public, anon',
+     /revoke\s+all\s+on\s+function\s+public\.don_thung_rac[^;]*from\s+public,\s*anon/i
+       .test(SQL_16),
+     'mặc định Postgres cho MỌI vai gọi, kể cả người chưa đăng nhập');
+
+// `delete from public.trees` chỉ được có ở ĐÚNG MỘT chỗ trong cả lược đồ.
+{
+  const moiFile = [SQL_08, SQL_13, SQL_14, SQL_16];
+  const dem = moiFile.reduce((t, f) =>
+    t + (f.match(/delete\s+from\s+public\.trees/gi) || []).length, 0);
+  kiem('chỉ có ĐÚNG MỘT lệnh delete from public.trees trong lược đồ',
+       dem === 1, 'đếm được ' + dem + ' lệnh — cửa xoá cứng phải là duy nhất');
+}
+
+// Màn hình phải đọc `boQua` và `dsAnh`. Bỏ `boQua` là người bấm tưởng đã dọn
+// xong cả loạt; bỏ `dsAnh` là để lại file mồ côi vĩnh viễn trong kho ảnh.
+kiem('màn hình xoá ảnh mồ côi sau khi dọn thùng rác',
+     /dsAnh/.test(boGhiChuJs(JS_GP)) && /xoaAnhThat\s*\(/.test(boGhiChuJs(JS_GP)),
+     'ảnh trong kho không đi theo delete của Postgres');
+
+// Đơn xin xoá KHÔNG khoá cây — hàng rào ở máy chủ, nhưng màn hình cũng không
+// được tự đóng sớm hơn máy chủ.
+kiem('màn hình KHÔNG tự đóng cây khi mới có đơn xin xoá',
+     !/xinXoaLuc\s*\)\s*return/.test(boGhiChuJs(JS_GP)) &&
+     /!c\.daXoaLuc/.test(boGhiChuJs(JS_GP)),
+     'màn hình đóng sớm hơn máy chủ — biến một lá đơn thành một lệnh');
+
+// ============================================================
 // PHẦN G — KIỂM CHỨNG NGƯỢC: bẻ gãy mã rồi xem bài kiểm có bắt được không
 // ============================================================
 console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
@@ -860,6 +1010,24 @@ function suaHashBangReplaceState(js) {
   if (!m) return false;
   const than = boGhiChuJs(m[0]);
   return /replaceState/.test(than) && !/location\.hash\s*=/.test(than);
+}
+
+/**
+ * Cắt lấy THÂN của một hàm SQL — từ `create … function public.<tên>` tới dấu
+ * `$$;` đóng đầu tiên. Trả `null` nếu không thấy.
+ *
+ * ⚠ Có hàm này vì một biểu thức `<tên>[\s\S]*?<chữ cần tìm>` **không dừng ở
+ *   cuối hàm**: dấu `*?` lười thì lười, nhưng nếu chữ ấy không có trong thân
+ *   hàm nó vẫn chạy tiếp sang hàm sau để tìm cho ra. Phép *"ds_gia_pha() không
+ *   còn nhánh la_thanh_vien"* báo HỎNG trên một file đúng đúng vì lẽ đó.
+ */
+function thanHamSql(sql, ten) {
+  const m = new RegExp(
+    'create\\s+(?:or\\s+replace\\s+)?function\\s+public\\.' + ten + '\\s*\\(',
+    'i').exec(sql);
+  if (!m) return null;
+  const ket = sql.indexOf('$$;', m.index);
+  return sql.slice(m.index, ket === -1 ? sql.length : ket);
 }
 
 /**

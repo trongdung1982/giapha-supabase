@@ -4,8 +4,17 @@
 //            được, dấu tích "cây làm việc" / nút Xin quyền, công tắc "cho
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
-// Phụ thuộc: services/sb, config
-// Phiên bản: 0.6.0 · Cập nhật: 09/09/2026 (b109b)
+// Phụ thuộc: services/sb, config, utils/id, quan-tri/o-goi-y
+// Phiên bản: 0.7.0 · Cập nhật: 09/09/2026 (b110)
+//            0.7.0 THÙNG RÁC GIA PHẢ. Cột *Xoá* trong bảng (xin xoá · rút
+//            đơn · duyệt), và khối **Thùng rác** riêng bên dưới với ô tích
+//            chọn hàng loạt. ⚠ Cây đã vào thùng rác **rời khỏi bảng chính**
+//            và chỉ còn ở khối ấy — để nó nằm cả hai chỗ là hai dòng nói về
+//            một cây, và người bấm không biết dòng nào thật.
+//            ⚠ Khối Thùng rác chỉ Quản trị hệ thống có gì để thấy, và đó là
+//            hàng rào của MÁY CHỦ: chủ dự án chốt 09/09/2026 *"không hiện cây
+//            trong thùng rác"*, nên `16` 0.2.0 gỡ nhánh `la_thanh_vien` khỏi
+//            `ds_gia_pha()`. Thành viên biết chuyện qua màn hình khởi động.
 //            0.6.0 hai ô của `veFormMoi()` nay CÓ GỢI Ý: gõ vài chữ của tên
 //            hoặc email thì hiện danh sách khớp (`o-goi-y.js`, lọc ở máy chủ
 //            bằng `15-tim-kiem.sql`). Trước bản này cả hai là ô gõ tay mù —
@@ -57,6 +66,7 @@ import {
   datChoNguoiLaThayTen, chonGiaPha, xinVaoCay, taoGiaPhaMoi,
   moiVaoCay, nhanLoiMoi, tuChoiLoiMoi,
   timTaiKhoan, timNguoiTrongCay,
+  xinXoaCay, huyXinXoaCay, duyetXoaCay, phucHoiCay, donThungRac, xoaAnhThat,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import { sinhMaCay } from '../../utils/id.js';
@@ -106,7 +116,14 @@ async function nap(than, phien) {
     return;
   }
 
-  const ds = kq.ds || [];
+  const tatCa = kq.ds || [];
+
+  // ⚠ Cây trong thùng rác TÁCH HẲN khỏi bảng chính. Để nó ở cả hai chỗ là
+  //   hai dòng nói về một cây, và dòng trên bảng chính sẽ mang một cột *Cây
+  //   làm việc* không bấm được cùng một cột *Xoá* vô nghĩa — người bấm không
+  //   có cách nào biết dòng nào là dòng thật.
+  const ds = tatCa.filter((c) => !c.daXoaLuc);
+  const dsRac = tatCa.filter((c) => c.daXoaLuc);
 
   // ⚠ Nút này đứng TRƯỚC nhánh "danh sách rỗng" bên dưới, và đó là chỗ nó
   //   phải đứng: người vừa được cấp quyền dựng cây mà chưa có chân ở đâu cả
@@ -116,6 +133,14 @@ async function nap(than, phien) {
 
   if (phien.laQuanTriHeThong) {
     than.append(veOCayMacDinh(ds, cayMacDinh, () => nap(than, phien)));
+  }
+
+  if (!ds.length && dsRac.length) {
+    // Mọi cây người này thấy đều đang nằm trong thùng rác — cảnh chỉ Quản trị
+    // hệ thống gặp được. Bảng chính trống, nhưng câu "chưa có gia phả nào"
+    // bên dưới sẽ nói sai hẳn, nên nhảy thẳng xuống khối Thùng rác.
+    than.append(veKhoiThungRac(dsRac, () => nap(than, phien)));
+    return;
   }
 
   if (!ds.length) {
@@ -133,6 +158,10 @@ async function nap(than, phien) {
   }
 
   than.append(veBang(ds, cayMacDinh, phien, () => nap(than, phien)));
+
+  if (dsRac.length) {
+    than.append(veKhoiThungRac(dsRac, () => nap(than, phien)));
+  }
 }
 
 // ============================================================
@@ -147,7 +176,10 @@ function veBang(ds, cayMacDinh, phien, napLai) {
 
   const bang = document.createElement('table');
   bang.style.cssText =
-    'width:100%;min-width:820px;border-collapse:collapse;font-size:13px;' +
+    // ⚠ 920px, không phải 820px — b110 thêm cột *Xoá*. Bảng hẹp hơn tổng bề
+    //   ngang các cột thì chữ trong ô bị bóp xuống hai dòng và hàng nút rơi
+    //   xuống dưới; ảnh 1280px không phân giải nổi chỗ ấy, phải đo.
+    'width:100%;min-width:920px;border-collapse:collapse;font-size:13px;' +
     'background:#fffdf9;border:1px solid #e6e0d8;border-radius:10px';
 
   bang.append(veDauBang(), veThanBang(ds, cayMacDinh, phien, napLai));
@@ -173,6 +205,8 @@ function veDauBang() {
     // b108 — chỉ chủ cây và Quản trị hệ thống thấy nút; người khác thấy ô
     // trống. Xem `veOMoi()`.
     ['Mời', 'text-align:center'],
+    // b110 — cùng tập người với cột Mời. Xem `veOXoa()`.
+    ['Xoá', 'text-align:center'],
   ];
   for (const [chu, them] of cot) {
     const th = document.createElement('th');
@@ -206,6 +240,9 @@ function veDong(c, cayMacDinh, phien, napLai) {
   //   Huy hiệu "Mặc định" thì Ở LẠI: nó nói chuyện khác hẳn — cây mà NGƯỜI LẠ
   //   vào được khi chưa có chân ở đâu — và không cột nào khác nói điều đó.
   if (c.fileId === cayMacDinh) oTen.append(huyHieu('Mặc định', false));
+  // b110 — đơn xin xoá KHÔNG khoá cây, nên huy hiệu này chỉ báo tin, không
+  // đổi gì trên hàng. Mọi cột khác vẫn bấm được như thường.
+  if (c.xinXoaLuc) oTen.append(huyHieu('Đang xin xoá', false));
 
   const oMa = o(c.tenFile || '',
     'padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:#5b4533');
@@ -223,7 +260,7 @@ function veDong(c, cayMacDinh, phien, napLai) {
 
   tr.append(oTen, oMa, oChu, oSo, oVai,
             veOCongTac(c, phien), veOThaoTac(c, phien, napLai),
-            veOMoi(c, phien, napLai));
+            veOMoi(c, phien, napLai), veOXoa(c, phien, napLai));
   return tr;
 }
 
@@ -471,6 +508,394 @@ function veFormMoi(td, c, napLai) {
  *   là **tiêu đề cột** (*Cây làm việc*) cộng câu dẫn đầu khu. Đổi tiêu đề cột
  *   thành chữ khác là lấy mất lời giải thích duy nhất của ô này.
  */
+// ============================================================
+// Xoá gia phả — hai chữ ký (`luoc-do/16-thung-rac-cay.sql`)
+// ============================================================
+//
+// ⚠ Cột này KHÔNG bao giờ xoá gì. Nó chỉ đi được nửa đường: chủ cây **xin**,
+//   rồi Quản trị hệ thống **duyệt** ở một cú bấm riêng, rồi cây nằm 30 ngày
+//   trong thùng rác trước khi mất thật. Ba nhịp, và nhịp nào cũng lùi được.
+
+/**
+ * Cột *Xoá*. Cùng tập người với cột *Mời*: chủ cây và Quản trị hệ thống.
+ *
+ * ⚠ Ẩn nút KHÔNG phải hàng rào — hàng rào ở `xin_xoa_cay()` và
+ *   `duyet_xoa_cay()`, đã đo bằng HR1/HR2/HR6 của `do-b110.mjs`. Ẩn chỉ để
+ *   không mời người ta bấm một thứ chắc chắn bị từ chối.
+ */
+function veOXoa(c, phien, napLai) {
+  const td = o('', 'padding:10px;text-align:center');
+  const laQT = phien.laQuanTriHeThong;
+
+  if (!c.toiLaChu && !laQT) return td;
+
+  // — Chưa có đơn: một nút xin —
+  if (!c.xinXoaLuc) {
+    const b = nut('Xin xoá…', false);
+    b.addEventListener('click', () => veFormXinXoa(td, c, napLai));
+    td.append(b);
+    return td;
+  }
+
+  // — Đã có đơn: kể ai xin, vì sao, rồi hai đường đi tiếp —
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'display:flex;flex-direction:column;align-items:center;gap:5px;min-width:150px';
+
+  const ai = document.createElement('span');
+  ai.textContent = (c.emailXinXoa || 'ai đó') + ' đã xin xoá';
+  ai.style.cssText = 'font-size:11px;color:#6a625a;word-break:break-all';
+  hop.append(ai);
+
+  if (c.xinXoaLyDo) {
+    const ly = document.createElement('span');
+    ly.textContent = '“' + c.xinXoaLyDo + '”';
+    ly.style.cssText = 'font-size:11px;color:#8a8078;font-style:italic';
+    hop.append(ly);
+  }
+
+  const hang = document.createElement('div');
+  hang.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center';
+
+  const bRut = nut('Rút đơn', false);
+  bRut.addEventListener('click', async () => {
+    bRut.disabled = true;
+    bRut.textContent = 'Đang rút…';
+    const kq = await huyXinXoaCay(c.fileId);
+    if (kq.ok) { napLai(); return; }
+    bRut.disabled = false;
+    bRut.textContent = 'Rút đơn';
+    hop.append(dongLoi(kq.loi || 'Không rút được đơn.'));
+  });
+  hang.append(bRut);
+
+  // ⚠ Chữ ký thứ hai chỉ Quản trị hệ thống ký được. Chủ cây thấy đơn của
+  //   mình đang chờ, và thấy nó đang chờ AI — không phải một ô trống.
+  if (laQT) {
+    const bDuyet = nut('Duyệt xoá', true);
+    bDuyet.addEventListener('click', () => veHoiDuyetXoa(hop, bDuyet, c, napLai));
+    hang.append(bDuyet);
+  }
+
+  hop.append(hang);
+
+  if (!laQT) {
+    const cho = document.createElement('span');
+    cho.textContent = 'chờ Quản trị hệ thống duyệt';
+    cho.style.cssText = 'font-size:11px;color:#8a8078';
+    hop.append(cho);
+  }
+
+  td.append(hop);
+  return td;
+}
+
+/** Ô lý do + nút Gửi đơn, mở tại chỗ khi bấm "Xin xoá…". */
+function veFormXinXoa(td, c, napLai) {
+  td.innerHTML = '';
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'display:flex;flex-direction:column;gap:6px;text-align:left;min-width:230px';
+
+  const nhan = document.createElement('div');
+  // ⚠ Câu này phải nói ra ĐÚNG chuyện sắp xảy ra, và chuyện ấy KHÔNG phải
+  //   "xoá". Người bấm cần biết cây vẫn chạy bình thường sau khi gửi đơn —
+  //   nếu không họ sẽ đi báo cả họ dừng nhập liệu.
+  nhan.textContent =
+    'Gửi đơn xin xoá “' + (c.ten || 'gia phả này') + '”. Gia phả vẫn dùng ' +
+    'bình thường cho tới khi Quản trị hệ thống duyệt.';
+  nhan.style.cssText = 'font-size:12px;color:#6a625a;line-height:1.45';
+
+  const oLyDo = document.createElement('textarea');
+  oLyDo.rows = 3;
+  oLyDo.maxLength = 500;
+  oLyDo.placeholder = 'Vì sao xin xoá? Ví dụ: dựng nhầm, đã gộp vào cây khác.';
+  oLyDo.style.cssText =
+    'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
+    'border-radius:6px;font:inherit;font-size:12px;resize:vertical';
+
+  const hangNut = document.createElement('div');
+  hangNut.style.cssText = 'display:flex;gap:6px;justify-content:flex-end';
+
+  const bThoi = nut('Thôi', false);
+  bThoi.addEventListener('click', () => napLai());
+
+  const bGui = nut('Gửi đơn', true);
+  bGui.addEventListener('click', async () => {
+    bGui.disabled = true;
+    bGui.textContent = 'Đang gửi…';
+    const kq = await xinXoaCay(c.fileId, oLyDo.value);
+    if (kq.ok) { napLai(); return; }
+    bGui.disabled = false;
+    bGui.textContent = 'Gửi đơn';
+    hop.append(dongLoi(kq.loi || 'Không gửi được đơn.'));
+  });
+
+  hangNut.append(bThoi, bGui);
+  hop.append(nhan, oLyDo, hangNut);
+  td.append(hop);
+  oLyDo.focus();
+}
+
+/**
+ * Nút *Duyệt xoá* hỏi lại một nhịp trước khi ký.
+ *
+ * ⚠ Không `confirm()` — cả app chưa có chỗ nào dùng (`khung.js` đầu file).
+ *   Hỏi ngay tại chỗ vừa bấm.
+ */
+function veHoiDuyetXoa(hop, bDuyet, c, napLai) {
+  bDuyet.disabled = true;
+
+  const hoi = document.createElement('div');
+  hoi.style.cssText =
+    'margin-top:6px;padding:8px;border:1px solid #e2c9a8;background:#fdf7ee;' +
+    'border-radius:7px;font-size:11px;color:#6a5233;line-height:1.45;text-align:left';
+
+  const chu = document.createElement('div');
+  chu.textContent =
+    'Duyệt xong, “' + (c.ten || 'gia phả này') + '” (' + c.soNguoi +
+    ' người) đóng lại với mọi người và nằm trong thùng rác 30 ngày. ' +
+    'Bản sao lưu đêm vẫn chép nó. Phục hồi được bất cứ lúc nào trước khi dọn.';
+  hoi.append(chu);
+
+  const hang = document.createElement('div');
+  hang.style.cssText = 'display:flex;gap:6px;margin-top:7px;justify-content:flex-end';
+
+  const bThoi = nut('Thôi', false);
+  bThoi.addEventListener('click', () => { hoi.remove(); bDuyet.disabled = false; });
+
+  const bOk = nut('Duyệt xoá', true);
+  bOk.addEventListener('click', async () => {
+    bOk.disabled = true; bThoi.disabled = true;
+    bOk.textContent = 'Đang duyệt…';
+    const kq = await duyetXoaCay(c.fileId);
+    if (kq.ok) { napLai(); return; }
+    bOk.disabled = false; bThoi.disabled = false;
+    bOk.textContent = 'Duyệt xoá';
+    hoi.append(dongLoi(kq.loi || 'Không duyệt được.'));
+  });
+
+  hang.append(bThoi, bOk);
+  hoi.append(hang);
+  hop.append(hoi);
+}
+
+// ============================================================
+// Khối Thùng rác
+// ============================================================
+
+/**
+ * Khối đứng dưới bảng chính, chỉ hiện khi có cây nằm trong thùng rác.
+ *
+ * ⚠ **Chỉ Quản trị hệ thống có gì để thấy ở đây**, và đó là hàng rào của MÁY
+ *   CHỦ chứ không phải một nhánh `if` trong file này: từ `16` bản 0.2.0, cây
+ *   trong thùng rác chỉ còn lọt qua nhánh `la_quan_tri_he_thong()` của
+ *   `ds_gia_pha()`. Người thường nhận `dsRac` rỗng nên khối này không dựng.
+ *
+ *   Chủ dự án chốt như vậy 09/09/2026: *"không hiện cây trong thùng rác"* —
+ *   thành viên biết chuyện qua **màn hình khởi động** (`khoi-dong.js` nhánh
+ *   `daxoa`), không qua một dòng câm trong bảng chọn.
+ *
+ * ⚠ Số ngày còn lại tính ở TRÌNH DUYỆT chỉ để hiện chữ. Hàng rào 30 ngày
+ *   nằm ở `don_thung_rac()` — đã đo (HR12c). Máy chủ vẫn từ chối dù màn hình
+ *   có tính lệch múi giờ.
+ */
+function veKhoiThungRac(dsRac, napLai) {
+  const khoi = document.createElement('section');
+  khoi.style.cssText =
+    'margin-top:22px;padding:14px 16px;border:1px solid #e6e0d8;' +
+    'border-radius:10px;background:#faf8f5';
+
+  const tua = document.createElement('h3');
+  tua.textContent = 'Thùng rác';
+  tua.style.cssText = 'margin:0 0 6px;font-size:14px;color:#2a2622';
+
+  const dan = document.createElement('p');
+  dan.textContent =
+    'Gia phả trong thùng rác đóng cửa với mọi người, kể cả bạn — muốn xem ' +
+    'lại thì Phục hồi trước. Người có chân trong cây thấy một lời nhắn khi ' +
+    'mở app, không thấy cây trong danh sách. Bản sao lưu đêm vẫn tiếp tục ' +
+    'chép chúng. Sau 30 ngày thì dọn hẳn được, và dọn rồi thì không lấy lại được.';
+  dan.style.cssText = 'margin:0 0 12px;font-size:12px;color:#6a625a;line-height:1.5';
+
+  khoi.append(tua, dan);
+
+  const oTich = new Map();
+  for (const c of dsRac) khoi.append(veDongRac(c, oTich, napLai));
+
+  khoi.append(veHangDon(dsRac, oTich, napLai));
+  return khoi;
+}
+
+/** Số ngày còn phải nằm trong thùng rác. Âm hoặc 0 nghĩa là dọn được rồi. */
+function conLaiNgay(daXoaLuc) {
+  const t = Date.parse(daXoaLuc);
+  if (Number.isNaN(t)) return 30;
+  return Math.max(0, 30 - Math.floor((Date.now() - t) / 86400000));
+}
+
+function veDongRac(c, oTich, napLai) {
+  const hang = document.createElement('div');
+  hang.style.cssText =
+    'display:flex;align-items:flex-start;gap:10px;padding:8px 0;' +
+    'border-top:1px solid #eee8e0;flex-wrap:wrap';
+
+  const conLai = conLaiNgay(c.daXoaLuc);
+
+  const tich = document.createElement('input');
+  tich.type = 'checkbox';
+  tich.style.cssText = 'margin-top:3px;width:15px;height:15px;cursor:pointer';
+  // ⚠ Cây chưa đủ 30 ngày thì KHÔNG tích được. Máy chủ vẫn là hàng rào thật
+  //   (HR12c), nhưng cho tích rồi báo lỗi sau là mời người ta bấm một thứ
+  //   chắc chắn bị từ chối.
+  if (conLai > 0) {
+    tich.disabled = true;
+    tich.title = 'Còn ' + conLai + ' ngày nữa mới dọn được.';
+  }
+  oTich.set(c.fileId, tich);
+  hang.append(tich);
+
+  const than = document.createElement('div');
+  than.style.cssText = 'flex:1 1 240px;min-width:0';
+
+  const ten = document.createElement('div');
+  ten.textContent = (c.ten || '(chưa đặt tên)') + ' · ' + c.soNguoi + ' người';
+  ten.style.cssText = 'font-weight:600;font-size:13px;color:#2a2622';
+
+  const phu = document.createElement('div');
+  phu.textContent = conLai > 0
+    ? 'còn ' + conLai + ' ngày nữa mới dọn được'
+    : 'đã quá 30 ngày — dọn được';
+  phu.style.cssText = 'font-size:11px;color:' + (conLai > 0 ? '#8a8078' : '#a83220');
+
+  than.append(ten, phu);
+
+  if (c.xinXoaLyDo) {
+    const ly = document.createElement('div');
+    ly.textContent = '“' + c.xinXoaLyDo + '”';
+    ly.style.cssText = 'font-size:11px;color:#8a8078;font-style:italic;margin-top:2px';
+    than.append(ly);
+  }
+
+  hang.append(than);
+
+  const b = nut('Phục hồi', false);
+  b.addEventListener('click', async () => {
+    b.disabled = true;
+    b.textContent = 'Đang phục hồi…';
+    const kq = await phucHoiCay(c.fileId);
+    if (kq.ok) { napLai(); return; }
+    b.disabled = false;
+    b.textContent = 'Phục hồi';
+    than.append(dongLoi(kq.loi || 'Không phục hồi được.'));
+  });
+  hang.append(b);
+
+  return hang;
+}
+
+/**
+ * Hàng nút *Dọn các mục đã chọn* — cửa xoá cứng duy nhất của cả phần mềm.
+ *
+ * ⚠ Hai nhịp: bấm rồi phải bấm xác nhận. Không gõ lại tên như
+ *   `xoa_tai_khoan()` đòi gõ lại email — khác nhau vì ở đó danh sách là toàn
+ *   hệ thống và hai dòng trông na ná nhau, còn ở đây mỗi dòng đã đi qua ba
+ *   nhịp (xin · duyệt · 30 ngày) và mang tên kèm số người ngay trên ô tích.
+ *
+ * ⚠ Sau khi máy chủ gật, gọi `xoaAnhThat()` với `dsAnh` máy chủ trả về. Ảnh
+ *   nằm trong kho Storage, `on delete cascade` của Postgres không với tới —
+ *   bỏ bước này là để lại file mồ côi vĩnh viễn, không ai còn đường tìm ra.
+ */
+function veHangDon(dsRac, oTich, napLai) {
+  const hang = document.createElement('div');
+  hang.style.cssText =
+    'margin-top:12px;padding-top:12px;border-top:1px solid #eee8e0;' +
+    'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+
+  const b = nut('Dọn các mục đã chọn', false);
+  b.style.cssText += ';border-color:#d9a79c;color:#a83220';
+
+  const dem = document.createElement('span');
+  dem.style.cssText = 'font-size:11px;color:#8a8078';
+
+  const chon = () => [...oTich.entries()]
+    .filter(([, t]) => t.checked && !t.disabled).map(([id]) => id);
+
+  for (const t of oTich.values()) {
+    t.addEventListener('change', () => {
+      const n = chon().length;
+      dem.textContent = n ? 'đã chọn ' + n + ' gia phả' : '';
+    });
+  }
+
+  b.addEventListener('click', () => {
+    const ds = chon();
+    if (!ds.length) {
+      hang.append(dongLoi('Chưa chọn gia phả nào đủ 30 ngày.'));
+      return;
+    }
+    veHoiDon(hang, b, ds, dsRac, napLai);
+  });
+
+  hang.append(b, dem);
+  return hang;
+}
+
+function veHoiDon(hang, bMo, ds, dsRac, napLai) {
+  bMo.disabled = true;
+
+  const ten = dsRac.filter((c) => ds.includes(c.fileId))
+    .map((c) => c.ten || c.tenFile).join(' · ');
+  const soNguoi = dsRac.filter((c) => ds.includes(c.fileId))
+    .reduce((t, c) => t + (c.soNguoi || 0), 0);
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'flex:1 1 100%;margin-top:8px;padding:10px;border:1px solid #f1c0b9;' +
+    'background:#fdf2f0;border-radius:8px;font-size:12px;color:#8a3a2a;line-height:1.5';
+
+  const chu = document.createElement('div');
+  chu.textContent =
+    'Xoá hẳn ' + ds.length + ' gia phả (' + ten + '), tổng ' + soNguoi +
+    ' người, cùng toàn bộ hôn nhân, ảnh và nhật ký thay đổi của chúng. ' +
+    'Việc này KHÔNG hoàn tác được — sau đây chỉ còn bản sao lưu đêm.';
+  hop.append(chu);
+
+  const hangNut = document.createElement('div');
+  hangNut.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end';
+
+  const bThoi = nut('Thôi', false);
+  bThoi.addEventListener('click', () => { hop.remove(); bMo.disabled = false; });
+
+  const bOk = nut('Xoá hẳn', true);
+  bOk.style.cssText += ';border-color:#a83220;background:#a83220';
+  bOk.addEventListener('click', async () => {
+    bOk.disabled = true; bThoi.disabled = true;
+    bOk.textContent = 'Đang dọn…';
+
+    const kq = await donThungRac(ds);
+    if (!kq.ok) {
+      bOk.disabled = false; bThoi.disabled = false;
+      bOk.textContent = 'Xoá hẳn';
+      hop.append(dongLoi(kq.loi || 'Không dọn được.'));
+      return;
+    }
+
+    // Ảnh trong kho không đi theo `delete` của Postgres — xem khối chú thích
+    // trên `veHangDon()`. Hỏng ở bước này KHÔNG làm hỏng việc dọn: dòng dữ
+    // liệu đã mất rồi, chỉ còn file mồ côi. Nên báo mà không kêu là thất bại.
+    const anh = kq.dsAnh || [];
+    if (anh.length) await xoaAnhThat(anh);
+
+    napLai();
+  });
+
+  hangNut.append(bThoi, bOk);
+  hop.append(hangNut);
+  hang.append(hop);
+}
+
 function veDauTich(c, phien) {
   const dangLam = c.fileId === phien.treeId;
 

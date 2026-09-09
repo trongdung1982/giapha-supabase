@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 17:12 · Bước gần nhất: **b109e** · Việc kế tiếp: **b110***
+*Cập nhật 09/09/2026 · Bước gần nhất: **b110** · Việc kế tiếp: **b111***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -705,7 +705,87 @@ Vòng thứ năm trong ngày. Không đụng SQL — `hoTen` đã đọc đượ
 | **File đụng tới** | `khu-thanh-vien.js` 0.7.0 |
 | **⏳ Điểm dừng** | Chủ dự án bấm thử cả bốn tấm lọc trên máy chủ thật |
 
-### b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày
+### ✓ b110 — Xoá gia phả: hai chữ ký + thùng rác 30 ngày · **MÃ XONG 09/09/2026**
+
+> ✓ **Câu treo đã có trả lời.** Chủ dự án chốt đầu phiên: *"dọn thùng rác chỉ
+> có quản trị hệ thống, bấm tay, có chọn hàng loạt"* — loại hẳn đường nối vào
+> trigger Apps Script chạy đêm, và quyết hình dạng tham số
+> `don_thung_rac(p_ds uuid[])`.
+>
+> **Đã làm:** `luoc-do/16-thung-rac-cay.sql` **0.2.0** *(⚠ số **16**, không
+> phải 15 — b109b đã lấy số ấy)* · `sb.js` 0.13.0 · `khu-gia-pha.js` 0.7.0 ·
+> `khoi-dong.js` 0.12.0 · `kiem-thu/ban-thu-sql/do-b110.mjs` *(ngoài repo,
+> **62/62 ĐẠT**, 5 phép kiểm chứng ngược)* · `kiem-trang-quan-tri.mjs`
+> 154 → **190 phép** (PHẦN F2 mới).
+>
+> ⚠⚠ **THIẾT KẾ CHỈ ĐÚNG NGUY HIỂM NHƯNG CHỈ SAI ĐƯỜNG VÁ — phần đáng giữ
+> nhất của bước.** Mục 11.6 viết *"sửa `co_the_xem_cay()` là an toàn, đừng
+> động `la_thanh_vien()`, vì sao lưu PHẢI chép được cây trong thùng rác"*.
+> Làm đúng từng chữ thì **hỏng**: sáu bảng nội dung `SaoLuu.gs` chép đều gác
+> bằng chính `co_the_xem_cay()` (`11` mục 16 đã đổi từ b102). Đo được: tài
+> khoản `sao_luu` đọc cây trong thùng rác ra **0 dòng `persons`** — file sao
+> lưu đêm vẫn sinh, vẫn đủ chín bảng, thiếu đúng cái cây mong manh nhất, và
+> **không có gì báo lỗi**. Ba mươi ngày ấy là ba mươi ngày không có bản sao.
+>
+> Vá bằng lối riêng cho vai `sao_luu` (`la_may_sao_luu()`): *thùng rác đóng
+> cửa với người, không đóng cửa với máy sao lưu*. Phép **KC2** bẻ đúng lối ấy
+> đi và đòi thấy con số 0.
+>
+> **Một câu để nhớ, nối tiếp hai câu cũ** (*hỏi hàm quyết quyền không phải là
+> đo hàng rào* — b102; *chạy lại không phải là nâng cấp* — b103):
+> **đọc lời cảnh báo không thay được việc đo.**
+>
+> **Hai hàm bị sửa, và chỉ hai:** `co_the_xem_cay()` khoá ĐỌC *(có lối cho
+> `sao_luu`)*, `co_the_sua()` khoá GHI *(không lối cho ai)*. `co_the_sua()`
+> gác cả ba cửa ghi — `luu_cay()` hàng rào đầu, và hai luật RLS kho ảnh.
+> KHÔNG đụng `la_thanh_vien()`, KHÔNG đụng `vai_tro()`.
+>
+> **Ba chỗ lệch khỏi thiết kế:**
+> 1. **`duyet_xoa_cay()` không cấm người vừa xin tự duyệt.** Nếp "không tự
+>    đặt quyền cho mình" canh việc tự NÂNG quyền; đây ngược chiều. Cấm đi thì
+>    hôm nay **không xoá được cây nào** — chủ dự án là QTHT duy nhất và đứng
+>    tên cả hai cây. Đúng bài học `xoa_tai_khoan()` b107.
+> 2. ~~**`ds_gia_pha()` thêm `or la_thanh_vien(t.id)`**~~ — **chủ dự án bác
+>    bỏ ngay trong phiên**, và chỗ tôi sai đáng ghi hơn chỗ tôi đúng. Nguyên
+>    văn: *"không hiện cây trong thùng rác. nếu người nào đang có chân trong
+>    cây này thì nhận thông báo cây đã bị xoá bởi… vậy không lo màn hình
+>    trắng"*. Tôi lo màn hình trắng — vấn đề của người dùng — rồi chữa bằng
+>    cách **nới một hàng rào**; câu trả lời đúng nằm ở tầng khác: một **lời
+>    nhắn**. Bản **0.2.0** gỡ nhánh ấy, thêm cột `da_xoa_boi` *(0.1.0 cố ý
+>    không có — nhưng lời nhắn phải kể đích danh, mà thành viên không đọc
+>    được `change_log`)*, và thêm hàm **`tin_thung_rac()`** ⚠ *`security
+>    definer` nên tự gác: phải có chân trong cây hoặc mang cờ QTHT — thiếu là
+>    người lạ dò được tên mọi gia phả đã xoá kèm email. HR10f canh.*
+> 3. **Trạng thái `daxoa` ở màn hình khởi động** — chỗ suýt bỏ sót.
+>    `layPhien()` đặt `docDuoc: true` **cứng** cho ai có dòng `tree_members`;
+>    từ b110 "có chân" không còn đủ để kết luận "đọc được". Không vá thì người
+>    có đủ quyền, kể cả QTHT, mở app ra thấy **sơ đồ trống không một chữ**.
+>    Màn hình kể tên cây, ngày xoá, người xin và người duyệt.
+>
+> ⚠ **Ảnh trong kho KHÔNG cascade.** `media` đi theo, file ảnh trong Storage
+> thì không. `don_thung_rac()` đọc `media` TRƯỚC khi xoá và trả `dsAnh`; màn
+> hình gọi `xoaAnhThat()` ngay sau.
+>
+> ⚠ **`change_log` ĐI THEO**, khác hẳn `xoa_tai_khoan()` của b107 (ở đó nhật
+> ký nói về NGƯỜI và ở lại). Không lấy lại được — bản sao lưu đêm là bản duy
+> nhất còn giữ.
+>
+> ✓ **ĐÃ DÁN CẢ HAI SUPABASE — 09/09/2026, chủ dự án xác nhận bảng tự kiểm
+> 11 mục đạt cả.**
+>
+> ⏳ **Điểm dừng VẪN CHƯA ĐÓNG, và phân biệt này không phải câu nệ chữ:**
+> bảng tự kiểm hỏi *"thứ này có đúng hình dạng không"* — nó là máy chủ tự nói
+> về mình, đúng thứ b102 đã trả giá để học (bảng tự kiểm 12/12 báo xanh trong
+> lúc ai cũng tự đặt mình thành Quản trị hệ thống). Cái chưa có là một người
+> đi hết vòng **xin → chờ → duyệt → phục hồi** bằng trình duyệt, và nhìn thấy
+> lời nhắn *"đã bị xoá bởi…"* bằng mắt. Loại kiểm chứng ấy chỉ người bấm mới
+> đóng được — b96 · b101 · b103 đều đã dạy.
+> ⚠ **Dựng một cây mới để thử, đừng đem cây thật ra.**
+>
+> ⚠⚠ **CHUỖI DÁN LẠI DÀI THÊM MỘT NẤC:**
+> `11`/`10` → `14` → **`16`** · và `13`/`14` → `15`.
+> Dán lại `11` hoặc `14` mà quên `16` thì **cây trong thùng rác mở lại cho cả
+> họ đọc**, không báo lỗi.
 
 Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** trước.
 *"chủ cây có quyền yêu cầu xoá cây do mình tạo ra"* — chữ **yêu cầu** là nghĩa
@@ -713,12 +793,13 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 
 | | |
 |---|---|
-| **Làm** | `luoc-do/16-thung-rac-cay.sql` — ⚠ **số 16, không phải 15**: b109b đã lấy số 15 (`15-tim-kiem.sql`, dán 09/09/2026). — 4 cột trên `trees` + 5 hàm: `xin_xoa_cay` · `huy_xin_xoa_cay` · `duyet_xoa_cay` · `phuc_hoi_cay` · `don_thung_rac`. Cộng màn hình: nút *Xin xoá* ở khu Gia phả, hàng chờ + **Thùng rác** ở khu Gia phả của Quản trị hệ thống |
+| **Làm** | `luoc-do/16-thung-rac-cay.sql` — ⚠ **số 16, không phải 15**: b109b đã lấy số 15 (`15-tim-kiem.sql`, dán 09/09/2026). — 5 cột trên `trees` + 8 hàm: `xin_xoa_cay` · `huy_xin_xoa_cay` · `duyet_xoa_cay` · `phuc_hoi_cay` · `don_thung_rac` · `trong_thung_rac` · `la_may_sao_luu` · `tin_thung_rac`. Cộng màn hình: cột *Xoá* ở khu Gia phả, khối **Thùng rác** (chỉ QTHT), và màn hình khởi động báo cây đã bị xoá bởi ai |
 | **Điểm dừng** | Xin xoá một cây thử → cây **vẫn dùng được bình thường** trong lúc chờ → duyệt → không ai đọc được nữa → phục hồi → đọc lại được đủ 59 người |
 | **⚠ Đơn xin xoá KHÔNG khoá cây** | Đơn còn có thể bị từ chối, và trong lúc chờ thì cả dòng họ vẫn đang dùng. Khoá sớm là biến một lá đơn thành một lệnh |
-| **⚠⚠ Chỗ khó nằm ở tầng nền móng** | Thêm điều kiện *"chưa vào thùng rác"* vào **`co_the_xem_cay()`** — an toàn. **KHÔNG động vào `la_thanh_vien()`**: sửa gọn một dòng ở đó chính là lỗ hổng b102 (sao lưu đêm ra file rỗng, không báo lỗi). Và có lý do thứ hai mạnh hơn: **bản sao lưu PHẢI tiếp tục chép cây trong thùng rác**, không thì 30 ngày ấy là 30 ngày không có bản sao nào. *Thùng rác đóng cửa với người, không đóng cửa với máy sao lưu* |
+| **⚠⚠ Chỗ khó nằm ở tầng nền móng** | ~~Thêm điều kiện *"chưa vào thùng rác"* vào `co_the_xem_cay()` — **an toàn**~~ — **CÂU NÀY SAI, đo mới ra.** Sáu bảng nội dung `SaoLuu.gs` chép đều gác bằng chính `co_the_xem_cay()`, nên làm đúng chữ ấy là sao lưu đêm ra file **thiếu đúng cây trong thùng rác**, không báo lỗi. Phải chừa lối riêng cho vai `sao_luu` (`la_may_sao_luu()`). Phần **KHÔNG động `la_thanh_vien()`** thì vẫn đúng và vẫn phải giữ |
 | **Vì sao không xoá cứng ngay** | `CLAUDE.md` mục 7 — *"Không xoá cứng"*. Và **chưa ai từng thử KHÔI PHỤC từ bản sao lưu đêm** (treo từ 04/09), nên hôm nay sao lưu chưa phải đường lùi đã kiểm chứng |
-| **Phải hỏi chủ dự án** | Ai gọi `don_thung_rac()` — nút bấm tay trong khu Sao lưu, hay nối vào trigger Apps Script chạy đêm? Đừng tự chọn: đường thứ hai cho một việc phá dữ liệu chạy tự động lúc không ai ngồi xem |
+| ~~**Phải hỏi chủ dự án**~~ ✓ **ĐÃ TRẢ LỜI 09/09/2026** | *"dọn thùng rác chỉ có quản trị hệ thống, bấm tay, có chọn hàng loạt"* — loại hẳn đường trigger Apps Script chạy đêm, và quyết hình dạng tham số `don_thung_rac(p_ds uuid[])` |
+| ✓ **Chốt thêm cùng ngày** | *"không hiện cây trong thùng rác. nếu người nào đang có chân trong cây này thì nhận thông báo cây đã bị xoá bởi… vậy không lo màn hình trắng"* — bản 0.1.0 làm ngược lại và bị bác bỏ. Xem khối ✓ đầu mục |
 
 ### b111 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
