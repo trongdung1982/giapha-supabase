@@ -5,7 +5,10 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.4.0 · Cập nhật: 08/09/2026 15:01
+// Phiên bản: 0.5.0 · Cập nhật: 09/09/2026 (b108)
+//            0.5.0 cột *Mời* (chủ cây · Quản trị hệ thống) — `veFormMoi()`
+//            gọi `moiVaoCay()`. Cột *Cây làm việc* thêm nhánh `duocMoi`:
+//            Nhận/Từ chối thay cho Xin quyền, xem `veKhoiNhanTuChoi()`.
 //            0.4.0 (b104) nút *+ Dựng gia phả mới* và hộp nhập tên · mã ·
 //            ghi chú. Nút hiện cho MỌI người — hàng rào ở máy chủ, xem
 //            `veHopTaoCay()`.
@@ -44,6 +47,7 @@
 import {
   layDanhSachGiaPha, layCayMacDinh, datCayMacDinh,
   datChoNguoiLaThayTen, chonGiaPha, xinVaoCay, taoGiaPhaMoi,
+  moiVaoCay, nhanLoiMoi, tuChoiLoiMoi,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import { sinhMaCay } from '../../utils/id.js';
@@ -133,7 +137,7 @@ function veBang(ds, cayMacDinh, phien, napLai) {
 
   const bang = document.createElement('table');
   bang.style.cssText =
-    'width:100%;min-width:720px;border-collapse:collapse;font-size:13px;' +
+    'width:100%;min-width:820px;border-collapse:collapse;font-size:13px;' +
     'background:#fffdf9;border:1px solid #e6e0d8;border-radius:10px';
 
   bang.append(veDauBang(), veThanBang(ds, cayMacDinh, phien, napLai));
@@ -156,6 +160,9 @@ function veDauBang() {
     // ⚠ Tiêu đề cột này là lời giải thích DUY NHẤT của ô tích bên dưới — ô
     //   tròn không mang chữ nào. Đổi nó là làm cột ấy câm.
     ['Cây làm việc', 'text-align:center'],
+    // b108 — chỉ chủ cây và Quản trị hệ thống thấy nút; người khác thấy ô
+    // trống. Xem `veOMoi()`.
+    ['Mời', 'text-align:center'],
   ];
   for (const [chu, them] of cot) {
     const th = document.createElement('th');
@@ -205,7 +212,8 @@ function veDong(c, cayMacDinh, phien, napLai) {
     'padding:10px;' + (chuVai ? '' : 'color:#8a8078;font-style:italic'));
 
   tr.append(oTen, oMa, oChu, oSo, oVai,
-            veOCongTac(c, phien), veOThaoTac(c, phien, napLai));
+            veOCongTac(c, phien), veOThaoTac(c, phien, napLai),
+            veOMoi(c, phien, napLai));
   return tr;
 }
 
@@ -259,12 +267,20 @@ function veOCongTac(c, phien) {
   return td;
 }
 
-/** Cột *Cây làm việc*: dấu tích · Xin quyền · Đã nộp đơn. */
+/** Cột *Cây làm việc*: dấu tích · Xin quyền · Đã nộp đơn · Nhận/Từ chối lời mời. */
 function veOThaoTac(c, phien, napLai) {
   const td = o('', 'padding:10px;text-align:center');
 
   if (c.coTheXem) {
     td.append(veDauTich(c, phien));
+    return td;
+  }
+
+  // ⚠ ĐỨNG TRƯỚC `daNopDon` — một dòng chưa duyệt là ĐƠN XIN VÀO hoặc LỜI
+  //   MỜI (b107), và `ds_gia_pha()` đã tách rõ hai cờ. Xem cùng lý lẽ ở
+  //   `khoi-dong.js` nhánh `duocmoi`.
+  if (c.duocMoi) {
+    td.append(veKhoiNhanTuChoi(c, td, napLai));
     return td;
   }
 
@@ -280,6 +296,111 @@ function veOThaoTac(c, phien, napLai) {
   b.addEventListener('click', () => veFormXin(td, c, napLai));
   td.append(b);
   return td;
+}
+
+/** Hai nút Nhận / Từ chối cho một lời mời — dùng ở cột *Cây làm việc*. */
+function veKhoiNhanTuChoi(c, td, napLai) {
+  const hop = document.createElement('div');
+  hop.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px';
+
+  const chu = document.createElement('span');
+  chu.textContent = 'được mời làm ' + (vaiTroBangChu(c.moiVai) || c.moiVai || '');
+  chu.style.cssText = 'font-size:11px;color:#6a625a';
+
+  const hang = document.createElement('div');
+  hang.style.cssText = 'display:flex;gap:6px';
+
+  const bNhan = nut('Nhận', true);
+  const bTuChoi = nut('Từ chối', false);
+  hang.append(bNhan, bTuChoi);
+
+  bNhan.addEventListener('click', async () => {
+    bNhan.disabled = true; bTuChoi.disabled = true;
+    bNhan.textContent = 'Đang nhận…';
+    const kq = await nhanLoiMoi(c.fileId);
+    if (kq.ok) { napLai(); return; }
+    bNhan.disabled = false; bTuChoi.disabled = false;
+    bNhan.textContent = 'Nhận';
+    hop.append(dongLoi(kq.loi || 'Không nhận được.'));
+  });
+
+  bTuChoi.addEventListener('click', async () => {
+    bNhan.disabled = true; bTuChoi.disabled = true;
+    bTuChoi.textContent = 'Đang từ chối…';
+    const kq = await tuChoiLoiMoi(c.fileId);
+    if (kq.ok) { napLai(); return; }
+    bNhan.disabled = false; bTuChoi.disabled = false;
+    bTuChoi.textContent = 'Từ chối';
+    hop.append(dongLoi(kq.loi || 'Không từ chối được.'));
+  });
+
+  hop.append(chu, hang);
+  return hop;
+}
+
+/**
+ * Cột *Mời*: chỉ chủ cây và Quản trị hệ thống thấy nút — người khác thấy ô
+ * trống. Ẩn nút KHÔNG phải hàng rào (hàng rào là `co_the_quan_tri()` trong
+ * `moi_vao_cay()`), chỉ để không mời người ta bấm một thứ chắc chắn bị từ
+ * chối, đúng lý lẽ đã ghi ở `veOCongTac()`.
+ */
+function veOMoi(c, phien, napLai) {
+  const td = o('', 'padding:10px;text-align:center');
+
+  if (!c.toiLaChu && !phien.laQuanTriHeThong) return td;
+
+  const b = nut('Mời…', false);
+  b.addEventListener('click', () => veFormMoi(td, c, napLai));
+  td.append(b);
+  return td;
+}
+
+/** Ô email + vai + nút Mời, mở tại chỗ khi bấm "Mời…". */
+function veFormMoi(td, c, napLai) {
+  td.innerHTML = '';
+
+  const hop = document.createElement('div');
+  hop.style.cssText = 'display:flex;flex-direction:column;gap:6px;text-align:left;min-width:220px';
+
+  const oEmail = document.createElement('input');
+  oEmail.type = 'email';
+  oEmail.placeholder = 'email@đã-đăng-ký.gì-đó';
+  oEmail.style.cssText =
+    'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
+    'border-radius:6px;font:inherit;font-size:12px';
+
+  const oVai = document.createElement('select');
+  oVai.style.cssText =
+    'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
+    'border-radius:6px;font:inherit;font-size:12px';
+  for (const [ma, chu] of [['xem', 'Xem'], ['sua', 'Sửa'], ['quan_tri', 'Quản trị']]) {
+    const op = document.createElement('option');
+    op.value = ma; op.textContent = chu;
+    oVai.append(op);
+  }
+  oVai.value = 'xem';
+
+  const hangNut = document.createElement('div');
+  hangNut.style.cssText = 'display:flex;gap:6px;justify-content:flex-end';
+
+  const bThoi = nut('Thôi', false);
+  bThoi.addEventListener('click', () => napLai());
+
+  const bMoi = nut('Gửi lời mời', true);
+  bMoi.addEventListener('click', async () => {
+    bMoi.disabled = true;
+    bMoi.textContent = 'Đang mời…';
+    const kq = await moiVaoCay(c.fileId, oEmail.value, oVai.value);
+    if (kq.ok) { napLai(); return; }
+    bMoi.disabled = false;
+    bMoi.textContent = 'Gửi lời mời';
+    hop.append(dongLoi(kq.loi || 'Không mời được.'));
+  });
+
+  hangNut.append(bThoi, bMoi);
+  hop.append(oEmail, oVai, hangNut);
+  td.append(hop);
+  oEmail.focus();
 }
 
 /**

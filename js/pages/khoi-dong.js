@@ -4,7 +4,9 @@
 //            báo lỗi rõ ràng nếu người dùng chưa đăng nhập hoặc chưa có quyền.
 // Lớp      : pages
 // Phụ thuộc: services/repo, services/sb, pages/dang-nhap, pages/tree-view
-// Phiên bản: 0.10.0 · Cập nhật: 05/09/2026 11:09
+// Phiên bản: 0.11.0 · Cập nhật: 09/09/2026 (b108)
+//            0.11.0 nhánh `duocmoi` — người ĐƯỢC MỜI (b107) thấy Nhận/Từ chối
+//            ngay tại màn hình khởi động, thay vì câu "đơn đang chờ duyệt".
 // ============================================================
 //
 // ⚠ **ĐỔI SO VỚI BẢN APPS SCRIPT: có thêm một kết cục thứ ba.**
@@ -16,6 +18,7 @@
 //   chưa đăng nhập            → mở màn hình đăng nhập  (người dùng tự làm được)
 //   đăng nhập, chưa nộp đơn   → nút "Xin vào gia phả"  (người dùng tự làm được)
 //   đã nộp đơn, đang chờ      → nói rõ là đang chờ, KHÔNG hiện nút nữa
+//   ĐƯỢC MỜI, chưa nhận       → nút Nhận / Từ chối     (người dùng tự làm được)
 //   đọc được                  → mở sơ đồ
 //
 // ⚠ Kết cục thứ ba thêm vào 04/09/2026 cùng `luoc-do/07-duyet-dang-ky.sql`.
@@ -23,14 +26,19 @@
 //   ngõ cụt: họ không biết nhắn thế nào cho phải, và người quản lý thì không có
 //   danh sách ai đang đợi. Nay đơn tự vào hàng chờ và admin thấy nó trong Cài đặt.
 //
-// Trộn hai câu đầu là gửi người ta đi tìm người quản lý trong khi họ chỉ cần
-// gõ mật khẩu — hoặc ngược lại, bắt họ gõ đi gõ lại một mật khẩu vốn đã đúng.
+// ⚠ Kết cục thứ tư thêm vào 09/09/2026 (b108) cùng `luoc-do/14-loi-moi.sql`.
+//   Trước đó một dòng "chưa duyệt" chỉ có một cách đọc — đơn xin vào — và
+//   người ĐƯỢC MỜI (b107, quản trị ngỏ lời trước) rơi lẫn vào đúng kết cục
+//   thứ ba, nghe câu "đơn đang chờ duyệt" trong khi họ chưa nộp đơn nào.
+//
+// Trộn các câu này là gửi người ta đi tìm người quản lý trong khi họ chỉ cần
+// gõ mật khẩu, bấm Nhận, hoặc ngồi chờ — ba việc khác hẳn nhau.
 
 import * as repo from '../services/repo.js';
-import { xinVaoCay } from '../services/sb.js';
+import { xinVaoCay, nhanLoiMoi, tuChoiLoiMoi } from '../services/sb.js';
 import { mountDangNhap } from './dang-nhap.js';
 import { mountTreeView } from './tree-view.js';
-import { rongHop } from '../config.js';
+import { rongHop, vaiTroBangChu } from '../config.js';
 
 /**
  * Hiện màn hình chờ, gọi repo.khoiTao(), rồi chuyển sang tree-view.
@@ -96,6 +104,23 @@ function hienManHinhCho(el) {
 function hienManHinhKhongCoQuyen(el, phien) {
   el.innerHTML = '';
 
+  // ⚠ ĐỨNG TRƯỚC nhánh 'cho' — cả hai đều là dòng approved=false, nhưng
+  //   người ĐƯỢC MỜI (b107) chưa nộp đơn nào và cần bấm Nhận/Từ chối NGAY
+  //   TẠI ĐÂY, không phải mở trang Quản trị mới thấy. `luoc-do/14-loi-moi.sql`
+  //   mục 6b — trước b108, nhánh 'cho' bên dưới nuốt luôn ca này và nói sai
+  //   hẳn chuyện đang xảy ra ("đơn đang chờ duyệt").
+  if (phien.trangThai === 'duocmoi') {
+    el.append(khung([
+      tieuDe('Bạn được mời vào gia phả'),
+      doan((phien.tenCay || 'Một gia phả') + ' mời bạn vào, với vai ' +
+           (vaiTroBangChu(phien.moiVai) || phien.moiVai || 'xem') + '.'),
+      doan('Người mời: ' + (phien.emailNguoiMoi || '(không rõ)')),
+      veKhoiNhanLoiMoi(el, phien),
+      phien.email ? nhoMo('Bạn đang đăng nhập bằng: ' + phien.email) : null,
+    ]));
+    return;
+  }
+
   // Đã nộp đơn rồi thì không có việc gì để làm ngoài chờ — hiện nút "Xin vào"
   // lần nữa chỉ khiến người ta bấm mãi và tưởng nút hỏng.
   if (phien.trangThai === 'cho') {
@@ -134,6 +159,72 @@ function hienManHinhKhongCoQuyen(el, phien) {
     nhoMo('Hoặc nhắn thẳng cho ' + (phien.nguoiQuanLy || '') + '.'),
     phien.email ? nhoMo('Bạn đang đăng nhập bằng: ' + phien.email) : null,
   ]));
+}
+
+/**
+ * Hai nút "Nhận" / "Từ chối" cho lời mời — chữ ký thứ hai của b107.
+ *
+ * ⚠ Cả hai đường đều nạp lại TỪ ĐẦU (`mountKhoiDong(el)`), không tự vẽ màn
+ *   hình kế tiếp tại đây. Trạng thái thật đã đổi ở máy chủ (nhận thì có chân
+ *   trong cây, từ chối thì dòng biến mất) và `mountKhoiDong` là chỗ DUY NHẤT
+ *   biết thứ tự hỏi lại phiên, quyền, cây — đúng lý lẽ đã ghi ở màn hình đăng
+ *   nhập ngay phía trên.
+ */
+function veKhoiNhanLoiMoi(el, phien) {
+  const hop = document.createElement('div');
+  hop.style.cssText = 'display:flex;gap:10px;margin:16px 0';
+
+  const nutNhan = document.createElement('button');
+  nutNhan.type = 'button';
+  nutNhan.textContent = 'Nhận lời mời';
+  nutNhan.style.cssText =
+    'flex:1;min-height:44px;font:inherit;font-size:15px;font-weight:600;' +
+    'border-radius:9px;cursor:pointer;background:#2a2622;color:#fffdf9;' +
+    'border:1px solid #2a2622';
+
+  const nutTuChoi = document.createElement('button');
+  nutTuChoi.type = 'button';
+  nutTuChoi.textContent = 'Từ chối';
+  nutTuChoi.style.cssText =
+    'flex:1;min-height:44px;font:inherit;font-size:15px;font-weight:600;' +
+    'border-radius:9px;cursor:pointer;background:#fffdf9;color:#2a2622;' +
+    'border:1px solid #c8bfb2';
+
+  const bao = document.createElement('p');
+  bao.style.cssText = 'margin:10px 0 0;font-size:13px;line-height:1.5;color:#8a3a2a';
+
+  const khoaCa = (khoa) => { nutNhan.disabled = khoa; nutTuChoi.disabled = khoa; };
+
+  nutNhan.addEventListener('click', async () => {
+    khoaCa(true);
+    nutNhan.textContent = 'Đang nhận…';
+    const kq = await nhanLoiMoi(phien.treeId);
+    if (!kq || !kq.ok) {
+      khoaCa(false);
+      nutNhan.textContent = 'Nhận lời mời';
+      bao.textContent = (kq && kq.loi) || 'Không nhận được lời mời. Thử lại sau.';
+      return;
+    }
+    mountKhoiDong(el);
+  });
+
+  nutTuChoi.addEventListener('click', async () => {
+    khoaCa(true);
+    nutTuChoi.textContent = 'Đang từ chối…';
+    const kq = await tuChoiLoiMoi(phien.treeId);
+    if (!kq || !kq.ok) {
+      khoaCa(false);
+      nutTuChoi.textContent = 'Từ chối';
+      bao.textContent = (kq && kq.loi) || 'Không từ chối được. Thử lại sau.';
+      return;
+    }
+    mountKhoiDong(el);
+  });
+
+  hop.append(nutNhan, nutTuChoi);
+  const boc = document.createElement('div');
+  boc.append(hop, bao);
+  return boc;
 }
 
 /**

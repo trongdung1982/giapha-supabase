@@ -3,7 +3,11 @@
 -- Vai trò  : MỜI người vào gia phả (chiều ngược của "xin vào"), cờ Quản trị
 --            hệ thống bật được trên màn hình, và hai hàm cho khu Tài khoản
 --            nhìn TOÀN HỆ THỐNG chứ không chỉ cây đang mở.
--- Phiên bản: 0.1.0 · Cập nhật: 08/09/2026 23:10 (b107)
+-- Phiên bản: 0.2.0 · Cập nhật: 09/09/2026 (b108)
+--            0.2.0 vá `trang_thai_cua_toi()` — mục 6b — để người ĐƯỢC MỜI mở
+--            app thường (không phải trang Quản trị) thấy đúng lời mời của
+--            mình, thay vì câu "đơn của bạn đang chờ duyệt". Đây là chỗ
+--            b107 cố ý để hở, ghi ở `KE-HOACH.md` mục b107 "Còn hở, cố ý".
 -- ============================================================
 --
 -- ⚠⚠ THỨ TỰ DÁN: file này dán SAU `13-quan-ly-thanh-vien.sql`.
@@ -15,6 +19,12 @@
 --    `11-quyen-he-thong.sql` (thêm ba cột lời mời). **Dán lại `11` thì bắt
 --    buộc dán lại `14`**, nếu không màn hình khu Gia phả mất cột *Được mời*
 --    và người được mời không thấy lời mời của mình ở đâu cả.
+--
+-- ⚠⚠ CHIỀU NGƯỢC THỨ HAI (0.2.0, b108): file này CŨNG định nghĩa đè
+--    `trang_thai_cua_toi()` của `10-sua-nhieu-cay.sql` (thêm nhánh
+--    `duocmoi`). **Dán lại `10` thì bắt buộc dán lại `14`**, nếu không màn
+--    hình khởi động của app thường lại nói người ĐƯỢC MỜI là "đơn đang chờ
+--    duyệt" — sai hẳn chuyện đang xảy ra.
 --
 -- ═══ VÌ SAO CÓ FILE NÀY ═══
 --
@@ -411,6 +421,106 @@ as $$
          and tm.approved = false
     )
   order by t.name;
+$$;
+
+-- ============================================================
+-- 6b. trang_thai_cua_toi() — THÊM NHÁNH "duocmoi" (0.2.0, b108)
+-- ============================================================
+-- ⚠ Đây là bản đè của bản `10-sua-nhieu-cay.sql`. Chép nguyên phần chọn
+--   `v_tree` (ba câu hỏi theo thứ tự) — KHÔNG đổi gì ở đó, chỉ thêm MỘT
+--   nhánh mới sau khi đã có `v_dong`.
+--
+-- ═══ VÌ SAO CẦN NHÁNH NÀY ═══
+--
+-- Từ b107, một dòng `tree_members` có `approved = false` có thể là ĐƠN XIN
+-- VÀO hoặc LỜI MỜI — hai thứ khác hẳn nhau (mục "Ba trạng thái" đầu file).
+-- Hàm này trước b108 gộp cả hai vào một chữ `'cho'`, và màn hình khởi động
+-- (`khoi-dong.js`) đọc chữ ấy ra câu "Đơn của bạn đang chờ duyệt" — đúng với
+-- người xin, SAI hẳn với người được mời: họ chưa nộp đơn nào, và họ cần bấm
+-- Nhận hoặc Từ chối, không phải chờ.
+--
+-- ⚠ Nhánh mới đứng TRƯỚC câu trả lời `'cho'`/`'daduyet'` cũ, và kiểm đúng
+--   điều kiện `ds_gia_pha()` mục 6 đã dùng: `moi_luc is not null`, không phải
+--   `moi_boi is not null` — lý do giống hệt, xem cảnh báo ở mục 1 đầu file.
+--
+-- Trả thêm tên/mã cây và email người mời để màn hình vẽ được câu hỏi đầy đủ
+-- mà không phải gọi thêm một vòng máy chủ nữa.
+
+create or replace function public.trang_thai_cua_toi(p_tree uuid default null)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_tree      uuid;
+  v_dong      public.tree_members%rowtype;
+  v_so        integer;
+  v_ten       text;
+  v_ma        text;
+  v_email_moi text;
+begin
+  if auth.uid() is null then
+    return jsonb_build_object('trangThai', 'chuadangnhap');
+  end if;
+
+  if p_tree is not null then
+    v_tree := p_tree;
+  else
+    select tm.tree_id into v_tree
+      from public.tree_members tm
+      left join public.user_settings us
+             on us.user_id = tm.user_id and us.tree_id = tm.tree_id
+     where tm.user_id = auth.uid()
+     order by coalesce(us.dang_mo, false) desc,
+              tm.approved desc,
+              tm.added_at,
+              tm.tree_id
+     limit 1;
+
+    if v_tree is null then
+      select count(*) into v_so from public.trees;
+      if v_so = 1 then
+        select id into v_tree from public.trees;
+      else
+        return jsonb_build_object('trangThai', 'nhieucay', 'soCay', v_so);
+      end if;
+    end if;
+  end if;
+
+  select * into v_dong from public.tree_members
+   where tree_id = v_tree and user_id = auth.uid();
+
+  if not found then
+    return jsonb_build_object('trangThai', 'chuanop', 'treeId', v_tree);
+  end if;
+
+  -- b108: LỜI MỜI đứng TRƯỚC câu trả lời cũ. Xem "VÌ SAO CẦN NHÁNH NÀY" trên.
+  if not v_dong.approved and v_dong.moi_luc is not null then
+    select t.name, t.tree_code into v_ten, v_ma
+      from public.trees t where t.id = v_tree;
+    select u.email::text into v_email_moi
+      from auth.users u where u.id = v_dong.moi_boi;
+
+    return jsonb_build_object(
+      'trangThai', 'duocmoi',
+      'treeId', v_tree,
+      'tenCay', coalesce(v_ten, ''),
+      'maCay', coalesce(v_ma, ''),
+      'moiVai', v_dong.moi_vai,
+      'moiLuc', v_dong.moi_luc,
+      'emailNguoiMoi', coalesce(v_email_moi, ''));
+  end if;
+
+  return jsonb_build_object(
+    'trangThai', case when v_dong.approved
+                        or v_dong.role in ('quan_tri_he_thong', 'quan_tri', 'sao_luu')
+                      then 'daduyet' else 'cho' end,
+    'treeId', v_tree,
+    'vaiTro', v_dong.role,
+    'xinLuc', v_dong.xin_luc);
+end;
 $$;
 
 -- ============================================================
@@ -833,4 +943,11 @@ from (
     case when exists (select 1 from pg_constraint
                        where conname='tree_members_moi_vai_hop_le')
          then 'ĐẠT' else 'HỎNG — thiếu ràng buộc' end
+  union all
+  select 6, 'trang_thai_cua_toi() đã biết nhánh duocmoi (0.2.0)',
+    case when pg_get_functiondef(
+           (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+             where n.nspname='public' and p.proname='trang_thai_cua_toi')
+         ) like '%duocmoi%'
+         then 'ĐẠT' else 'HỎNG — chưa dán bản 0.2.0' end
 ) t order by stt;

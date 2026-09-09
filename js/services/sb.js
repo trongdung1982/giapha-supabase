@@ -5,7 +5,11 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.7.0 · Cập nhật: 08/09/2026 20:05
+// Phiên bản: 0.8.0 · Cập nhật: 09/09/2026 (b108)
+//            0.8.0 `moiVaoCay()` · `nhanLoiMoi()` · `tuChoiLoiMoi()` — chiều
+//            NGƯỢC của xin vào (`luoc-do/14-loi-moi.sql`). `layDanhSachGiaPha()`
+//            đọc thêm `duocMoi`/`moiVai`/`emailNguoiMoi`; `layPhien()` mang
+//            thêm bốn trường ấy khi `trangThai === 'duocmoi'`.
 //            0.7.0 (b106) bảy cửa của `luoc-do/13-quan-ly-thanh-vien.sql` —
 //            xem khối *QUẢN LÝ TÀI KHOẢN CỦA MỘT CÂY* ở cuối file.
 //            0.6.0 (b104) thêm `taoGiaPhaMoi()` — cửa dựng gia phả mới.
@@ -149,6 +153,8 @@ export async function nguoiDangNhap() {
  *   laQuanTriHeThong:boolean, maNgan:string,
  *   nguoiTrungTamMacDinh:string|null, hienNgayGio:boolean,
  *   tenHo:string, nguoiQuanLy:string,
+ *   trangThai?:string, soCay?:number,
+ *   tenCay?:string, maCay?:string, moiVai?:string, emailNguoiMoi?:string,
  *   loi:string|null}>}
  */
 export async function layPhien() {
@@ -256,6 +262,12 @@ export async function layPhien() {
       trangThai: tt.trangThai,
       treeId: tt.treeId || null,
       soCay: tt.soCay,
+      // b108: chỉ có nghĩa khi trangThai === 'duocmoi' — màn hình khởi động
+      // đọc bốn thứ này để vẽ câu hỏi Nhận/Từ chối, không gọi thêm máy chủ.
+      tenCay: tt.tenCay,
+      maCay: tt.maCay,
+      moiVai: tt.moiVai,
+      emailNguoiMoi: tt.emailNguoiMoi,
     };
   }
 
@@ -510,6 +522,10 @@ export async function layDanhSachGiaPha() {
     daNopDon: Boolean(r.da_nop_don),
     choNguoiLaThayTen: Boolean(r.cho_nguoi_la_thay_ten),
     toiLaChu: Boolean(r.toi_la_chu),
+    // Ba cột b107/b108 — xem `luoc-do/14-loi-moi.sql` mục 6.
+    duocMoi: Boolean(r.duoc_moi),
+    moiVai: r.moi_vai || null,
+    emailNguoiMoi: r.email_nguoi_moi || '',
   }));
   return { ok: true, loi: null, ds };
 }
@@ -731,11 +747,17 @@ export async function xinVaoCay(loiNhan = '', treeId = null) {
 
 /**
  * Trạng thái của chính người đang đăng nhập:
- * `chuadangnhap` · `chuanop` · `cho` · `daduyet` · `nhieucay`.
+ * `chuadangnhap` · `chuanop` · `cho` · `duocmoi` · `daduyet` · `nhieucay`.
  *
  * ⚠ `nhieucay` là trạng thái MỚI (05/09/2026): người chưa có chân ở cây nào,
  *   mà máy chủ lại có nhiều cây — nên không có cây nào để nói về. Trước đó
  *   máy chủ đoán bừa một cây và trả lời như thể chắc chắn.
+ *
+ * ⚠ `duocmoi` là trạng thái MỚI (b108): một dòng `approved=false` có thể là
+ *   ĐƠN XIN VÀO hoặc LỜI MỜI (từ b107) — hai người ấy cần nghe hai câu khác
+ *   hẳn nhau. Kèm theo là `tenCay` · `maCay` · `moiVai` · `moiLuc` ·
+ *   `emailNguoiMoi`, đủ để màn hình vẽ câu hỏi Nhận/Từ chối mà không phải
+ *   gọi thêm máy chủ. `luoc-do/14-loi-moi.sql` mục 6b.
  *
  * Trả `chuadangnhap` khi hỏi hụt, chứ không ném lỗi: chỗ gọi nó là màn hình
  * từ chối, và một màn hình từ chối mà tự nó vỡ thì người dùng không còn đường
@@ -747,6 +769,53 @@ export async function trangThaiCuaToi(treeId = null) {
   const { data, error } = await k.rpc('trang_thai_cua_toi', { p_tree: treeId || null });
   if (error || !data) return { trangThai: 'chuadangnhap' };
   return data;
+}
+
+// ============================================================
+// Mời vào gia phả — chiều NGƯỢC của "xin vào" (b107/b108)
+// `luoc-do/14-loi-moi.sql`
+// ============================================================
+
+/**
+ * Mời một tài khoản (theo email) vào gia phả. Chỉ chủ cây và Quản trị hệ
+ * thống mời được — máy chủ tự hỏi `co_the_quan_tri()`, hàm này không hỏi
+ * trước, đúng luật đã ghi ở `taoGiaPhaMoi()`.
+ *
+ * ⚠ Không cú bấm nào đưa được người vào cây: đây chỉ là "chữ ký thứ nhất",
+ *   người kia phải tự bấm Nhận (`nhanLoiMoi`) mới thật sự vào.
+ *
+ * @param {string} treeId
+ * @param {string} email
+ * @param {string} [vai] 'quan_tri' · 'sua' · 'xem' (mặc định)
+ * @param {string} [maNguoi] mã người gắn sẵn, có thể bỏ trống
+ */
+export async function moiVaoCay(treeId, email, vai = 'xem', maNguoi = '') {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('moi_vao_cay', {
+    p_tree: treeId, p_email: String(email || ''), p_vai: vai,
+    p_ma_nguoi: maNguoi ? String(maNguoi) : null,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/** Chữ ký thứ hai — nhận lời mời. Vai lấy từ `moi_vai` máy chủ đã ghi sẵn. */
+export async function nhanLoiMoi(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('nhan_loi_moi', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/** Từ chối lời mời — xoá dòng, không đánh dấu (`change_log` mới là nhật ký). */
+export async function tuChoiLoiMoi(treeId) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('tu_choi_loi_moi', { p_tree: treeId });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
 }
 
 /** Đơn đang xếp hàng. Không phải `quan_tri_he_thong`/`quan_tri` thì máy chủ trả mảng rỗng. */
