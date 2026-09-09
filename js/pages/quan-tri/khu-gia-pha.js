@@ -5,7 +5,10 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config
-// Phiên bản: 0.5.0 · Cập nhật: 09/09/2026 (b108)
+// Phiên bản: 0.5.1 · Cập nhật: 09/09/2026 (b108)
+//            0.5.1 `veFormMoi()` thêm ô *Mã người trong sơ đồ* — chủ dự án
+//            bấm thử bản 0.5.0 thấy thiếu, dù `moiVaoCay()`/`moi_vao_cay()`
+//            đã nhận tham số này từ đầu.
 //            0.5.0 cột *Mời* (chủ cây · Quản trị hệ thống) — `veFormMoi()`
 //            gọi `moiVaoCay()`. Cột *Cây làm việc* thêm nhánh `duocMoi`:
 //            Nhận/Từ chối thay cho Xin quyền, xem `veKhoiNhanTuChoi()`.
@@ -369,6 +372,22 @@ function veFormMoi(td, c, napLai) {
     'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
     'border-radius:6px;font:inherit;font-size:12px';
 
+  // ⚠ Không bắt buộc — để trống thì `moi_vao_cay()` mời mà không gắn ai vào
+  //   sơ đồ. Có gõ thì nó là mã NGƯỜI TRONG CÂY (`P0012`), không phải mã tài
+  //   khoản; máy chủ không kiểm mã này có thật hay không (cùng luật với ô
+  //   "Mã người trong sơ đồ" của khu Tài khoản, `khu-thanh-vien.js`
+  //   `viecGanNguoi`) — gõ sai thì gắn treo, không báo lỗi.
+  const nhanMa = document.createElement('div');
+  nhanMa.textContent = 'Mã người trong sơ đồ (không bắt buộc):';
+  nhanMa.style.cssText = 'font-size:11px;color:#6a625a';
+
+  const oMa = document.createElement('input');
+  oMa.type = 'text';
+  oMa.placeholder = 'P0012 — để trống nếu chưa biết';
+  oMa.style.cssText =
+    'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
+    'border-radius:6px;font:inherit;font-size:12px;font-family:ui-monospace,monospace';
+
   const oVai = document.createElement('select');
   oVai.style.cssText =
     'width:100%;box-sizing:border-box;padding:7px;border:1px solid #dcd5cb;' +
@@ -390,7 +409,7 @@ function veFormMoi(td, c, napLai) {
   bMoi.addEventListener('click', async () => {
     bMoi.disabled = true;
     bMoi.textContent = 'Đang mời…';
-    const kq = await moiVaoCay(c.fileId, oEmail.value, oVai.value);
+    const kq = await moiVaoCay(c.fileId, oEmail.value, oVai.value, oMa.value);
     if (kq.ok) { napLai(); return; }
     bMoi.disabled = false;
     bMoi.textContent = 'Gửi lời mời';
@@ -398,7 +417,7 @@ function veFormMoi(td, c, napLai) {
   });
 
   hangNut.append(bThoi, bMoi);
-  hop.append(oEmail, oVai, hangNut);
+  hop.append(oEmail, nhanMa, oMa, oVai, hangNut);
   td.append(hop);
   oEmail.focus();
 }
