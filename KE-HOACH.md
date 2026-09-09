@@ -146,7 +146,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Năm mươi mốt việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Năm mươi lăm việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -203,6 +203,10 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Vai chủ cây neo vào cột `trees.chu_so_huu`; mã `quan_tri_he_thong` bị cấm khỏi `tree_members`** | **b105** | ✓ **08/09/2026** — đã dán |
 | **Bàn giao gia phả (`doi_chu_cay`) — chức năng bị bỏ sót, chủ dự án bổ sung** | **b105** | ✓ **08/09/2026** — đã dán |
 | **Phép đo `do-b105.mjs` — 53/53 ĐẠT, 4 kiểm chứng ngược · bộ kiểm `kiem-quan-ly-thanh-vien.mjs` 55/55** | **b105** | ✓ **08/09/2026** |
+| **Xoá gia phả hai chữ ký + thùng rác 30 ngày — `16-thung-rac-cay.sql` 0.2.0** | **b110** | ✓ **09/09/2026** — đã dán cả hai |
+| **Lối riêng cho vai `sao_luu` — sao lưu đêm vẫn chép được cây trong thùng rác** | **b110** | ✓ **09/09/2026** — thiết kế chỉ sai đường vá, đo mới ra |
+| **Cây trong thùng rác biến khỏi danh sách; thành viên nhận lời nhắn `tin_thung_rac()`** | **b110** | ✓ **09/09/2026** — chủ dự án chốt, bác bỏ bản 0.1.0 |
+| **Phép đo `do-b110.mjs` — 62/62 ĐẠT, 5 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 154 → 190** | **b110** | ✓ **09/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
