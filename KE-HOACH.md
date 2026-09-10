@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 10/09/2026 · Bước gần nhất: **b110c** · Việc kế tiếp: **b111***
+*Cập nhật 10/09/2026 · Bước gần nhất: **b110d** · Việc kế tiếp: **b111***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -21,14 +21,22 @@
 
 ## Đang ở đâu
 
-> ⚠⚠ **10/09/2026 — CÓ MỘT LỖ HỔNG ĐANG MỞ TRÊN MÁY CHỦ THẬT.** Chủ dự án bấm
-> thử và bắt được: mời một tài khoản vào cây rồi **tự duyệt và tự đổi vai hộ
-> họ**, không cần họ đồng ý. Đo ra **bốn cửa** thủng, không phải một. Bản vá
-> `luoc-do/18-hai-chu-ky.sql` đã viết và đo xong (48/48) nhưng **CHƯA DÁN** —
-> đây là việc chặn duy nhất hiện nay. Chi tiết: `nhat-ky/b110c-hai-chu-ky.md`.
+> ✓ **10/09/2026 — LỖ HỔNG "HAI CHỮ KÝ" ĐÃ VÁ, ĐÃ DÁN, ĐÃ DỌN VẾT (b110c → b110d).**
+> Chủ dự án bấm thử và bắt được: mời một tài khoản vào cây rồi **tự duyệt và
+> tự đổi vai hộ họ**, không cần họ đồng ý. Đo ra **bốn cửa** thủng. Bản vá
+> `luoc-do/18-hai-chu-ky.sql` đã dán lên máy chủ thật.
 >
-> ⚠ Dán xong còn phải **dọn vết**: bản vá đóng cửa nhưng không tự sửa những
-> dòng đã lọt qua. Xem mục 9 cuối file `18`.
+> ⚠ **Dán xong, bảng tự kiểm của chính `18` báo nhầm ở HAI phép** (b110d):
+> phép 10 so sai kiểu dữ liệu nên không bao giờ xanh được dù hàm đúng; phép
+> 13 và câu dọn ở mục 9 lại **lệch điều kiện với nhau** nên cùng bỏ sót vết
+> thật. Đo trên bàn thử bằng cách gieo lại đúng hình dạng vết rồi cho cả bản
+> cũ lẫn bản mới của phép kiểm chạy qua — bản cũ "ĐẠT" sai, bản mới HỎNG
+> đúng. Cả ba phép đã sửa trong `18` (không đụng hàm nghiệp vụ).
+>
+> Vết thật tìm thấy trên máy chủ: `khach@io.vn` đã sửa được ở vai `sua` trên
+> hai cây dù chưa bấm Nhận lời mời. Chủ dự án đã dán câu dọn — xác nhận
+> `Success. No rows returned`, sạch. Chi tiết: `nhat-ky/b110c-hai-chu-ky.md`
+> và `nhat-ky/b110d-vet-phep-kiem-sai.md`.
 
 **CẢ CHUỖI ĐÃ THÔNG.** 03/09/2026: bốn file SQL đã chạy thật, tài khoản tạo
 được, đăng nhập được, **và thêm được người mới** — tức trình duyệt ghi xuống
@@ -155,7 +163,7 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Sáu mươi lăm việc đã đóng** *(đếm lại 10/09/2026, b110c — 65 dòng)* — đếm
+**Sáu mươi bảy việc đã đóng** *(đếm lại 10/09/2026, b110d — 67 dòng)* — đếm
 theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
@@ -222,11 +230,13 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Không màn hình nào ngầm định "cây đang mở" — `veBangViec/veXetDon` nhận đối tượng cây** | **b110b** | ✓ **09/09/2026** |
 | **Phép đo `do-b110b.mjs` — 29/29 ĐẠT, 3 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 190 → 214** | **b110b** | ✓ **09/09/2026** |
 | **⚠ `kiem-thu/sb-gia.mjs` thiếu 6 cửa của b110 → 17 ảnh chụp ra NỀN TRƠN suốt một bước** | **b110b** | ✓ **09/09/2026** — vá, và ghi vào `CHI-DAN` |
-| ⚠⚠ **LỖ HỔNG: bốn cửa ghi được vào LỜI MỜI chưa ai nhận — `18-hai-chu-ky.sql`** | **b110c** | ⏳ **10/09/2026** — mã xong, **chưa dán** |
-| **Lớp hai: `la_thanh_vien()` thu hẹp đường tắt theo vai, sao lưu đêm còn nguyên** | **b110c** | ⏳ **10/09/2026** |
-| **Màn hình phân biệt LỜI MỜI với ĐƠN XIN VÀO — `ds_thanh_vien()` trả `moi_luc`** | **b110c** | ⏳ **10/09/2026** |
-| **⚠ Hỏng 3 sống lại khi dán lại `08` (`ds_cho_duyet` đoán cây bằng `limit 1`)** | **b110c** | ⏳ **10/09/2026** — `18` chốt lại |
+| **LỖ HỔNG vá xong: bốn cửa ghi được vào LỜI MỜI chưa ai nhận — `18-hai-chu-ky.sql`** | **b110c** | ✓ **10/09/2026** — đã dán |
+| **Lớp hai: `la_thanh_vien()` thu hẹp đường tắt theo vai, sao lưu đêm còn nguyên** | **b110c** | ✓ **10/09/2026** — đã dán |
+| **Màn hình phân biệt LỜI MỜI với ĐƠN XIN VÀO — `ds_thanh_vien()` trả `moi_luc`** | **b110c** | ✓ **10/09/2026** — đã dán |
+| **Hỏng 3 sống lại khi dán lại `08` (`ds_cho_duyet` đoán cây bằng `limit 1`) — chốt lại ở `18`** | **b110c** | ✓ **10/09/2026** — đã dán |
 | **Phép đo `do-b110c.mjs` — 48/48 ĐẠT, 7 lỗ hổng tái hiện, 3 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 214 → 237** | **b110c** | ✓ **10/09/2026** |
+| **Hai phép tự kiểm của `18` tự sai (phép 10 so kiểu dữ liệu sai; phép 13 lệch điều kiện với câu dọn) — sửa cả hai** | **b110d** | ✓ **10/09/2026** |
+| **Vết thật trên máy chủ: `khach@io.vn` sửa được 2 cây dù chưa nhận lời mời — dò ra, dọn sạch** | **b110d** | ✓ **10/09/2026** — xác nhận `0 rows` |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy

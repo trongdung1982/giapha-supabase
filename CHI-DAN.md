@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 09/09/2026 (b110b)*
+*Nhánh Supabase · cập nhật 10/09/2026 (b110d)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -50,11 +50,10 @@ nó chính là thứ nó sinh ra để tránh.
    cây nay **3 chữ số** (`NPG473`). `13`·`14` đã dán, `16` (thùng rác) và
    `17` (cờ dựng cây) dán 10/09 — **chưa ai bấm thử** vòng xin → duyệt →
    phục hồi. ⏳ **`15` 0.2.0 CHƯA DÁN** (`vai_cao_nhat`).
-   ⚠⚠ ⏳ **`18-hai-chu-ky.sql` CHƯA DÁN** (b110c) — vá lỗ hổng chủ dự án bắt
-   được 10/09: **mời ai vào cây rồi tự duyệt và tự đổi vai hộ họ**. Đo 48/48.
-   Chuỗi dán lại: `11`/`10` → `14` → `16` → **`18`** · `13`/`14` → `15` →
-   **`18`** · `08` → **`18`**. Quên `16` là cây trong thùng rác mở lại; quên
-   **`18`** là mở lại đúng lỗ hổng ấy, và nó không báo gì cả.
+   ✓ **`18-hai-chu-ky.sql` ĐÃ DÁN, đã dọn vết** (b110c→b110d) — vá lỗ hổng
+   *"mời ai vào cây rồi tự duyệt/đổi vai hộ họ"*; đo 48/48, một vết thật đã
+   dò ra và dọn sạch. ⚠ Chuỗi dán lại: `11`/`10`→`14`→`16`→**`18`** ·
+   `13`/`14`→`15`→**`18`** · `08`→**`18`** — quên là mở lại đúng lỗ hổng ấy.
 
 ## Quy ước khung tài liệu này
 

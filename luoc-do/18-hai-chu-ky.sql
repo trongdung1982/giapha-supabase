@@ -652,9 +652,17 @@ from (
             join pg_namespace n on n.oid=p.pronamespace
            where n.nspname='public' and p.proname='ds_cho_duyet'))
            like '%moi_boi is null%'
-          and (select pg_get_function_identity_arguments(p.oid)
+          -- ⚠ 10/09/2026: vế này TRƯỚC ĐÂY so
+          --   `pg_get_function_identity_arguments(...) = 'uuid'`, và nó báo
+          --   HỎNG trên máy chủ thật trong khi hàm đã vá đúng. Hàm ấy trả kèm
+          --   TÊN tham số — `'p_tree uuid'` — nên vế so luôn sai, bất kể hàm
+          --   đúng hay sai. Một phép kiểm không bao giờ xanh được thì nó không
+          --   canh gì cả; nó chỉ dạy người đọc bỏ qua chính nó.
+          --   Nay hỏi thẳng thứ cần hỏi: hàm còn `default` nào không. Bản của
+          --   `08` khai `p_tree uuid default null` → `pronargdefaults = 1`.
+          and (select p.pronargdefaults
                  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-                where n.nspname='public' and p.proname='ds_cho_duyet') = 'uuid'
+                where n.nspname='public' and p.proname='ds_cho_duyet') = 0
          then 'ĐẠT' else 'HỎNG — con số trên thanh điều hướng còn sai' end
   union all
   select 11, '⚠ ds_cho_duyet() KHÔNG còn đoán cây bằng limit 1 (Hỏng 3)',
@@ -671,12 +679,25 @@ from (
            'public.ds_cho_duyet(uuid)', 'execute')
          then 'ĐẠT' else 'HỎNG — quên grant lại sau drop' end
   union all
-  select 13, 'Không còn dòng lời mời nào đang mang vai quan_tri',
+  -- ⚠⚠ 10/09/2026 — PHÉP NÀY TỪNG BÁO "ĐẠT" TRÊN MÁY CHỦ THẬT TRONG KHI CÓ
+  --   HAI DÒNG MANG VẾT. Bản cũ hỏi:
+  --       coalesce(approved,false) = false
+  --         and role in ('quan_tri_he_thong','quan_tri','sao_luu')
+  --   Hai mệnh đề ấy đuổi mất đúng thứ cần bắt:
+  --     · `approved = false` loại bỏ dòng ĐÃ BỊ BẬT DUYỆT — mà đó chính là
+  --       dòng nguy hiểm nhất, vì nó đã vào được cây rồi.
+  --     · ba vai kia không có `sua`, mà `sua` mới là vai lỗ hổng hay để lại.
+  --   Đo được trên máy chủ thật: `khach@io.vn` mang `role='sua'`,
+  --   `approved=true` trên cả hai cây, `moi_vai` chỉ là `xem`. Phép này vẫn
+  --   báo ĐẠT.
+  --   Bài học, cùng họ với b102 và H9: **một phép kiểm hẹp hơn thứ nó canh
+  --   thì tệ hơn không có phép kiểm**, vì nó phát ra giấy chứng nhận sạch.
+  --   Nay hỏi ĐÚNG câu mà câu dò ở mục 9 hỏi — hai chỗ không được lệch nhau.
+  select 13, 'Không còn dòng LỜI MỜI nào mang vết của lỗ hổng',
     case when not exists (
       select 1 from public.tree_members
-       where coalesce(approved, false) = false
-         and moi_boi is not null
-         and role in ('quan_tri_he_thong', 'quan_tri', 'sao_luu'))
+       where moi_boi is not null
+         and (coalesce(approved, false) or role <> 'xem'))
          then 'ĐẠT'
          else 'HỎNG — có dòng đã bị lỗ hổng chạm vào, xem mục 9 dưới đây' end
 ) t order by stt;
@@ -700,8 +721,18 @@ from (
 --   Câu 2 SỬA: trả mọi lời mời chưa nhận về `role='xem'`, `approved=false`.
 --   Vai thật của lời mời nằm ở `moi_vai` và không bị đụng tới, nên người được
 --   mời bấm Nhận vẫn vào đúng vai đã mời.
+--
+-- ⚠⚠ 10/09/2026 — CÂU NÀY TRƯỚC ĐÂY LỌC `and approved = false`, TỨC BỎ SÓT
+--    ĐÚNG NHỮNG DÒNG CẦN DỌN NHẤT. Dòng đã bị `duyet_thanh_vien()` bật lên
+--    mang `approved = true`; câu dọn đi tìm `approved = false` thì không thấy
+--    nó, chạy xong báo `UPDATE 0`, và vết vẫn nằm nguyên trong bảng.
+--    Nó cũng mâu thuẫn với chính câu dò ngay phía trên — câu dò hỏi
+--    `(approved or role <> 'xem')`, câu sửa hỏi ngược lại. Hai câu đứng cạnh
+--    nhau mà lệch nhau thì câu dò chỉ để trấn an.
+--    Đo được trên máy chủ thật: hai dòng `khach@io.vn`, `approved = true`.
+--    Nay hai câu hỏi cùng một câu hỏi.
 
 -- update public.tree_members
 --    set role = 'xem', approved = false
 --  where moi_boi is not null
---    and approved = false;
+--    and (coalesce(approved, false) or role <> 'xem');
