@@ -1,6 +1,8 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 10/09/2026 · Bước gần nhất: **b110d** · Việc kế tiếp: **b111***
+*Cập nhật 10/09/2026 · Bước gần nhất: **b111** (mã xong, đã dán SQL, CHƯA bấm
+thử) · Việc kế tiếp: **b111b** — sửa khu "Tài khoản & quyền", xem chi tiết ở
+mục "Đang ở đâu" và bảng bên dưới*
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -21,6 +23,27 @@
 
 ## Đang ở đâu
 
+> ✓ **10/09/2026 — b111 XONG PHẦN MÃ, ĐÃ DÁN SQL, CHƯA BẤM THỬ THẬT.**
+> `chi_tiet_kiem_duyet()` (`luoc-do/19-kiem-duyet-chi-tiet.sql`) đọc lại
+> `change_log.truoc` rồi tra thêm "sau" từ chính bảng thật — không thêm cột
+> nào. `domains/so-sanh.js` (file mới, 10 file `domains/` cũ không đụng) xếp
+> kết quả thành bảng Người · Trường · Trước · Sau, chỉ vẽ ô thật sự đổi. Nút
+> "Xem chi tiết" mới ở khu Kiểm duyệt (`khu-kiem-duyet.js`) gọi cả hai, và
+> khoá sẵn nút Từ chối kèm lý do nếu có ai đã sửa tiếp lên cùng bản ghi.
+> Đo 21/21 trên bàn thử SQL + 23/23 phép Node, `/kiem-tra` đạt cả 9. Đã đẩy
+> GitHub (`e0a169d`). Chủ dự án đã dán `19` lên Supabase thật.
+>
+> ⚠ **Chưa bấm thử điểm dừng của b111** ("chọn một lần Lưu thật, thấy đúng
+> từng ô trước → sau"; "dựng cảnh xung đột, nút hoàn tác mờ kèm lý do"). Đi
+> tìm cách tạo một lần Lưu "chờ duyệt" thật để thử thì chủ dự án đụng phải
+> b111b ngay dưới đây — **nhưng đó KHÔNG phải đường duy nhất**: Quản trị hệ
+> thống/Quản trị viên luôn ghi thẳng (`ghi_thang()`, `08-kiem-duyet.sql`),
+> nên tự gắn mã người cho TÀI KHOẢN CỦA MÌNH (kể cả sau khi b111b xong) vẫn
+> **không** tạo ra hàng chờ để thử. Đường thử được, có ngay hôm nay, không
+> cần chờ b111b: mời một **email thứ hai** vào cây, gắn mã người cho TÀI
+> KHOẢN ẤY (`khu-thanh-vien.js` tab theo cây, gắn cho người khác thì không
+> bị khoá), rồi đăng nhập bằng tài khoản ấy để Lưu một sửa đổi thật.
+>
 > ✓ **10/09/2026 — LỖ HỔNG "HAI CHỮ KÝ" ĐÃ VÁ, ĐÃ DÁN, ĐÃ DỌN VẾT (b110c → b110d).**
 > Chủ dự án bấm thử và bắt được: mời một tài khoản vào cây rồi **tự duyệt và
 > tự đổi vai hộ họ**, không cần họ đồng ý. Đo ra **bốn cửa** thủng. Bản vá
@@ -942,6 +965,23 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | **Điểm dừng** | Chọn một lần Lưu thật, thấy đúng từng ô *trước → sau*, trường không đổi thì **không vẽ dòng**. Rồi dựng cảnh xung đột: Lưu A, Lưu B đụng cùng bản ghi → cột SAU nói rõ đó là trạng thái hôm nay, nút hoàn tác mờ kèm lý do |
 | **Đã trả lời sẵn** | Không cần thêm cột `sau`. `truoc` có hình `{persons:[{id,cu}],…}`, còn *sau* chính là dòng hiện tại |
 | **⚠ Giữ nguyên** | Xem theo **ô**, duyệt theo **lần Lưu**. Không cho nhận từng ô |
+
+### b111b — Khu "Tài khoản & quyền": gắn mã người bấm được ở cả hai tấm, và bỏ khoá cứng "cây đang mở"
+
+⚠ Chủ dự án nêu 10/09/2026, khi đi tìm chỗ gắn mã người cho CHÍNH TÀI KHOẢN
+mình và không thấy — không phải thiếu, mà `khu-thanh-vien.js` cố ý khoá dòng
+của chính người đang đăng nhập (luật *"không ai đặt quyền cho chính mình"*,
+`THIET-KE-NHIEU-CAY.md` mục 11.3, không có ngoại lệ). Ba ý chủ dự án chốt,
+nguyên văn:
+
+| | |
+|---|---|
+| **Làm** | (1) Tab **Toàn hệ thống** (`khu-tai-khoan-he-thong.js`) thêm cột **"Người được gắn"**, bấm vào sửa được. (2) Tab **Tất cả** (`khu-thanh-vien.js`) — cột "Người được gắn" đã có thì cũng phải bấm sửa được. (3) Dòng chữ **"Đang xét quyền trong: <tên cây> · <mã cây>"** (`khu-thanh-vien.js` dòng ~200-312, biến `oCayDangMo`) hiện khoá cứng vào cây đang mở trên trình duyệt — đổi thành **nút chọn cây** trong số các cây người đó sở hữu/quản trị, chọn cây nào thì bảng tài khoản & quyền bên dưới đổi theo cây ấy |
+| **Đọc trước** | `THIET-KE-QUAN-TRI.md` **trước tiên** (luật của trang) · `THIET-KE-NHIEU-CAY.md` mục 11.3 (ai đổi được quyền, luật không tự đặt quyền cho mình — SOÁT LẠI luật ấy có áp cho việc TỰ GẮN MÃ NGƯỜI hay không, đừng đoán) · `CHI-DAN.md` dòng *"Không màn hình nào được ngầm định 'cây đang mở'"* (b110b) — ý (3) chính là áp luật ấy vào đúng chỗ còn sót |
+| **Câu hỏi cần trả lời trước khi viết mã** | Cột "Người được gắn" ở tab **Toàn hệ thống** là cột XUYÊN CÂY, mà mã người là khái niệm THEO TỪNG CÂY (một tài khoản có `person_id` khác nhau ở mỗi cây họ có mặt) — bấm vào một dòng của tab ấy thì sửa mã người cho CÂY NÀO? Cần chọn cây trước hay hỏi lại. Trả lời câu này trước, đừng chỉnh sửa khi chưa rõ |
+| **Sản phẩm** | `khu-tai-khoan-he-thong.js` sửa · `khu-thanh-vien.js` sửa · bộ kiểm liên quan cập nhật |
+| **Điểm dừng** | Chủ dự án tự gắn mã người cho MỘT TÀI KHOẢN KHÁC (không phải tài khoản của chính mình — luật cũ vẫn giữ) từ cả hai tấm, và đổi được cây đang xét ở dòng "Đang xét quyền trong" mà không cần rời trang |
+| **⚠ Không phải đường thử b111** | Việc này KHÔNG mở khoá "tự gắn mã người cho chính mình" — luật ấy giữ nguyên. Muốn thử b111 (kiểm duyệt) thì vẫn cần MỘT TÀI KHOẢN KHÁC đóng vai Thành viên thường, xem ghi chú ở mục "Đang ở đâu" phía trên |
 
 ### b112 — Khu Sao lưu + Số đếm đối chiếu
 
