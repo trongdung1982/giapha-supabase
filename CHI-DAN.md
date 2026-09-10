@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 10/09/2026 (b111)*
+*Nhánh Supabase · cập nhật 10/09/2026 (b111b)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -20,7 +20,7 @@ nó chính là thứ nó sinh ra để tránh.
 | **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa. ⚠ **Quyền DỰNG cây là hạng thứ tư** = cờ `tai_khoan.duoc_tao_cay`, **tách hẳn** khỏi ba hạng trên (b110b) |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` · bảng TRƯỚC/SAU: `luoc-do/19-kiem-duyet-chi-tiet.sql` + `js/domains/so-sanh.js` (b111) |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
-| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ô gợi ý: `o-goi-y.js` + `luoc-do/15-tim-kiem.sql` · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (17 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép, và b110b bắt được cả 17 ảnh RA NỀN TRƠN vì `kiem-thu/sb-gia.mjs` thiếu sáu cửa của b110: **thêm cửa vào `sb.js` thì thêm cả ở đó**. ⚠ **Không màn hình nào được ngầm định "cây đang mở"** — mọi chỗ gán quyền phải gọi tên cây (b110b); ngoại lệ duy nhất là hai cờ cấp tài khoản. ⚠ Ảnh 1280px KHÔNG phân giải nổi "đè lên nhau" với "sát nhau" — đo bằng `node ../kiem-thu/do-goi-y.mjs` |
+| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ô gợi ý: `o-goi-y.js` + `luoc-do/15-tim-kiem.sql` · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (22 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép. ⚠⚠ **THÊM CỬA VÀO `sb.js` THÌ THÊM CẢ Ở `kiem-thu/sb-gia.mjs`** — thiếu một tên là `SyntaxError` lúc nạp mô-đun, tức **CẢ BỘ ẢNH ra nền trơn**, kể cả khu chẳng liên quan. Đã xảy ra HAI lần: b110b (thiếu sáu cửa) và b111 (thiếu `chiTietKiemDuyet`, trắng suốt tới b111b mà không ai biết). Từ b111b `trang-quan-tri-gia.html` in lỗi ra **chữ đỏ đầu trang** — thấy chữ đỏ thì đọc nó, đừng đi sửa bố cục. ⚠ **Không màn hình nào được ngầm định "cây đang mở"** — mọi chỗ gán quyền phải gọi tên cây (b110b); khu Tài khoản nay có **ô chọn cây** riêng, KHÔNG dính cây đang mở của app (b111b); ngoại lệ duy nhất là hai cờ cấp tài khoản. ⚠ Ảnh 1280px KHÔNG phân giải nổi "đè lên nhau" với "sát nhau" — đo bằng `node ../kiem-thu/do-goi-y.mjs` |
 | Bàn thử SQL tại chỗ · phép ĐO hàng rào · tên/mã vai trò | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102`→`do-b110` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` · tên vai: `config.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
@@ -44,16 +44,15 @@ nó chính là thứ nó sinh ra để tránh.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
 3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09;
    luật trực hệ + hàng chờ duyệt đo bằng REST, **5/5 hàng rào đạt** (b94,
-   b96). `KIEN-TRUC.md` mục 6: còn gì dở.
-   ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
-   tầng quyền hệ thống + tạo cây mới đã dán cả hai Supabase (b102–b104); mã
-   cây nay **3 chữ số** (`NPG473`). `13`·`14` đã dán, `16` (thùng rác) và
-   `17` (cờ dựng cây) dán 10/09 — **chưa ai bấm thử** vòng xin → duyệt →
-   phục hồi. ⏳ **`15` 0.2.0 CHƯA DÁN** (`vai_cao_nhat`).
-   ✓ **`18-hai-chu-ky.sql` ĐÃ DÁN, đã dọn vết** (b110c→b110d) — vá lỗ hổng
-   *"mời ai vào cây rồi tự duyệt/đổi vai hộ họ"*; đo 48/48, một vết thật đã
-   dò ra và dọn sạch. ⚠ Chuỗi dán lại: `11`/`10`→`14`→`16`→**`18`** ·
-   `13`/`14`→`15`→**`18`** · `08`→**`18`** — quên là mở lại đúng lỗ hổng ấy.
+   b96). Máy chủ thật nay có **HAI cây**, mã cây **3 chữ số** (`NPG473`),
+   khung Quản trị bốn khu. `KIEN-TRUC.md` mục 6: còn gì dở.
+   ⚠ **File SQL nào đã dán, file nào chưa — hỏi `KE-HOACH.md`.** Không giữ
+   bản thứ hai ở đây: nó đổi mỗi bước, và hai chỗ ghi là hai chỗ để lệch nhau.
+   ⚠ **Chuỗi dán lại:** `11`/`10`→`14`→`16`→`18` · `13`/`14`→`15`→`20`→`18` ·
+   `08`→`18`. Quên là mở lại đúng lỗ hổng "hai chữ ký" của b110c.
+   ⚠ **`drop function` XOÁ CẢ `grant`.** Dựng lại một hàm đã có thì chép theo
+   cả dòng `grant` của nó, không thì nó lặng lẽ rơi về mặc định Postgres *ai
+   cũng gọi được, kể cả `anon`* — `15` đã vấp, `20` vá.
 
 ## Quy ước khung tài liệu này
 

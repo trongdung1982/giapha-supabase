@@ -156,7 +156,8 @@ tô đậm cái đang chọn. Dùng lại đúng ngôn ngữ hình ấy.
 | **Mục đích** | Thay hẳn việc mở SQL Editor để xem và sửa `tree_members` |
 | **Ai vào được** | `quan_tri_he_thong` đầy đủ · `quan_tri` **chỉ xem** · hai vai kia không. **Máy chủ quyết** |
 | **Dữ liệu** | Cần hàm mới `ds_thanh_vien()` — xem mục 6 |
-| **Cột** | Email · Người được gắn *(mã + tên)* · Vai trò · Đã duyệt · Tin cậy · Tham gia |
+| **Cột** | Email · Người được gắn *(mã + tên, **bấm được** từ b111b)* · Vai trò · Đã duyệt · Tin cậy · Tham gia |
+| **Cây nào** | **Ô chọn cây** ngay dưới dòng danh tính — mục 5b điều ① |
 | **Rỗng** | *"Chưa có thành viên nào trong gia phả này."* |
 | **Lỗi** | *"Không tải được danh sách thành viên."* + **Thử lại** |
 
@@ -203,7 +204,7 @@ thấy tấm này, và hàng rào nằm trong chính câu truy vấn của
 |---|---|
 | **Mã ở đâu** | `js/pages/quan-tri/khu-tai-khoan-he-thong.js` — **file riêng**, không viết thêm vào `khu-thanh-vien.js`. Hai chế độ, hai câu hỏi, hai bảng khác cột |
 | **Nối bằng gì** | `khu-thanh-vien.js` nạp nó bằng `import()` **động**; nó `import` ngược lại để dùng năm việc của `13`. Tĩnh cả hai chiều là **vòng import**, và vòng import trong ES Modules gốc không ném lỗi lúc nạp — nó để một hàm thành `undefined`, chỉ vỡ lúc ai đó bấm đúng nút ấy |
-| **Cột** | Tài khoản *(+ huy hiệu QTHT / Bạn)* · Mã tài khoản · Vai trò · **Tạo gia phả** *(ô tích, b110b)* · Số cây *(kèm dòng nhỏ "n chờ · n mời")* · Xác nhận email · Đăng ký · Đăng nhập gần nhất |
+| **Cột** | Tài khoản *(+ huy hiệu QTHT / Bạn)* · Mã tài khoản · Vai trò · **Người được gắn** *(xuyên cây, b111b — mục 5b điều ②)* · **Tạo gia phả** *(ô tích, b110b)* · Số cây *(kèm dòng nhỏ "n chờ · n mời")* · Xác nhận email · Đăng ký · Đăng nhập gần nhất |
 | **Bảng sâu, năm việc** | ① họ tên · ② bật/tắt cờ Quản trị hệ thống · ③ **ô tích Quyền dựng gia phả** *(b110b)* · ④ bảng các cây + năm việc của `13` theo từng dòng *(hoặc Duyệt/Từ chối nếu là đơn đang chờ)* · ⑤ mời thẳng vào một cây · ⑥ xoá hẳn tài khoản, gõ lại email |
 | **⚠ Hai việc KHÔNG hỏi cây** | Cờ Quản trị hệ thống và ô tích Quyền dựng gia phả là cờ ở tầng **tài khoản** — chúng đứng cạnh nhau, TRƯỚC mọi việc theo cây, và nhãn của chúng tự khai *"cả hệ thống, không chọn cây"*. Mọi việc còn lại phải gọi tên cây, xem mục 5a |
 | **Khoá trên dòng của chính mình** | Ba việc: cờ QTHT · mời · xoá. Cộng nút mở năm việc trong bảng cây. **Khoá sẵn kèm lý do, không mở ra rồi mới giải thích** |
@@ -342,6 +343,46 @@ nhãn, và bản 0.7.0 đã bịa đúng như thế (`'Gia phả đang mở'`). 
 **Ngoại lệ, và chỉ có hai** — hai cờ ở tầng tài khoản (mục 4, khu 2). Chúng
 không hỏi cây nào vì câu ấy không có câu trả lời, và nhãn của chúng phải tự
 khai điều đó.
+
+### 5b. Chốt 10/09/2026 (b111b) — chỗ CHỌN cây, và luật của cột xuyên cây
+
+Mục 5a bắt mọi màn hình **gọi tên** cây. b111b trả lời nốt câu còn lại: người
+dùng **đổi** cây ở đâu, và một cột xuyên cây thì sửa cho cây nào.
+
+**① Khu 2 có ô chọn cây riêng, và nó KHÔNG phải cây đang mở của app.**
+Dòng *"Đang xét quyền trong: …"* trước b111b khoá cứng vào `phien.treeId`,
+nên muốn sửa quyền ở cây khác thì phải rời trang sang khu 1 đổi cây làm việc
+rồi quay lại — tức phải đổi cả phiên của mình để đọc một cái bảng. Nay nó là
+một ô chọn, và nó chỉ đổi câu hỏi của khu 2.
+
+⚠ **Đừng gộp nó với "chọn gia phả" của khu 1.** Hai việc khác hẳn nhau: khu 1
+đổi cây người ta đang *làm việc* (sơ đồ, biên tập, ảnh); ô này đổi cây người
+ta đang *xét quyền*. Gộp lại là để một cú bấm tưởng như lọc một cái bảng lại
+im lặng đổi cây đang mở ở tab bên cạnh. Nhãn của ô phải tự khai điều đó.
+
+⚠ **Lọc bằng `co_the_xem` của MÁY CHỦ, không suy vai ở trình duyệt.** Cám dỗ
+là chỉ liệt kê cây mình làm chủ hay quản trị — nhưng chủ cây nhận quyền qua
+một CỘT (`trees.chu_so_huu`) và Quản trị hệ thống qua một CỜ, nên phép suy từ
+`vaiCuaToi` khoá tay đúng hai hạng người có quyền nhất. Đúng cái bẫy mục 7
+điều 5 đã cấm. Bỏ cây trong thùng rác, và **một cây thì vẽ chữ chứ đừng vẽ ô
+chọn** — một danh sách thả xuống có đúng một mục nói sai một câu: rằng có thứ
+để chọn.
+
+**② Cột xuyên cây KHÔNG BAO GIỜ là chỗ sửa.** Cột *Người được gắn* ở tấm
+*Toàn hệ thống* trả lời một câu xuyên cây, mà mã người là khái niệm theo TỪNG
+cây — nên "sửa ở đó" là một câu chưa đủ nghĩa. Luật:
+
+> Cột xuyên cây **hiện tóm tắt và mở ra bảng theo từng cây**; chỗ sửa nằm
+> trong bảng ấy, nơi tên cây đứng ngay bên cạnh ô đang sửa.
+
+Cột **Vai trò** đã đi đúng đường ấy từ b109c; b111b chỉ áp lại cho cột thứ
+hai. Nhờ thế không phải đẻ ra hộp thoại *"bạn muốn sửa cho cây nào?"* nào cả
+— câu hỏi ấy tự tan khi người ta bấm vào một dòng có tên cây.
+
+⚠ **Tóm tắt phải nói ra phần nó cắt.** Máy chủ trả `nguoi_gan` **trần 3 phần
+tử** kèm `so_cay_gan` là số đầy đủ (`luoc-do/20-nguoi-duoc-gan.sql`). Vẽ theo
+`nguoi_gan.length` là nói dối ở đúng tài khoản dính nhiều cây nhất — tức đúng
+tài khoản người ta mở ra để xem. Dòng *"và n cây khác"* là chỗ trả nợ ấy.
 
 ---
 

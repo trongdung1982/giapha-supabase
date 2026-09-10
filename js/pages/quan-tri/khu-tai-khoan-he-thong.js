@@ -4,7 +4,25 @@
 //            phần mềm, và bảng sâu theo từng cây của một tài khoản.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, pages/quan-tri/khu-thanh-vien
-// Phiên bản: 0.5.0 · Cập nhật: 09/09/2026 (b110b)
+// Phiên bản: 0.6.0 · Cập nhật: 10/09/2026 (b111b)
+//            0.6.0 cột **Người được gắn**, chủ dự án đặt hàng 10/09/2026.
+//              ⚠ CÂU HỎI NÀY XUYÊN CÂY, và đó là cả cái khó của nó. Mã người
+//                là khái niệm THEO TỪNG CÂY — một tài khoản có `person_id`
+//                khác nhau ở mỗi cây họ có mặt — nên một ô bảng ở tấm *Toàn hệ
+//                thống* không có cách nào là chỗ SỬA: sửa thì sửa cho cây nào?
+//                Đường đã có sẵn hình mẫu ngay cạnh: cột *Vai trò* cũng là một
+//                dòng tóm tắt xuyên cây, và nó **bấm ra bảng theo từng cây**
+//                rồi mới sửa ở đó. Cột này đi y hệt — bấm mở bảng *các cây tài
+//                khoản này dính tới*, và ô *Người được gắn* TRONG bảng ấy mới
+//                là chỗ sửa, vì tới đó mới có tên cây đứng cạnh.
+//              ⚠ Nội dung cột lấy từ hai trường mới của `ds_tai_khoan_he_thong()`
+//                (`luoc-do/20-nguoi-duoc-gan.sql`): `nguoiGan` **trần 3 phần
+//                tử** và `soCayGan` là số đầy đủ. Vẽ theo `nguoiGan.length` là
+//                nói dối ở đúng tài khoản dính nhiều cây nhất.
+//              Cộng: ô *Người được gắn* trong bảng con theo từng cây nay bấm
+//              được, mở đúng hàng *Mã người trong sơ đồ* của cây ấy — trước
+//              bản này nó là ô chữ chết và đường duy nhất đi vòng qua nút
+//              *Sửa quyền* ở cột cuối.
 //            0.5.0 chủ dự án chốt 09/09/2026, hai việc rời nhau nhưng cùng
 //            một câu: *"luôn luôn xác định người nào, cây nào, quyền gì"*.
 //              ① **Cột *Tạo gia phả*** — một ô tích, bật/tắt cờ
@@ -97,6 +115,7 @@ import {
 import { vaiTroBangChu } from '../../config.js';
 import {
   veBangViec, veXetDon, veBangVaiTroTungCay,
+  veONguoiGan, tieuDeGan, bangGanNguoi,
   hangViec, nutHaiNhip, xong, dongBao, dongNhac, nhanCay,
   o, huyHieu, nut, veLoi, gioVietNam, capChieuCao, CSS_DAU_BANG,
 } from './khu-thanh-vien.js';
@@ -243,6 +262,10 @@ function veDauBang() {
     //   ba tấm lọc kia, chủ dự án đổi 09/09/2026. Cùng một thứ mà hai màn hình
     //   gọi hai tên là bắt người đọc tự đoán chúng có phải một không.
     ['Vai trò', '', 'cao nhất · bấm xem từng cây'],
+    // ⚠ Cột XUYÊN CÂY, và chú thích phải nói ra điều ấy. Bấm nó KHÔNG sửa gì —
+    //   nó mở bảng theo từng cây, vì "gắn mã người" mà không nói cây nào là
+    //   một câu chưa đủ nghĩa (`THIET-KE-QUAN-TRI.md` mục 5a).
+    ['Người được gắn', '', 'theo từng cây · bấm để mở'],
     // ⚠ CỘT NÀY KHÔNG HỎI CÂY NÀO, và đó là cả điểm của nó. Ba cột bên trái
     //   nói về quyền TRONG một cây; cột này là cờ của TÀI KHOẢN — bật một
     //   lần thì người ấy dựng được gia phả, chấm hết. Chủ dự án đặt hàng
@@ -324,6 +347,7 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
     'padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:#5b4533');
 
   const oVaiTro = veOVaiTro(tk);
+  const oGan = veOGanXuyenCay(tk);
 
   const oTaoCay = o('', 'padding:10px;text-align:center');
   oTaoCay.append(oTichTaoCay(tk, true));
@@ -360,7 +384,7 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
     (tk.dangNhapGanNhat ? '#6a625a' : '#8a8078'));
   if (!tk.dangNhapGanNhat) oDn.style.fontStyle = 'italic';
 
-  tr.append(oTk, oMa, oVaiTro, oTaoCay, oSo, oXn, oTao, oDn);
+  tr.append(oTk, oMa, oVaiTro, oGan.td, oTaoCay, oSo, oXn, oTao, oDn);
   ruot.append(tr);
 
   // ⚠ Dòng của chính mình KHÔNG khoá ở đây, khác hẳn bảng bên `khu-thanh-vien`.
@@ -382,6 +406,7 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
   };
   bo.nut.push(datTk);
   if (oVaiTro.datTrangThai) bo.nut.push(oVaiTro.datTrangThai);
+  if (oGan.dat) bo.nut.push(oGan.dat);
 
   bMo.addEventListener('click', () => moDong(bo, 'tk:' + tk.userId, tk, datTk,
     () => veBangSau(tk, ds, dsCay, napLai)));
@@ -396,6 +421,95 @@ function veMotDong(ruot, tk, ds, dsCay, napLai, bo) {
         docCaSo: true, duocDoiQuyen: true, napLai,
       })));
   }
+
+  // ⚠ Cột *Người được gắn* mở **cùng bảng** mà ô Tài khoản mở một phần — bảng
+  //   các cây tài khoản này dính tới. Khác nhau ở chỗ nó mở THẲNG vào đó, thay
+  //   vì bắt cuộn qua bốn việc cấp tài khoản để tới. Khoá riêng (`gan:`) vì
+  //   một dòng nay có BA chỗ bấm mở ba thứ, và khoá trùng nhau thì bấm chỗ này
+  //   sẽ đóng chỗ kia — trông hệt như cú bấm không ăn.
+  if (oGan.nut) {
+    oGan.nut.addEventListener('click', () => moDong(bo, 'gan:' + tk.userId, tk,
+      oGan.dat, () => veCacCay(tk, napLai)));
+  }
+}
+
+/**
+ * Ô **Người được gắn** của sổ đăng ký — một dòng TÓM TẮT xuyên cây.
+ *
+ * ⚠ ĐỌC `soCayGan`, KHÔNG ĐỌC `nguoiGan.length`. Máy chủ cắt mảng ở ba phần tử
+ *   (`20-nguoi-duoc-gan.sql` mục 1) nên hai con số ấy lệch nhau đúng ở tài
+ *   khoản dính nhiều cây nhất — tức đúng tài khoản người ta mở ra để xem.
+ *
+ * ⚠ KHÔNG khoá trên dòng của chính mình, khác cột cùng tên ở ba tấm lọc kia.
+ *   Ở đây bấm vào chỉ MỞ một bảng để xem; mọi nút sửa nằm trong bảng ấy và
+ *   chúng tự khoá lấy. Khoá ở đây là giấu mất câu *"tôi đang được gắn vào ai"*,
+ *   một câu ai cũng có quyền đọc về chính mình.
+ */
+function veOGanXuyenCay(tk) {
+  const td = o('', 'padding:0');
+  const ds = tk.nguoiGan || [];
+
+  // Chưa gắn ở đâu là một trạng thái CÓ THẬT và đáng đọc — nói ra bằng chữ,
+  // đừng để nó trông giống dữ liệu thiếu. Và không vẽ nút: không có gì để mở
+  // mà vẫn mời bấm là hứa hão.
+  if (!ds.length) {
+    const d = document.createElement('div');
+    d.textContent = tk.soCay ? 'chưa gắn ở cây nào' : '—';
+    d.style.cssText = 'padding:10px;color:#8a8078;' +
+      (tk.soCay ? 'font-style:italic' : '');
+    // Hai câu khác nhau: *chưa gắn* là có chân mà chưa ai gắn; dấu gạch là
+    // chưa có chân ở cây nào cả, và lúc ấy chữ "chưa gắn" đọc ra như một việc
+    // đang chờ ai làm — không phải.
+    if (!tk.soCay) d.title = 'Tài khoản này chưa có chân trong gia phả nào.';
+    td.append(d);
+    return { td, nut: null, dat: null };
+  }
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.style.cssText =
+    'display:block;width:100%;padding:10px;border:0;background:none;' +
+    'font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:8px';
+
+  const dau = ds[0] || {};
+  const hang1 = document.createElement('div');
+  const ma = document.createElement('span');
+  ma.textContent = dau.maNguoi || '';
+  ma.style.cssText = 'font-family:ui-monospace,monospace;font-size:12px;color:#5b4533';
+  hang1.append(ma);
+  if (dau.maCay) {
+    const mc = document.createElement('span');
+    mc.textContent = ' · ' + dau.maCay;
+    mc.style.cssText = 'font-size:11px;color:#8a8078';
+    hang1.append(mc);
+  }
+  b.append(hang1);
+
+  if (dau.ten && dau.ten !== dau.maNguoi) {
+    const ten = document.createElement('div');
+    ten.textContent = dau.ten;
+    ten.style.cssText = 'font-size:12px;color:#6a625a;overflow-wrap:break-word';
+    b.append(ten);
+  }
+
+  // Chỉ mọc khi khác 0, đúng luật `CLAUDE.md` mục 7 — một dòng "và 0 cây khác"
+  // nói *có thêm gì đấy* trong khi không có.
+  const con = (Number(tk.soCayGan) || ds.length) - 1;
+  if (con > 0) {
+    const d = document.createElement('div');
+    d.textContent = 'và ' + con + ' cây khác';
+    d.style.cssText = 'font-size:11px;color:#7a5a28;white-space:nowrap';
+    b.append(d);
+  }
+
+  td.append(b);
+
+  const dat = (dangMo) => {
+    b.style.background = dangMo ? '#f2ece2' : 'none';
+    b.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+  };
+
+  return { td, nut: b, dat };
 }
 
 /**
@@ -602,7 +716,9 @@ function moDong(bo, khoa, tk, datTrangThai, veNoiDung) {
   const tieu = document.createElement('div');
   tieu.style.cssText = 'padding:12px 0 0;font-size:13px;color:#2a2622';
   tieu.append(document.createTextNode(
-    khoa.startsWith('vai:') ? 'Vai trò của ' : 'Tài khoản '));
+    khoa.startsWith('vai:') ? 'Vai trò của '
+      : khoa.startsWith('gan:') ? 'Người được gắn cho '
+      : 'Tài khoản '));
 
   const ai = document.createElement('span');
   ai.textContent = tk.email || '(không rõ email)';
@@ -617,6 +733,19 @@ function moDong(bo, khoa, tk, datTrangThai, veNoiDung) {
   }
 
   if (khoa.startsWith('vai:')) tieu.append(document.createTextNode(' — ở từng gia phả'));
+  else if (khoa.startsWith('gan:')) {
+    tieu.append(document.createTextNode(' — ở từng gia phả'));
+    // ⚠ Nói thẳng chỗ SỬA nằm đâu. Người ta bấm cột *Người được gắn* để đổi mã
+    //   người, và thứ mở ra là một bảng — không có câu này thì họ đọc bảng
+    //   xong đi tìm nút Lưu ở đâu đó ngoài màn hình.
+    const d = document.createElement('div');
+    d.textContent =
+      'Mã người gắn theo TỪNG cây. Bấm vào ô Người được gắn của dòng cây nào ' +
+      'thì sửa cho cây ấy.';
+    d.style.cssText = 'margin-top:4px;font-size:12px;font-weight:400;' +
+      'color:#8a8078;line-height:1.5;max-width:640px';
+    tieu.append(d);
+  }
 
   hop.append(tieu, veNoiDung());
   bo.oSau.append(hop);
@@ -1002,14 +1131,25 @@ function veBangCay(ds, tk, napLai, bo) {
   const thead = document.createElement('thead');
   const tr = document.createElement('tr');
   tr.style.cssText = 'border-bottom:1px solid #e6e0d8;background:#faf8f5';
-  for (const [chu, them] of [['Gia phả', ''], ['Đứng ở đâu', ''], ['Vai trò', ''],
-                             ['Người được gắn', ''], ['Tin cậy', 'text-align:center'],
-                             ['', 'text-align:right']]) {
+  for (const [chu, them, phu] of [
+    ['Gia phả', ''], ['Đứng ở đâu', ''], ['Vai trò', ''],
+    // ⚠ ĐÂY mới là chỗ sửa mã người, và chú thích phải nói ra — cột cùng tên ở
+    //   bảng trên chỉ mở được bảng này chứ không sửa gì. Tới đây thì đã có tên
+    //   cây đứng ngay bên trái, tức câu "gắn cho cây nào" mới có câu trả lời.
+    ['Người được gắn', '', 'bấm để gắn/đổi'],
+    ['Tin cậy', 'text-align:center'], ['', 'text-align:right'],
+  ]) {
     const th = document.createElement('th');
-    th.textContent = chu;
     th.style.cssText =
       'padding:8px 10px;text-align:left;font-weight:600;color:#6a625a;' +
       'font-size:12px;white-space:nowrap;' + them;
+    th.append(document.createTextNode(chu));
+    if (phu) {
+      const d = document.createElement('div');
+      d.textContent = phu;
+      d.style.cssText = 'font-weight:400;font-size:11px;color:#8a8078';
+      th.append(d);
+    }
     tr.append(th);
   }
   thead.append(tr);
@@ -1058,30 +1198,29 @@ function veMotDongCay(ruot, c, tk, napLai, bo) {
   oVai.textContent = vaiTroBangChu(vaiHien) || vaiHien || '';
   if (c.laChuCay) oVai.append(huyHieu('Chủ gia phả', true));
 
-  const oNguoi = o('', 'padding:9px 10px;color:#2a2622');
-  if (c.maNguoi) {
-    const ma = document.createElement('span');
-    ma.textContent = c.maNguoi;
-    ma.style.cssText = 'font-family:ui-monospace,monospace;font-size:12px;color:#5b4533';
-    oNguoi.append(ma);
-    if (c.tenNguoi && c.tenNguoi !== c.maNguoi) {
-      const t = document.createElement('div');
-      t.textContent = c.tenNguoi;
-      t.style.cssText = 'font-size:12px;color:#6a625a';
-      oNguoi.append(t);
-    }
-  } else {
-    oNguoi.textContent = 'chưa gắn';
-    oNguoi.style.color = '#8a8078';
-    oNguoi.style.fontStyle = 'italic';
-  }
+  // ⚠ ĐÂY là chỗ gắn mã người THẬT của cả tấm *Toàn hệ thống* — tới dòng này
+  //   thì "cây nào" mới có câu trả lời, vì tên cây đứng ngay cột đầu.
+  //   Hai lý do khoá, và cả hai trùng đúng với `gan_nguoi_cho_thanh_vien()`
+  //   (`18` mục 4). `duocDoiQuyen` không có trong danh sách vì chỉ Quản trị hệ
+  //   thống mở được tấm này, và `co_the_quan_tri()` trả `true` cho họ ở MỌI
+  //   cây — xem khối đầu file.
+  const oNguoi = veONguoiGan(
+    { maNguoi: c.maNguoi, tenNguoi: c.tenNguoi },
+    {
+      css: 'padding:9px 10px',
+      khoa: trangThai === 'duocmoi' || tk.laChinhToi,
+      lyDo: tk.laChinhToi
+        ? 'Tài khoản của chính bạn — không ai tự gắn mã người cho mình được.'
+        : 'Lời mời đang chờ chính người ấy bấm Nhận. Gắn mã người hộ họ là bỏ '
+          + 'mất chữ ký thứ hai.',
+    });
 
   const oTin = o(c.tinCay ? 'Có' : 'Không',
     'padding:9px 10px;text-align:center;color:' + (c.tinCay ? '#2f6b3a' : '#8a8078'));
 
   const oThao = o('', 'padding:9px 10px;text-align:right');
 
-  tr.append(oCay, oTt, oVai, oNguoi, oTin, oThao);
+  tr.append(oCay, oTt, oVai, oNguoi.td, oTin, oThao);
   ruot.append(tr);
 
   // Hình dạng `t` mà năm việc của `13` chờ: quyền gắn vào TÀI KHOẢN, còn vai
@@ -1099,6 +1238,19 @@ function veMotDongCay(ruot, c, tk, napLai, bo) {
     laChuCay: c.laChuCay,
   };
 
+  // ⚠ Tham số `cay` là cả ĐỐI TƯỢNG từ `khu-thanh-vien.js` 0.8.0 — mọi việc
+  //   bên trong phải gọi được TÊN cây, không chỉ biết uuid của nó.
+  const cay = { treeId: c.treeId, ten: c.ten || '', maCay: c.maCay || '' };
+
+  // Ô *Người được gắn* của dòng này — chỗ sửa mã người thật. Nó mở TRƯỚC cả
+  // cửa `duocmoi` bên dưới vì ô ấy đã tự khoá cho trạng thái ấy rồi.
+  if (oNguoi.dat) {
+    bo.nut.push(oNguoi.dat);
+    oNguoi.nut.addEventListener('click', () => moDongCay(
+      bo, 'gan:' + c.treeId, oNguoi.dat, tieuDeGan(t, cay),
+      () => bangGanNguoi(t, cay, true, napLai)));
+  }
+
   // ⚠ Lời mời KHÔNG có nút nào ở đây, và đó là luật chứ không phải thiếu sót:
   //   nhận hộ người ta là bỏ mất chữ ký thứ hai — đúng thứ `14` dựng cả cột
   //   `moi_vai` riêng để giữ. `nhan_loi_moi()` ở máy chủ cũng từ chối.
@@ -1109,7 +1261,6 @@ function veMotDongCay(ruot, c, tk, napLai, bo) {
 
   const chuDong = c.daDuyet ? 'Sửa quyền' : 'Xét đơn';
   const b = nut(chuDong, false);
-  b.dataset.chuDong = chuDong;
 
   // ⚠ **Khoá sẵn, không mở ra rồi mới giải thích** — chủ dự án bảo thẳng
   //   08/09/2026 sau khi bấm vào dòng của chính mình ở khu bên. Năm việc bên
@@ -1124,49 +1275,57 @@ function veMotDongCay(ruot, c, tk, napLai, bo) {
     return;
   }
 
-  bo.nut.push(b);
-
-  // `true` cho `duocDoiQuyen`: chỉ Quản trị hệ thống mở được tấm lọc này, và
-  // `co_the_quan_tri()` trả true cho họ ở mọi cây — xem khối đầu file.
-  //
-  // ⚠ Tham số thứ hai là cả ĐỐI TƯỢNG CÂY từ `khu-thanh-vien.js` 0.8.0 — năm
-  //   việc bên trong phải gọi được tên cây, không chỉ biết uuid của nó.
-  const cay = { treeId: c.treeId, ten: c.ten || '', maCay: c.maCay || '' };
-
-  b.addEventListener('click', () => moDongCay(bo, c, b, () => (c.daDuyet
-    ? veBangViec(t, cay, true, napLai)
-    : veXetDon(t, cay, true, napLai))));
-
-  oThao.append(b);
-}
-
-/** Cùng luật "một chỗ đứng chung, mỗi lúc một dòng" của `moDong()` ở trên. */
-function moDongCay(bo, c, bMo, veNoiDung) {
-  const dangMoDongNay = bo.dangMo === c.treeId;
-
-  bo.oSau.innerHTML = '';
-  for (const n of bo.nut) n.textContent = n.dataset.chuDong;
-
-  if (dangMoDongNay) {
-    bo.dangMo = null;
-    return;
-  }
-
-  bo.dangMo = c.treeId;
-  bMo.textContent = 'Thu lại';
-
-  const hop = document.createElement('div');
-  hop.style.cssText =
-    'margin-top:12px;padding:0 12px 12px;border:1px solid #e6e0d8;' +
-    'border-radius:9px;background:#fffdf9';
+  // ⚠ `bo.nut` chứa HÀM đặt trạng thái, không phải phần tử nút — đổi ở b111b,
+  //   cùng lý do `moDong()` ở trên đã đổi từ b109b: một dòng nay có HAI chỗ
+  //   bấm, và chỗ thứ hai (ô Người được gắn) chứa mã người, tên người và cả
+  //   chữ nghiêng *"chưa gắn"*. Gán đè `textContent` lên nó là xoá sạch ô.
+  const datNut = (dangMo) => { b.textContent = dangMo ? 'Thu lại' : chuDong; };
+  bo.nut.push(datNut);
 
   // Gọi tên cây bằng đúng `nhanCay()` mà khu bên dùng — tên KÈM mã cây. Hai
   // cây trùng tên là chuyện có thật (chi trên, chi dưới), và mã cây là thứ
   // duy nhất chỉ đúng một cây.
   const tieu = document.createElement('div');
   tieu.textContent = (c.daDuyet ? 'Sửa quyền trong ' : 'Xét đơn vào ') +
-    nhanCay({ ten: c.ten, maCay: c.maCay });
+    nhanCay(cay);
   tieu.style.cssText = 'padding:10px 0 0;font-size:13px;color:#2a2622;font-weight:600';
+
+  // `true` cho `duocDoiQuyen`: chỉ Quản trị hệ thống mở được tấm lọc này, và
+  // `co_the_quan_tri()` trả true cho họ ở mọi cây — xem khối đầu file.
+  b.addEventListener('click', () => moDongCay(bo, c.treeId, datNut, tieu,
+    () => (c.daDuyet
+      ? veBangViec(t, cay, true, napLai)
+      : veXetDon(t, cay, true, napLai))));
+
+  oThao.append(b);
+}
+
+/**
+ * Cùng luật "một chỗ đứng chung, mỗi lúc một dòng" của `moDong()` ở trên.
+ *
+ * ⚠ `khoa` là THAM SỐ từ b111b, không còn là `c.treeId` cứng: một dòng cây nay
+ *   có hai chỗ bấm mở hai thứ khác nhau — ô *Người được gắn* và nút *Sửa
+ *   quyền*. Khoá trùng nhau thì bấm chỗ này sẽ ĐÓNG chỗ kia thay vì đổi sang,
+ *   trông hệt như cú bấm không ăn. Đúng chỗ hỏng `moDong()` đã sửa ở b109c.
+ */
+function moDongCay(bo, khoa, dat, tieu, veNoiDung) {
+  const dangMoCaiNay = bo.dangMo === khoa;
+
+  bo.oSau.innerHTML = '';
+  for (const d of bo.nut) d(false);
+
+  if (dangMoCaiNay) {
+    bo.dangMo = null;
+    return;
+  }
+
+  bo.dangMo = khoa;
+  dat(true);
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:12px;padding:0 12px 12px;border:1px solid #e6e0d8;' +
+    'border-radius:9px;background:#fffdf9';
 
   hop.append(tieu, veNoiDung());
   bo.oSau.append(hop);

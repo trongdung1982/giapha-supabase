@@ -5,7 +5,14 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.16.0 · Cập nhật: 10/09/2026 (b111)
+// Phiên bản: 0.17.0 · Cập nhật: 10/09/2026 (b111b)
+//            0.17.0 `dsTaiKhoanHeThong()` đọc thêm **`soCayGan` · `nguoiGan`**
+//            (`luoc-do/20-nguoi-duoc-gan.sql`) — cột *Người được gắn* của tấm
+//            *Toàn hệ thống*. Câu hỏi ấy XUYÊN CÂY, mà `dsCayCuaTaiKhoan()`
+//            chỉ trả lời được từng tài khoản một: vẽ ba chục dòng bằng nó là
+//            ba chục vòng mạng cho một cái cột. Nên câu trả lời đi cùng chuyến
+//            với sổ đăng ký. ⚠ `nguoiGan` có **trần 3 phần tử**, `soCayGan`
+//            là số đầy đủ — đừng lấy `nguoiGan.length` làm con số.
 //            0.16.0 `chiTietKiemDuyet()` — cửa cho bảng phẳng TRƯỚC/SAU của
 //            màn hình Duyệt (`19-kiem-duyet-chi-tiet.sql`). Vòng gọi RIÊNG,
 //            không gộp vào `dsKiemDuyet()` — xem lý do ngay cạnh hàm ấy.
@@ -1434,6 +1441,17 @@ export async function dsTaiKhoanHeThong() {
     soCho: Number(r.so_cho) || 0,
     soMoi: Number(r.so_moi) || 0,
     soCayLamChu: Number(r.so_cay_lam_chu) || 0,
+    // ⚠ Hai trường b111b (`luoc-do/20-nguoi-duoc-gan.sql`) — cột *Người được
+    //   gắn* của tấm *Toàn hệ thống*. `nguoiGan` là mảng **trần 3 phần tử**,
+    //   mỗi phần tử `{treeId, tenCay, maCay, maNguoi, ten}`; `soCayGan` là số
+    //   ĐẦY ĐỦ. Hai thứ ấy lệch nhau là chuyện bình thường và màn hình phải
+    //   nói ra phần bị cắt, đừng lấy `nguoiGan.length` làm con số.
+    //
+    // ⚠ `Array.isArray` chứ không `|| []`: máy chủ chưa dán `20` trả về
+    //   `undefined` ở đây, còn một máy chủ nửa vời có thể trả `null` — cả hai
+    //   đều phải ra mảng rỗng, vì nơi nhận đọc `.length` ngay.
+    soCayGan: Number(r.so_cay_gan) || 0,
+    nguoiGan: Array.isArray(r.nguoi_gan) ? r.nguoi_gan : [],
     taoLuc: r.tao_luc || null,
     dangNhapGanNhat: r.dang_nhap_gan_nhat || null,
     daXacNhanEmail: Boolean(r.da_xac_nhan_email),

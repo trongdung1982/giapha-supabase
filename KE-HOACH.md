@@ -1,8 +1,8 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 10/09/2026 · Bước gần nhất: **b111** (mã xong, đã dán SQL, CHƯA bấm
-thử) · Việc kế tiếp: **b111b** — sửa khu "Tài khoản & quyền", xem chi tiết ở
-mục "Đang ở đâu" và bảng bên dưới*
+*Cập nhật 10/09/2026 · Bước gần nhất: **b111b** (mã xong, ⏳ CHỜ DÁN
+`luoc-do/20-nguoi-duoc-gan.sql`, chưa bấm thử) · Việc kế tiếp: **b111c** —
+đơn ĐỀ XUẤT gắn mã người cho chính mình, người khác duyệt; xem bảng bên dưới*
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -978,10 +978,64 @@ nguyên văn:
 |---|---|
 | **Làm** | (1) Tab **Toàn hệ thống** (`khu-tai-khoan-he-thong.js`) thêm cột **"Người được gắn"**, bấm vào sửa được. (2) Tab **Tất cả** (`khu-thanh-vien.js`) — cột "Người được gắn" đã có thì cũng phải bấm sửa được. (3) Dòng chữ **"Đang xét quyền trong: <tên cây> · <mã cây>"** (`khu-thanh-vien.js` dòng ~200-312, biến `oCayDangMo`) hiện khoá cứng vào cây đang mở trên trình duyệt — đổi thành **nút chọn cây** trong số các cây người đó sở hữu/quản trị, chọn cây nào thì bảng tài khoản & quyền bên dưới đổi theo cây ấy |
 | **Đọc trước** | `THIET-KE-QUAN-TRI.md` **trước tiên** (luật của trang) · `THIET-KE-NHIEU-CAY.md` mục 11.3 (ai đổi được quyền, luật không tự đặt quyền cho mình — SOÁT LẠI luật ấy có áp cho việc TỰ GẮN MÃ NGƯỜI hay không, đừng đoán) · `CHI-DAN.md` dòng *"Không màn hình nào được ngầm định 'cây đang mở'"* (b110b) — ý (3) chính là áp luật ấy vào đúng chỗ còn sót |
-| **Câu hỏi cần trả lời trước khi viết mã** | Cột "Người được gắn" ở tab **Toàn hệ thống** là cột XUYÊN CÂY, mà mã người là khái niệm THEO TỪNG CÂY (một tài khoản có `person_id` khác nhau ở mỗi cây họ có mặt) — bấm vào một dòng của tab ấy thì sửa mã người cho CÂY NÀO? Cần chọn cây trước hay hỏi lại. Trả lời câu này trước, đừng chỉnh sửa khi chưa rõ |
-| **Sản phẩm** | `khu-tai-khoan-he-thong.js` sửa · `khu-thanh-vien.js` sửa · bộ kiểm liên quan cập nhật |
+| **✓ Câu hỏi thiết kế — ĐÃ TRẢ LỜI 10/09/2026** | *Cột xuyên-cây thì sửa mã người cho cây nào?* → **Cột ấy KHÔNG sửa gì cả.** Nó là một dòng TÓM TẮT, và bấm vào nó mở **bảng theo từng cây**; ô *Người được gắn* trong bảng ấy mới là chỗ sửa, vì tới đó mới có tên cây đứng ngay bên cạnh. Không phải sáng kiến mới — cột **Vai trò** ngay cạnh nó đã đi đúng đường ấy từ b109c, và dùng lại đường ấy giữ nguyên luật 5a *"không màn hình nào ngầm định cây đang mở"* mà không phải đẻ ra hộp thoại "chọn cây" nào |
+| **Sản phẩm** | `luoc-do/20-nguoi-duoc-gan.sql` **(file MỚI)** · `sb.js` 0.17.0 · `khu-thanh-vien.js` 0.10.0 · `khu-tai-khoan-he-thong.js` 0.6.0 · `kiem-thu/sb-gia.mjs` · `do-b111b.mjs` (32 phép) · 5 ảnh mới |
 | **Điểm dừng** | Chủ dự án tự gắn mã người cho MỘT TÀI KHOẢN KHÁC (không phải tài khoản của chính mình — luật cũ vẫn giữ) từ cả hai tấm, và đổi được cây đang xét ở dòng "Đang xét quyền trong" mà không cần rời trang |
 | **⚠ Không phải đường thử b111** | Việc này KHÔNG mở khoá "tự gắn mã người cho chính mình" — luật ấy giữ nguyên. Muốn thử b111 (kiểm duyệt) thì vẫn cần MỘT TÀI KHOẢN KHÁC đóng vai Thành viên thường, xem ghi chú ở mục "Đang ở đâu" phía trên |
+
+> ✓ **10/09/2026 — b111b XONG PHẦN MÃ. ⏳ CHỜ DÁN `20`, CHƯA BẤM THỬ THẬT.**
+>
+> Ba việc chủ dự án đặt đều xong, cộng hai chỗ hỏng phép đo dò ra dọc đường:
+>
+> 1. **Ô chọn cây** thay dòng chữ khoá cứng. Nó đọc `layDanhSachGiaPha()` một
+>    lần mỗi lần mở khu, lọc theo `coTheXem` của MÁY CHỦ (không suy vai ở
+>    trình duyệt — chủ cây nhận quyền qua một CỘT, Quản trị hệ thống qua một
+>    CỜ), bỏ cây trong thùng rác, và **một cây thì vẽ chữ chứ không vẽ ô chọn**.
+>    ⚠ Nó KHÔNG đổi cây đang mở của app, và nhãn tự khai điều đó.
+> 2. **Cột *Người được gắn* bấm được** ở cả hai tấm, mở đúng MỘT việc — hàng
+>    *Mã người trong sơ đồ* — chứ không mở cả bảng năm việc.
+> 3. **Cột mới ở tấm *Toàn hệ thống***, ăn hai trường mới của
+>    `20-nguoi-duoc-gan.sql`: `nguoiGan` (trần 3 phần tử) + `soCayGan` (số đầy
+>    đủ). Đo 32/32 trên bàn thử SQL, `/kiem-tra` đạt cả 9.
+>
+> ⚠ **Và `20` vá luôn một cửa `15` đánh rơi:** `15` mục 5 `drop` rồi dựng lại
+> `ds_tai_khoan_he_thong()` và `ds_cay_cua_tai_khoan()` nhưng mục 6 không cấp
+> lại quyền gọi — mà `drop function` **xoá cả `grant`**, và mặc định Postgres
+> là EXECUTE cho `public`, tức cả `anon`. Không phải lỗ hổng dữ liệu (hàng rào
+> nằm trong thân hàm, `anon` nhận mảng rỗng), nhưng là một cửa đáng lẽ đã
+> đóng. Phép HR1 của `do-b111b.mjs` đo TRƯỚC khi vá để chứng minh chỗ hở có
+> thật. **Bài học chung: file nào dựng lại một hàm đã có thì phải chép theo cả
+> dòng `grant`.**
+>
+> ⚠ **`20` cũng mang theo bản 0.2.0 của `15`** (cột `vai_cao_nhat`) — máy chủ
+> thật chưa kịp dán `15` 0.2.0, nên cột *Vai trò* của tấm *Toàn hệ thống* đang
+> trống trơn ở đó. Dán `20` là có luôn, không phải dán hai lần.
+>
+> ⚠⚠ **BỘ ẢNH ĐÃ TRẮNG TỪ b111 MÀ KHÔNG AI BIẾT.** `kiem-thu/sb-gia.mjs`
+> thiếu cửa `chiTietKiemDuyet()` mà b111 thêm vào `sb.js`; một `import` tên
+> không có ném `SyntaxError` **lúc nạp mô-đun**, nên cả 17 tấm ảnh ra nền
+> trơn — kể cả khu Tài khoản chẳng liên quan gì. Đúng chỗ `CHI-DAN.md` đã ghi
+> sẵn lời cảnh báo sau b110b, và b111 vẫn quên. Đã bù cửa ấy, **và vá gốc**:
+> `trang-quan-tri-gia.html` nay có khối bắt lỗi in ra chữ đỏ ngay đầu trang,
+> nên lần sau ảnh chụp sẽ NÓI nó hỏng vì sao thay vì trắng bóc.
+>
+> ⏳ **Việc của chủ dự án:** dán `luoc-do/20-nguoi-duoc-gan.sql` vào **cả hai**
+> Supabase, đọc bảng tự kiểm 10 mục, rồi bấm thử điểm dừng ở trên.
+
+### b111c — Đơn ĐỀ XUẤT gắn mã người cho chính mình
+
+⚠ Chủ dự án chốt 10/09/2026, sau khi được hỏi thẳng ba đường. Nguyên văn câu
+hỏi và câu chọn: *"Đơn đề xuất, người khác duyệt"* — **không** mở khoá cho
+Quản trị hệ thống tự gắn cho mình, và **không** dừng ở một câu chỉ đường.
+
+| | |
+|---|---|
+| **Vì sao có bước này** | Khu *Tài khoản & quyền* khoá dòng của chính người đang đăng nhập, đúng luật *"không ai đặt quyền cho chính mình"* (`THIET-KE-NHIEU-CAY.md` mục 11.3, cửa thứ HAI trong bảy cửa: tự gắn mình vào một cụ tổ là mở `pham_vi_sua()` ra cả một nhánh). Luật đúng và giữ nguyên — nhưng nó để lại một người **không có đường nào** nói ra *"tôi chính là người này"*. Đơn đề xuất là đường ấy, và nó giữ nguyên hai chữ ký: người đề xuất ký một, người duyệt ký hai |
+| **Làm** | File SQL mới: một chỗ chứa đơn (`de_xuat_gan_nguoi`) + `de_xuat_gan_nguoi()` · `duyet_de_xuat_gan()` · `tu_choi_de_xuat_gan()` · `ds_de_xuat_gan()`. Màn hình: chỗ NỘP ở dòng của chính mình trong khu Tài khoản (nay đang khoá — đổi từ *khoá câm* sang *khoá kèm nút Đề xuất*), chỗ DUYỆT ở bảng việc của người khác |
+| **⚠ Ba điều hàm máy chủ phải tự canh** | ① người duyệt **không được là người nộp** — đây là cả điểm của bước này, và nó là cửa thứ TÁM của luật ấy; ② `null not in (…)` cho ra `null` chứ không cho ra `true` — cái bẫy đã mở một lỗ leo quyền thật ngày 04/09; ③ duyệt xong phải đi qua đúng `gan_nguoi_cho_thanh_vien()` của `18`, **không** ghi thẳng vào `tree_members` — hai đường ghi là hai chỗ để lệch nhau |
+| **Đọc trước** | `THIET-KE-NHIEU-CAY.md` mục 11.3 và 11.8 *(luật hai chữ ký đã TỪNG thủng ở bốn cửa — đọc kỹ vì sao)* · `luoc-do/18-hai-chu-ky.sql` · `07-duyet-dang-ky.sql` + `xin_vao_cay()` *(đường đơn-rồi-duyệt đã có sẵn, chép nếp của nó chứ đừng phát minh lại)* |
+| **Điểm dừng** | Chủ dự án nộp một đề xuất cho chính tài khoản mình, **thấy máy chủ từ chối khi tự bấm duyệt**, rồi đăng nhập bằng một tài khoản Quản trị hệ thống khác và duyệt được. Đo bằng `ban-thu-sql/do-b111c.mjs` trước khi đưa SQL đi dán |
+| **⚠ Hôm nay chỉ có MỘT Quản trị hệ thống** | Nên đường duyệt sẽ chưa bấm thử hết được nếu không cấp cờ ấy cho một email thứ hai. Nói thẳng chuyện này với chủ dự án trước khi bắt đầu, đừng để lộ ra ở phút cuối |
 
 ### b112 — Khu Sao lưu + Số đếm đối chiếu
 

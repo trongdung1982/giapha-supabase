@@ -7,7 +7,25 @@
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, quan-tri/o-goi-y,
 //            pages/quan-tri/khu-tai-khoan-he-thong (nạp động)
-// Phiên bản: 0.9.0 · Cập nhật: 10/09/2026 (b110c)
+// Phiên bản: 0.10.0 · Cập nhật: 10/09/2026 (b111b)
+//            0.10.0 hai việc chủ dự án chốt 10/09/2026, cùng một gốc: **khu
+//            này thôi ngầm định cây đang mở, và cột *Người được gắn* thôi chỉ
+//            để đọc.**
+//              ① Dòng *"Đang xét quyền trong: …"* trở thành **Ô CHỌN CÂY**.
+//                 Trước bản này nó khoá cứng vào `phien.treeId` — cây đang mở
+//                 trên trình duyệt — nên muốn sửa quyền ở cây khác thì phải
+//                 rời trang, sang khu Gia phả đổi cây, rồi quay lại. Đó là
+//                 chỗ cuối cùng còn sót của luật b110b *"không màn hình nào
+//                 được ngầm định cây đang hoạt động"*.
+//                 ⚠ Ô này **KHÔNG đổi cây đang mở của cả app** — nó chỉ đổi
+//                 câu hỏi của riêng khu này. Đổi cây làm việc là việc của khu
+//                 Gia phả, và trộn hai thứ ấy vào một chỗ bấm là để người ta
+//                 tưởng mình vừa xem một danh sách trong khi vừa đổi cả phiên.
+//              ② Cột **Người được gắn** bấm được, mở thẳng hàng *Mã người
+//                 trong sơ đồ* của đúng cây đang xét. Trước bản này nó là ô
+//                 chữ chết, và đường duy nhất tới chỗ gắn mã người đi vòng qua
+//                 nút *Sửa quyền* ở cột cuối — cột đầu tiên rơi khỏi mép màn
+//                 hình khi màn hình hẹp.
 //            0.9.0 ⚠ **BA TẤM LỌC CÂY NAY PHÂN BIỆT ĐƯỢC LỜI MỜI VỚI ĐƠN XIN
 //            VÀO.** Chủ dự án báo lỗ hổng 10/09/2026: mời một tài khoản rồi
 //            *"vào kiểm duyệt thêm được người này luôn và đổi được quyền cho
@@ -129,7 +147,7 @@ import {
   layPhien, coTheQuanTri, dsThanhVien,
   doiVaiThanhVien, ganNguoiChoThanhVien, datTinCayThanhVien,
   goThanhVien, doiChuCay, duyetThanhVien, tuChoiThanhVien,
-  timNguoiTrongCay, dsCayCuaTaiKhoan,
+  timNguoiTrongCay, dsCayCuaTaiKhoan, layDanhSachGiaPha,
 } from '../../services/sb.js';
 import { vaiTroBangChu } from '../../config.js';
 import { ganGoiY, dongNguoi } from './o-goi-y.js';
@@ -169,10 +187,16 @@ let locDangXem = 'tatca';
 /** Câu dẫn dưới tựa khu — đổi theo tấm lọc đang mở. Vắng ở tấm *Toàn hệ
  *  thống*: dòng danh tính ngay bên trên đã là điều đáng nói nhất ở đó, và
  *  đầu cột của bảng tự nói phần còn lại (`bấm để xem/sửa chi tiết`…). */
+// ⚠ **"GIA PHẢ ĐANG XÉT", KHÔNG PHẢI "GIA PHẢ ĐANG MỞ"** — sửa b111b. Từ khi
+//   có ô chọn cây, hai thứ ấy tách nhau ra được, và câu cũ để lại một câu SAI
+//   đứng ngay trên một cái bảng đúng. Người đọc tin câu chữ trước khi tin cái
+//   bảng — đúng lý lẽ khối chú thích của `oGioiThieu` đã dựng ra khi tấm
+//   *Toàn hệ thống* ra đời. Câu này không gọi TÊN cây: dòng ngay trên đã gọi,
+//   và nhắc lần thứ hai là làm loãng chính chỗ chọn.
 const DAN_CAY =
-  'Những tài khoản đăng nhập có tên trong gia phả đang mở. Vai trò gắn cho ' +
-  'TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể quản ' +
-  'trị gia phả mà không có mặt trong họ.';
+  'Những tài khoản đăng nhập có tên trong gia phả đang xét ở trên. Vai trò ' +
+  'gắn cho TÀI KHOẢN, không gắn cho người trong sơ đồ — một tài khoản có thể ' +
+  'quản trị gia phả mà không có mặt trong họ.';
 
 // ⚠ HIỆN Ở CẢ BỐN TẤM LỌC, không riêng *Toàn hệ thống* — sửa 09/09/2026
 //   (b109e) sau khi chủ dự án chỉ ra bất nhất: b109d mới sửa mỗi tấm *Toàn hệ
@@ -200,15 +224,40 @@ function dongDanhTinh(phien) {
 let oDanhTinh = null;
 
 /**
- * Thẻ `<p>` nói **đang xét quyền trong cây nào** — ba tấm lọc cây có, tấm
- * *Toàn hệ thống* không (ở đó mỗi dòng dính tới nhiều cây khác nhau, một câu
- * chung sẽ là một câu sai).
+ * Ô nói **đang xét quyền trong cây nào** — ba tấm lọc cây có, tấm *Toàn hệ
+ * thống* không (ở đó mỗi dòng dính tới nhiều cây khác nhau, một câu chung sẽ
+ * là một câu sai).
  *
  * ⚠ Đứng RIÊNG với dòng danh tính bên trên. Hai câu trả lời hai câu hỏi khác
  *   nhau — *ai đang cầm chuột* và *đang đứng trong cây nào* — và chủ dự án
  *   đòi cả hai phải nói ra trước khi ai bấm gì (09/09/2026).
+ *
+ * ⚠ Từ b111b đây là chỗ **CHỌN** cây, không còn là chỗ đọc tên cây đang mở.
+ *   Xem `veODoiCay()`.
  */
 let oCayDangMo = null;
+
+/**
+ * Cây khu này đang xét — `{treeId, ten, maCay}`, hoặc `null` khi chưa chọn.
+ *
+ * ⚠⚠ **KHÔNG PHẢI cây đang mở của app.** `phien.treeId` là cây người ta đang
+ *   vẽ sơ đồ; biến này là cây khu Tài khoản & quyền đang hỏi. Chúng khởi đầu
+ *   bằng nhau và tách ra ngay khi người dùng đổi ô chọn — và đó là cả điểm:
+ *   sửa quyền ở cây B không được bắt người ta bỏ dở cây A đang mở.
+ *
+ * ⚠ Nằm ở tầng mô-đun chứ không trong `phien`: `phien` là ảnh chụp của máy
+ *   chủ, ghi vào đó là dựng một sự thật thứ hai cạnh sự thật thật.
+ */
+let cayDangXet = null;
+
+/**
+ * Danh sách cây để đổ vào ô chọn — đọc MỘT LẦN mỗi lần mở khu.
+ *
+ * ⚠ Không đọc lại sau mỗi `napLai()`. Năm việc đổi quyền không đẻ ra cây mới,
+ *   nên đọc lại là một vòng mạng lấy về đúng thứ vừa có trong tay. Đổi cây
+ *   thì `mountKhuThanhVien()` chạy lại và danh sách tươi trở lại.
+ */
+let dsCayChon = [];
 
 /** Thẻ `<p>` chứa câu dẫn theo TẤM LỌC, giữ lại để `nap()` đổi chữ. */
 let oGioiThieu = null;
@@ -267,24 +316,72 @@ export async function mountKhuThanhVien(el, phienVao) {
     return;
   }
 
+  // ⚠ Đọc danh sách cây TRƯỚC khi vẽ bảng, vì ô chọn cây quyết định bảng hỏi
+  //   cây nào. Một vòng mạng rẻ (`ds_gia_pha` trả vài dòng), và nó thay cho
+  //   việc bắt người ta rời trang sang khu Gia phả rồi quay lại.
+  //
+  // ⚠ Lỗi đọc danh sách KHÔNG được biến thành "bạn chưa có cây nào" — đúng
+  //   luật `THIET-KE-QUAN-TRI.md` khu 1: *không biến lỗi thành danh sách rỗng*.
+  //   Rơi về đúng cây đang mở thì khu vẫn dùng được, chỉ mất chỗ đổi cây.
+  const kqCay = await layDanhSachGiaPha();
+  dsCayChon = kqCay.ok ? cayChonDuoc(kqCay.ds) : [];
+  if (!dsCayChon.length && phien.treeId) {
+    dsCayChon = [cayCuaPhien(phien)];
+  }
+
+  // Cây mở sẵn: cây đang mở nếu nó có trong danh sách, không thì cây đầu.
+  cayDangXet = dsCayChon.find((c) => c.treeId === phien.treeId)
+    || dsCayChon[0] || null;
+
   // ⚠ Cửa này chỉ chặn được người KHÔNG phải Quản trị hệ thống. Tấm lọc *Toàn
   //   hệ thống* không đọc cây nào cả — chặn nó vì "chưa mở gia phả" là khoá
   //   đúng người duy nhất có việc ở đó, và khoá bằng một lý do chẳng liên quan.
-  if (!phien.treeId && !phien.laQuanTriHeThong) {
+  if (!cayDangXet && !phien.laQuanTriHeThong) {
     than.innerHTML = '';
     than.style.cssText = '';
     const r = document.createElement('div');
     r.className = 'qt-chua-lam';
-    r.textContent =
-      'Bạn chưa mở gia phả nào, nên chưa có danh sách tài khoản để xem. ' +
-      'Sang khu Gia phả chọn một cây làm việc trước.';
+    r.textContent = kqCay.ok
+      ? 'Bạn chưa có chân trong gia phả nào, nên chưa có danh sách tài khoản ' +
+        'để xem.'
+      : 'Không đọc được danh sách gia phả, nên chưa biết xét quyền trong cây ' +
+        'nào. Mở lại khu này một lần nữa.';
     than.append(r);
     return;
   }
 
-  if (!phien.treeId) locDangXem = 'hethong';
+  if (!cayDangXet) locDangXem = 'hethong';
 
   await nap(than, phien);
+}
+
+/**
+ * Lọc ra những cây **đổ vào ô chọn được**, và trả đúng ba trường mà năm việc
+ * đổi quyền chờ.
+ *
+ * ⚠ KHÔNG lọc theo vai ở trình duyệt. Cám dỗ là chỉ hiện cây mình làm chủ hay
+ *   quản trị — nhưng vai ấy đọc từ `vaiCuaToi`, mà **chủ cây nhận quyền qua
+ *   một CỘT chứ không qua mã vai** (`13` mục 4), và Quản trị hệ thống thì
+ *   không có dòng `tree_members` nào ở phần lớn cây. Lọc kiểu ấy là khoá tay
+ *   đúng hai hạng người có quyền nhất — đúng cái bẫy khối chú thích đầu file
+ *   đã cảnh báo với `phien.vaiTro`. Máy chủ trả lời câu "đổi được không" bằng
+ *   `coTheQuanTri()`, và bảng rỗng đã có câu giải thích riêng.
+ *
+ * ⚠ Nhưng CÓ lọc bằng `coTheXem`, và đó không phải mâu thuẫn với đoạn trên:
+ *   `co_the_xem` là câu trả lời của MÁY CHỦ (`ds_gia_pha` hỏi
+ *   `co_the_xem_cay()`, thứ đã tính cả cờ Quản trị hệ thống lẫn cột chủ cây),
+ *   không phải một phép suy trong trình duyệt. Cây mình mới **nộp đơn** mà
+ *   chưa ai duyệt thì `co_the_xem` là `false` — đổ nó vào ô chọn là mời người
+ *   ta xét quyền trong một cây họ còn chưa vào được, và thứ nhận về sẽ là một
+ *   bảng rỗng kèm câu giải thích chẳng ăn nhập.
+ *
+ * ⚠ Cây trong THÙNG RÁC thì bỏ. Nó chưa xoá hẳn, nhưng xét quyền trong một
+ *   cây đang chờ xoá là mời người ta làm một việc sắp thành vô nghĩa.
+ */
+function cayChonDuoc(ds) {
+  return (ds || [])
+    .filter((c) => c && c.fileId && c.coTheXem && !c.daXoaLuc)
+    .map((c) => ({ treeId: c.fileId, ten: c.ten || '', maCay: c.treeCode || '' }));
 }
 
 async function nap(than, phien) {
@@ -297,17 +394,13 @@ async function nap(than, phien) {
   // Danh tính hiện Ở CẢ BỐN TẤM LỌC — không phụ thuộc `locDangXem`.
   if (oDanhTinh) oDanhTinh.textContent = dongDanhTinh(phien);
 
-  // Cây đang mở: nói ở ba tấm lọc cây, ẩn hẳn ở *Toàn hệ thống*. `display:none`
-  // chứ không để trống — một `<p>` rỗng vẫn ăn `margin-bottom`.
+  // Cây đang xét: nói ở ba tấm lọc cây, ẩn hẳn ở *Toàn hệ thống*.
+  // `display:none` chứ không để trống — một ô rỗng vẫn ăn `margin-bottom`.
   if (oCayDangMo) {
-    const cay = cayCuaPhien(phien);
-    const co = locDangXem !== 'hethong' && Boolean(cay.treeId);
-    // ⚠ Dấu hai chấm, KHÔNG viết *"trong gia phả <tên>"*: tên cây thật hay
-    //   mở đầu bằng chính chữ ấy (*"Gia phả họ Nguyễn Trọng Bắc"*), và câu kia
-    //   đọc ra thành *"trong gia phả Gia phả họ…"*.
-    oCayDangMo.textContent = co
-      ? 'Đang xét quyền trong: ' + nhanCay(cay) + '.' : '';
+    const co = locDangXem !== 'hethong' && Boolean(cayDangXet);
+    oCayDangMo.innerHTML = '';
     oCayDangMo.style.display = co ? '' : 'none';
+    if (co) oCayDangMo.append(veODoiCay(than, phien));
   }
 
   // Câu dẫn theo tấm lọc: ẩn hẳn ở *Toàn hệ thống* (dòng danh tính bên trên
@@ -322,10 +415,13 @@ async function nap(than, phien) {
 
   if (locDangXem === 'hethong') return napHeThong(than, phien);
 
-  // Hai câu hỏi đi cùng lượt — chúng không phụ thuộc nhau.
+  // ⚠ HỎI THEO `cayDangXet`, KHÔNG theo `phien.treeId`. Đây là chỗ luật b110b
+  //   thi hành thật: hai dòng dưới là hai lời gọi duy nhất quyết bảng này nói
+  //   về cây nào, và chúng gọi tên cây người dùng đã chọn.
+  const cay = cayDangXet;
   const [kq, duocDoiQuyen] = await Promise.all([
-    dsThanhVien(phien.treeId),
-    coTheQuanTri(phien.treeId),
+    dsThanhVien(cay.treeId),
+    coTheQuanTri(cay.treeId),
   ]);
 
   than.innerHTML = '';
@@ -352,10 +448,14 @@ async function nap(than, phien) {
     }
     const r = document.createElement('div');
     r.className = 'qt-chua-lam';
+    // ⚠ GỌI TÊN CÂY. Từ b111b ô chọn cây cho phép đứng ở một cây mình không
+    //   đọc được danh sách — câu "máy chủ không trả về tài khoản nào" mà không
+    //   nói cây nào thì đọc ra như cả phần mềm hỏng.
     r.textContent =
-      'Máy chủ không trả về tài khoản nào. Khu này dành cho người quản trị ' +
-      'gia phả; tài khoản của bạn xem và sửa gia phả bình thường ở trang ' +
-      'chính. Cần đổi thì nhắn cho ' + (phien.nguoiQuanLy || 'người quản lý') + '.';
+      'Máy chủ không trả về tài khoản nào trong ' + cumCay(cay) + '. Khu này ' +
+      'dành cho người quản trị gia phả; tài khoản của bạn xem và sửa gia phả ' +
+      'bình thường ở trang chính. Cần đổi thì nhắn cho ' +
+      (phien.nguoiQuanLy || 'người quản lý') + '.';
     than.append(r);
     return;
   }
@@ -402,7 +502,7 @@ async function nap(than, phien) {
   // Vai trò chỉ đổi nền — gán đè chữ lên nó là xoá mất huy hiệu bên trong.
   const boMoRong = { oViec, dangMo: null, nut: [], oVai: [] };
 
-  const khung = veBang(hienRa, phien, duocDoiQuyen, napLai, boMoRong);
+  const khung = veBang(hienRa, phien, cay, duocDoiQuyen, napLai, boMoRong);
   than.append(khung);
 
   // ⚠ Nói ra CHỈ KHI nó đúng, và ĐO để biết nó đúng — chép đúng cách
@@ -491,6 +591,80 @@ function veNhacChiXem() {
 }
 
 // ============================================================
+// Ô CHỌN CÂY — chỗ luật "không ngầm định cây đang mở" thi hành thật
+// ============================================================
+
+/**
+ * Dòng *"Đang xét quyền trong: …"*, nhưng là chỗ **chọn**, không phải chỗ đọc.
+ *
+ * ⚠ MỘT CÂY THÌ KHÔNG VẼ Ô CHỌN. Một `<select>` có đúng một mục là một cái nút
+ *   mời người ta bấm rồi chẳng đưa đi đâu — và nó còn nói sai một câu: rằng có
+ *   thứ để chọn. Câu chữ vẫn gọi tên cây, nên luật *"luôn xác định cây nào"*
+ *   không mất gì.
+ *
+ * ⚠ Ô này **KHÔNG đổi cây đang mở của cả app.** Nó không gọi `datCayLamViec()`
+ *   hay chạm `phien` — nó chỉ đổi câu hỏi của khu này. Trộn hai việc ấy là để
+ *   người ta tưởng mình vừa lọc một bảng trong khi vừa đổi cả phiên làm việc,
+ *   và sơ đồ ở tab bên cạnh im lặng nhảy sang cây khác.
+ *
+ * @param {HTMLElement} than  thân khu, để vẽ lại sau khi đổi
+ */
+function veODoiCay(than, phien) {
+  const hop = document.createElement('span');
+  hop.style.cssText = 'display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px';
+
+  const nhan = document.createElement('span');
+  nhan.textContent = 'Đang xét quyền trong:';
+  hop.append(nhan);
+
+  // Một cây — nói tên ra, hết. Dấu hai chấm ở trên, KHÔNG viết *"trong gia phả
+  // <tên>"*: tên cây thật hay mở đầu bằng chính chữ ấy (*"Gia phả họ Nguyễn
+  // Trọng Bắc"*), và câu kia đọc ra thành *"trong gia phả Gia phả họ…"*.
+  if (dsCayChon.length < 2) {
+    const t = document.createElement('span');
+    t.textContent = nhanCay(cayDangXet) + '.';
+    hop.append(t);
+    return hop;
+  }
+
+  const chon = document.createElement('select');
+  chon.style.cssText =
+    'padding:5px 8px;border:1px solid #dcd5cb;border-radius:7px;background:#fff;' +
+    'font:inherit;font-size:13px;font-weight:400;max-width:100%';
+  for (const c of dsCayChon) {
+    const m = document.createElement('option');
+    m.value = c.treeId;
+    m.textContent = nhanCay(c);
+    chon.append(m);
+  }
+  chon.value = cayDangXet.treeId;
+
+  chon.addEventListener('change', () => {
+    const moi = dsCayChon.find((c) => c.treeId === chon.value);
+    if (!moi || moi.treeId === cayDangXet.treeId) return;
+    cayDangXet = moi;
+    // ⚠ Vẽ lại CẢ KHU, không vá từng ô. Đổi cây là đổi câu trả lời của mọi
+    //   dòng, mọi con số trên tấm lọc, và cả câu *"bạn chỉ xem được"* — vá
+    //   từng chỗ là để sót đúng một chỗ, và chỗ ấy sẽ nói về cây cũ.
+    than.textContent = 'Đang đọc danh sách…';
+    than.style.cssText = 'color:#8a8078';
+    nap(than, phien);
+  });
+
+  hop.append(chon);
+
+  // ⚠ Nói thẳng ô này KHÔNG đổi cây đang mở. Không có câu này thì người dùng
+  //   hợp lý sẽ đoán ngược lại — mọi chỗ chọn cây khác trong app đều đổi cây
+  //   làm việc thật.
+  const nhac = document.createElement('span');
+  nhac.textContent = 'chỉ đổi bảng dưới đây, không đổi gia phả đang mở';
+  nhac.style.cssText = 'font-size:12px;font-weight:400;color:#8a8078';
+  hop.append(nhac);
+
+  return hop;
+}
+
+// ============================================================
 // Ba tấm lọc
 // ============================================================
 
@@ -534,7 +708,7 @@ function veThanhLoc(soCho, coHeThong, doiLoc) {
 // Bảng
 // ============================================================
 
-function veBang(ds, phien, duocDoiQuyen, napLai, bo) {
+function veBang(ds, phien, cay, duocDoiQuyen, napLai, bo) {
   // Bảng rộng phải tự cuộn TRONG khung của nó, không kéo phình cả lưới hai cột
   // của trang. Cùng cách hai khu kia làm.
   const khung = document.createElement('div');
@@ -549,7 +723,7 @@ function veBang(ds, phien, duocDoiQuyen, napLai, bo) {
   bang.append(veDauBang());
 
   const ruot = document.createElement('tbody');
-  for (const t of ds) veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo);
+  for (const t of ds) veMotDong(ruot, t, phien, cay, duocDoiQuyen, napLai, bo);
   bang.append(ruot);
 
   khung.append(bang);
@@ -568,8 +742,11 @@ function veDauBang() {
     //   khoản mà không phải đọc email lên. Màn Cài đặt hiện đúng mã ấy cho
     //   từng người tự đọc (`settings.js`, khối *Tài khoản và quyền*).
     ['Mã tài khoản', ''],
-    ['Người được gắn', ''],
-    ['Vai trò', ''],
+    // ⚠ Chú thích nhỏ *"bấm để gắn/đổi"* KHÔNG phải trang trí — cùng lý do đã
+    //   phải thêm nó cho cột *Tài khoản* của tấm *Toàn hệ thống* (b109c): một
+    //   ô bảng trông không giống nút, và không nói thì chỗ bấm ấy vô hình.
+    ['Người được gắn', '', 'bấm để gắn/đổi'],
+    ['Vai trò', '', 'bấm xem từng cây'],
     // ⚠ Trên màn hình gọi là **Tin cậy**, đúng tên cột `tree_members.tin_cay`
     //   và đúng chữ chủ dự án dùng khi hỏi. Bản đầu b106 gọi nó là *Ghi thẳng*
     //   — mô tả đúng cái nó làm, nhưng chủ dự án đi tìm chữ "tin cậy" và không
@@ -579,12 +756,18 @@ function veDauBang() {
     ['Tham gia', ''],
     ['', 'text-align:right'],
   ];
-  for (const [chu, them] of cot) {
+  for (const [chu, them, phu] of cot) {
     const th = document.createElement('th');
-    th.textContent = chu;
     th.style.cssText =
       'padding:9px 10px;text-align:left;font-weight:600;color:#6a625a;' +
       'font-size:12px;white-space:nowrap;' + CSS_DAU_BANG + them;
+    th.append(document.createTextNode(chu));
+    if (phu) {
+      const d = document.createElement('div');
+      d.textContent = phu;
+      d.style.cssText = 'font-weight:400;font-size:11px;color:#8a8078';
+      th.append(d);
+    }
     tr.append(th);
   }
   thead.append(tr);
@@ -654,7 +837,7 @@ export function trangThaiDong(t) {
   return t.moiLuc ? 'duocmoi' : 'donxin';
 }
 
-function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
+function veMotDong(ruot, t, phien, cay, duocDoiQuyen, napLai, bo) {
   const trangThai = trangThaiDong(t);
   const tr = document.createElement('tr');
   tr.style.cssText = 'border-bottom:1px solid #f2eee8;vertical-align:top';
@@ -676,31 +859,33 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
   const oMa = o(t.maNgan || '—',
     'padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:#5b4533');
 
-  // Trường trống thì KHÔNG vẽ chữ thay thế kiểu "Không rõ" — `CLAUDE.md` mục 7.
-  // Ở đây dấu gạch là *"chưa gắn"*, một trạng thái hợp lệ và có thật, nên nó
-  // được nói ra; nhưng tên người thì chỉ hiện khi có.
-  const oNguoi = o('', 'padding:10px;color:#2a2622');
-  if (t.maNguoi) {
-    const ma = document.createElement('span');
-    ma.textContent = t.maNguoi;
-    ma.style.cssText = 'font-family:ui-monospace,monospace;font-size:12px;color:#5b4533';
-    oNguoi.append(ma);
-    if (t.tenNguoi && t.tenNguoi !== t.maNguoi) {
-      const ten = document.createElement('div');
-      ten.textContent = t.tenNguoi;
-      ten.style.cssText = 'font-size:12px;color:#6a625a';
-      oNguoi.append(ten);
-    }
-  } else {
-    oNguoi.textContent = 'chưa gắn';
-    oNguoi.style.color = '#8a8078';
-    oNguoi.style.fontStyle = 'italic';
+  // ⚠ Ô này BẤM ĐƯỢC từ b111b — mở thẳng hàng *Mã người trong sơ đồ* của cây
+  //   đang xét. Xem `veONguoiGan()`.
+  const oNguoi = veONguoiGan(t, {
+    css: 'padding:10px',
+    // Đúng ba lý do khoá của nút *Sửa quyền* ngay cột cuối, và cùng nguồn:
+    // `gan_nguoi_cho_thanh_vien()` từ chối cả ba (`18` mục 4).
+    khoa: !duocDoiQuyen || t.laChinhToi || trangThai === 'duocmoi',
+    lyDo: t.laChinhToi
+      ? 'Dòng của chính bạn — không ai tự gắn mã người cho mình được. Tự gắn '
+        + 'mình vào một cụ tổ là mở quyền sửa cho cả một nhánh.'
+      : trangThai === 'duocmoi'
+      ? 'Đây là lời mời đang chờ chính người ấy bấm Nhận. Gắn mã người hộ họ '
+        + 'là bỏ mất chữ ký thứ hai.'
+      : 'Bạn xem được danh sách này nhưng không đổi được quyền của ai.',
+  });
+  if (oNguoi.dat) {
+    bo.oVai.push(oNguoi.dat);
+    oNguoi.nut.addEventListener('click', () => moOChung(
+      bo, 'gan:' + t.userId, oNguoi.dat,
+      tieuDeGan(t, cay),
+      () => bangGanNguoi(t, cay, duocDoiQuyen, napLai)));
   }
 
   // `nowrap`: tên vai dài nhất là *Thành viên họ tộc*, và để nó gãy làm hai
   //   dòng thì cột Vai trò cao gấp đôi mọi cột khác trên cùng một hàng — đo
   //   bằng ảnh chụp 1280px, không đoán.
-  const oVai = veOVaiTro(t, phien, duocDoiQuyen, napLai, bo);
+  const oVai = veOVaiTro(t, phien, cay, duocDoiQuyen, napLai, bo);
 
   const oTin = o(t.tinCay ? 'Có' : 'Không',
     'padding:10px;text-align:center;color:' + (t.tinCay ? '#2f6b3a' : '#8a8078'));
@@ -713,7 +898,7 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
 
   const oThao = o('', 'padding:10px;text-align:right');
 
-  tr.append(oTk, oMa, oNguoi, oVai, oTin, oLuc, oThao);
+  tr.append(oTk, oMa, oNguoi.td, oVai, oTin, oLuc, oThao);
   ruot.append(tr);
 
   // — Nút mở bảng việc —
@@ -755,10 +940,10 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
         + 'rồi mời lại.'
       : 'Bạn xem được danh sách này nhưng không đổi được quyền của ai.';
   } else {
-    // ⚠ Truyền cả ĐỐI TƯỢNG CÂY, không truyền `phien.treeId` trần. Một chuỗi
-    //   uuid không tự nói nó là cây nào, nên bảng việc mở ra sẽ phải tự bịa
-    //   một cái nhãn — và bản 0.7.0 đã bịa đúng như thế. Xem khối đầu file.
-    const cay = cayCuaPhien(phien);
+    // ⚠ `cay` là ĐỐI TƯỢNG, không phải `treeId` trần, và từ b111b nó tới đây
+    //   từ **ô chọn cây** chứ không từ `phien` — cùng một lý do: chuỗi uuid
+    //   không tự nói nó là cây nào, nên bảng việc mở ra sẽ phải tự bịa một cái
+    //   nhãn, và bản 0.7.0 đã bịa đúng như thế. Xem khối đầu file.
     bo.nut.push(bMo);
     bMo.addEventListener('click', () => moBangViec(bo, t, bMo, cay, () => (t.daDuyet
       ? veBangViec(t, cay, duocDoiQuyen, napLai)
@@ -778,7 +963,7 @@ function veMotDong(ruot, t, phien, duocDoiQuyen, napLai, bo) {
  *   ở cả hai tấm lọc — dạy đúng một câu: **vai trò không phải thuộc tính của
  *   tài khoản.** Với Quản trị hệ thống thì bảng ấy dài ra thật.
  */
-function veOVaiTro(t, phien, duocDoiQuyen, napLai, bo) {
+function veOVaiTro(t, phien, cay, duocDoiQuyen, napLai, bo) {
   // ⚠ Người được mời mang vai `xem` ở cột `role` cho tới lúc họ bấm Nhận —
   //   đó là cả điểm của cột `moi_vai` (`14` mục 4). Hiện đúng vai họ SẼ nhận,
   //   đừng hiện `xem`: người quản trị đọc "Khách" rồi đi đổi vai, và cú đổi
@@ -815,14 +1000,13 @@ function veOVaiTro(t, phien, duocDoiQuyen, napLai, bo) {
       // `ds_cay_cua_tai_khoan()`, xem khối chú thích của hàm ấy.
       docCaSo: Boolean(phien.laQuanTriHeThong),
       cayNay: {
-        treeId: phien.treeId,
-        // ⚠ Từ b110b `layPhien()` mang TÊN CÂY về ở mọi nhánh đọc được cây
-        //   (`sb.js` 0.14.0, hàm `caiDatCay`), nên chỗ này thôi phải bịa chuỗi
-        //   *"Gia phả đang mở"* như bản 0.7.0. Vẫn KHÔNG gọi
-        //   `layDanhSachGiaPha()` chỉ để lấy một chữ — đó là một vòng mạng
-        //   thừa cho mỗi lần vẽ khu.
-        ten: phien.tenCay || '',
-        maCay: phien.maCay || '',
+        // ⚠ Cây ĐANG XÉT, không phải cây đang mở — từ b111b hai thứ ấy tách
+        //   nhau ra được. Bảng một dòng này nói về đúng cái bảng bên trên nó,
+        //   nên nó phải lấy cùng một nguồn; đọc `phien` ở đây là để bảng con
+        //   nói về cây A trong khi bảng cha nói về cây B.
+        treeId: cay.treeId,
+        ten: cay.ten || '',
+        maCay: cay.maCay || '',
         vai: t.vai,
         daDuyet: t.daDuyet,
         // ⚠ Từ b110c `ds_thanh_vien()` TRẢ `moi_luc` (`luoc-do/18` mục 6b),
@@ -932,23 +1116,6 @@ function dongHet(bo) {
 
 /** Cùng một chỗ đứng, cùng luật "mỗi lúc một thứ" của `moBangViec()`. */
 function moBangVaiTro(bo, t, dat, veNoiDung) {
-  const dangMoDongNay = bo.dangMo === 'vai:' + t.userId;
-
-  dongHet(bo);
-
-  if (dangMoDongNay) {
-    bo.dangMo = null;
-    return;
-  }
-
-  bo.dangMo = 'vai:' + t.userId;
-  dat(true);
-
-  const hop = document.createElement('div');
-  hop.style.cssText =
-    'margin-top:14px;padding:0 14px 14px;border:1px solid #e6e0d8;' +
-    'border-radius:10px;background:#faf8f5';
-
   const tieu = document.createElement('div');
   tieu.style.cssText = 'padding:12px 0 0;font-size:13px;color:#2a2622';
   tieu.append(document.createTextNode('Vai trò của '));
@@ -958,10 +1125,177 @@ function moBangVaiTro(bo, t, dat, veNoiDung) {
   ai.style.cssText = 'font-weight:600;word-break:break-all';
   tieu.append(ai, document.createTextNode(' ở từng gia phả'));
 
+  moOChung(bo, 'vai:' + t.userId, dat, tieu, veNoiDung);
+}
+
+/**
+ * Mở một ô bảng thành một khung ở chỗ đứng chung dưới bảng.
+ *
+ * ⚠ **MỘT CHỖ ĐỨNG, MỖI LÚC MỘT THỨ.** `moBangViec()` · `moBangVaiTro()` và
+ *   ô *Người được gắn* đều đổ vào `bo.oViec`, nên mở cái này là đóng cái kia.
+ *   Đó là chủ ý, không phải tiết kiệm mã: hai bảng cùng mở là hai ô nhập mã
+ *   người nằm cạnh nhau không nói rõ ô nào của ai.
+ *
+ * @param {object} bo         `{oViec, dangMo, nut, oVai}`
+ * @param {string} khoa       khoá nhận diện thứ đang mở, ví dụ `gan:<userId>`
+ * @param {Function} dat      `dat(true|false)` — tô nền chỗ vừa bấm
+ * @param {HTMLElement} tieu  dòng tiêu đề của khung
+ */
+function moOChung(bo, khoa, dat, tieu, veNoiDung) {
+  const dangMoCaiNay = bo.dangMo === khoa;
+
+  dongHet(bo);
+
+  if (dangMoCaiNay) {
+    bo.dangMo = null;
+    return;
+  }
+
+  bo.dangMo = khoa;
+  dat(true);
+
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'margin-top:14px;padding:0 14px 14px;border:1px solid #e6e0d8;' +
+    'border-radius:10px;background:#faf8f5';
+
   hop.append(tieu, veNoiDung());
   bo.oViec.append(hop);
 
+  // `nearest` chứ không phải `start`: cuộn vừa đủ để thấy, không hất cái bảng
+  // ra khỏi màn hình.
   hop.scrollIntoView({ block: 'nearest' });
+}
+
+// ============================================================
+// Ô "NGƯỜI ĐƯỢC GẮN" — bấm được ở CẢ HAI tấm lọc (b111b)
+// ============================================================
+//
+// ⚠ VÌ SAO CỘT NÀY PHẢI BẤM ĐƯỢC, chứ không để yên như một ô chữ:
+//
+// Gắn mã người là việc người quản trị làm nhiều nhất sau khi duyệt một tài
+// khoản, và tới b111b nó chỉ có đúng MỘT đường vào — nút *Sửa quyền* ở cột
+// cuối cùng. Cột cuối là cột đầu tiên rơi khỏi mép màn hình khi màn hình hẹp
+// (bài học b106 và b109), nên trên điện thoại việc hay làm nhất nằm ở chỗ khó
+// tới nhất. Ô này là đường thứ hai, và nó nằm ngay trên chính dữ liệu nó sửa.
+//
+// ⚠ **KHÔNG mở cả bảng năm việc.** Nó mở đúng một hàng — *Mã người trong sơ
+//   đồ*. Bấm vào cột A mà ra bảng làm được cả năm chuyện là mời người ta đổi
+//   vai trong lúc họ đang định gắn mã người.
+//
+// ⚠ Khoá thì **mờ sẵn kèm lý do**, không mở ra rồi mới giải thích — luật chủ
+//   dự án chốt 08/09/2026. Và ba lý do khoá phải TRÙNG với ba lý do
+//   `gan_nguoi_cho_thanh_vien()` từ chối (`18` mục 4), không được rộng hơn hay
+//   hẹp hơn: rộng hơn là khoá tay người có quyền, hẹp hơn là mời người ta bấm
+//   một thứ chắc chắn bị từ chối.
+
+/**
+ * Ô bảng **Người được gắn**: mã người + tên, hoặc chữ *"chưa gắn"*.
+ *
+ * @param {object} t  cần `maNguoi`, `tenNguoi`
+ * @param {{css:string, khoa:boolean, lyDo:string}} opt
+ * @returns {{td:HTMLElement, nut:HTMLElement|null, dat:Function|null}}
+ *          `nut`/`dat` là `null` khi ô bị khoá — nơi gọi kiểm `dat` để biết
+ *          có phải gắn bộ nghe hay không.
+ */
+export function veONguoiGan(t, opt) {
+  const td = o('', 'padding:0');
+
+  // Trường trống thì KHÔNG vẽ chữ thay thế kiểu "Không rõ" — `CLAUDE.md` mục
+  // 7. Ở đây *"chưa gắn"* là một trạng thái hợp lệ và có thật, nên nó được nói
+  // ra; nhưng TÊN người thì chỉ hiện khi có.
+  const ruot = () => {
+    const d = document.createDocumentFragment();
+    if (t.maNguoi) {
+      const ma = document.createElement('span');
+      ma.textContent = t.maNguoi;
+      ma.style.cssText =
+        'font-family:ui-monospace,monospace;font-size:12px;color:#5b4533';
+      d.append(ma);
+      if (t.tenNguoi && t.tenNguoi !== t.maNguoi) {
+        const ten = document.createElement('div');
+        ten.textContent = t.tenNguoi;
+        ten.style.cssText = 'font-size:12px;color:#6a625a';
+        d.append(ten);
+      }
+    } else {
+      const c = document.createElement('span');
+      c.textContent = 'chưa gắn';
+      c.style.cssText = 'color:#8a8078;font-style:italic';
+      d.append(c);
+    }
+    return d;
+  };
+
+  if (opt.khoa) {
+    const d = document.createElement('div');
+    d.style.cssText = opt.css + ';color:#2a2622';
+    d.append(ruot());
+    // `title` là lớp thứ HAI, không phải chỗ duy nhất nói ra lý do — điện
+    // thoại không có chuột. Lý do chính đã nằm ở huy hiệu cột đầu và ở câu
+    // nhắc đầu khu.
+    if (opt.lyDo) d.title = opt.lyDo;
+    td.append(d);
+    return { td, nut: null, dat: null };
+  }
+
+  // ⚠ Một `<button>` THẬT, không phải `<div>` gắn `onclick` — nó phải đi được
+  //   bằng phím Tab và bấm được bằng Enter. Cùng lý do đã ghi ở ô *Tài khoản*
+  //   của `khu-tai-khoan-he-thong.js`.
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.style.cssText =
+    'display:block;width:100%;border:0;background:none;font:inherit;' +
+    'color:inherit;text-align:left;cursor:pointer;border-radius:8px;' + opt.css;
+  b.append(ruot());
+  td.append(b);
+
+  const dat = (dangMo) => {
+    b.style.background = dangMo ? '#f2ece2' : 'none';
+    b.style.boxShadow = dangMo ? 'inset 0 0 0 1px #c9c0b4' : 'none';
+  };
+
+  return { td, nut: b, dat };
+}
+
+/** Dòng tiêu đề của khung gắn mã người — nói rõ CỦA AI và Ở CÂY NÀO. */
+export function tieuDeGan(t, cay) {
+  const tieu = document.createElement('div');
+  tieu.style.cssText = 'padding:12px 0 0;font-size:13px;color:#2a2622';
+  tieu.append(document.createTextNode('Mã người của '));
+
+  const ai = document.createElement('span');
+  ai.textContent = t.email || '(không rõ email)';
+  ai.style.cssText = 'font-weight:600;word-break:break-all';
+  tieu.append(ai);
+
+  if (cay && (cay.ten || cay.maCay)) {
+    tieu.append(document.createTextNode(' — trong '));
+    const c = document.createElement('span');
+    c.textContent = cumCay(cay);
+    c.style.fontWeight = '600';
+    tieu.append(c);
+  }
+  return tieu;
+}
+
+/**
+ * Khung mở ra khi bấm ô *Người được gắn*: **đúng một việc**, không phải cả năm.
+ *
+ * Dùng lại nguyên `viecGanNguoi()` — không đẻ ra bản thứ hai của cùng một
+ * việc. Hai bản thì có ngày lệch nhau, và bản lệch sẽ là bản ít người bấm hơn.
+ */
+export function bangGanNguoi(t, cay, duocDoiQuyen, napLai) {
+  const hop = document.createElement('div');
+  hop.style.cssText =
+    'display:flex;flex-direction:column;gap:12px;padding:12px 0 2px;' +
+    'border-top:1px solid #ece6dd';
+
+  // Dòng "cây nào" đứng TRƯỚC mọi thứ khác — cùng lý do như `veBangViec()`:
+  // một tài khoản có chân ở nhiều cây, và mã người là khái niệm theo TỪNG cây.
+  hop.append(dongCay(cay));
+  hop.append(viecGanNguoi(t, cay, duocDoiQuyen, napLai));
+  return hop;
 }
 
 // ============================================================
