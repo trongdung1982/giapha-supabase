@@ -521,6 +521,11 @@ cùng một giao dịch — thiếu dòng ấy là chủ mới *sửa được m
 
 ### 4. ✓ CHỐT 08/09/2026 (b107) — VÀO CÂY LÀ QUYỀN CỦA MỖI NGƯỜI
 
+> ⚠⚠ **ĐỌC MỤC 11.8 TRƯỚC KHI TIN MỤC NÀY.** Luật dưới đây đúng, nhưng mã
+> **không** thi hành nó từ b107 tới b110c: bốn cửa khác của `13`/`08` ghi
+> thẳng được vào một dòng lời mời chưa ai nhận. Chủ dự án bắt được 10/09/2026,
+> vá ở `luoc-do/18-hai-chu-ky.sql`.
+
 Nguyên văn chủ dự án:
 
 > *"quyền vào gia phả hay không là quyền mỗi người nên quản trị hệ thống cũng
@@ -641,3 +646,179 @@ phần mềm được phép `delete from public.trees`)*.
 Apps Script chạy đêm đã có (`sao-luu/SaoLuu.gs`). Hỏi chủ dự án ở b110, đừng
 tự chọn — đường thứ hai làm một việc phá dữ liệu chạy tự động lúc không ai
 ngồi xem.
+
+### 7. ✓ CHỐT 09/09/2026 (b110b) — QUYỀN DỰNG CÂY TÁCH RIÊNG, VÀ KHÔNG ĐÂU NGẦM ĐỊNH CÂY
+
+Nguyên văn chủ dự án:
+
+> *"vì một người chủ cây gia phả có thể tạo nhiều cây gia phả vì vậy khi gán
+> quyền, không nên ngầm định gán quyền cho cây đang hoạt động mà cần luôn luôn
+> xác định người nào, cây nào, quyền gì. riêng quản trị hệ thống, khi gán
+> quyền quản trị hệ thống cho người khác mới không cần chọn cây cần áp dụng.
+> quyền tạo cây cần tách riêng khỏi quyền quản trị gia phả, ở các bảng có liên
+> quan đến tài khoản cần thêm 1 cột quyền tạo cây gia phả, muốn gán quyền cho
+> ai thì tích vào là xong, đây là đặc quyền của tài khoản quản trị hệ thống."*
+
+Ba điều rút ra, và chúng hỏng theo ba kiểu khác nhau.
+
+#### a · BỐN hạng, không phải ba
+
+Mục 11.3 đếm ba hạng. Từ b110b là **bốn**, và hạng thứ tư ở một tầng khác hẳn:
+
+| Hạng | Nhận ra bằng | Tầng | Hỏi "cây nào"? |
+|---|---|---|:---:|
+| **Quản trị hệ thống** | cờ `tai_khoan.la_quan_tri_he_thong` | tài khoản | **không** |
+| **Được dựng cây** | cờ `tai_khoan.duoc_tao_cay` | tài khoản | **không** |
+| **Chủ cây** | cột `trees.chu_so_huu` | cây | có |
+| **Quản trị gia phả** | `tree_members.role = 'quan_tri'` | cây | có |
+
+⚠ **Gộp hạng thứ hai vào hạng thứ tư là mở một đường leo thang không ai nhìn
+thấy.** Người được phong Quản trị gia phả của cây A mà dựng được cây riêng thì
+trong cây riêng ấy họ là **chủ cây** — tức tự cấp cho mình đúng cái quyền đổi
+quyền mà mục 11.3 dựng cả một luật để chặn. Không có triệu chứng nào trên màn
+hình; nó chỉ lộ ra khi có người đọc lại bảng `trees` và hỏi cây này ở đâu ra.
+
+#### b · Cửa thứ BẢY của luật không-tự-đặt-quyền-cho-mình
+
+Mục 11.3 đếm năm cửa, mục 11.5 thêm cửa thứ sáu. Cờ `duoc_tao_cay` là cửa thứ
+**bảy**, và nó gác đúng cùng một câu: `p_user = auth.uid()` thì từ chối.
+
+Chặn ở đây **không lấy đi khả năng nào** của Quản trị hệ thống: hàm
+`duoc_tao_cay()` của `11` mục 11 đã trả `true` cho họ qua nhánh
+`la_quan_tri_he_thong()`, không cần cột. Đúng lý lẽ mục 11.3: *một luật không
+ngoại lệ thì kiểm được.*
+
+⚠ **KHÔNG có phép "không tắt được người cuối cùng"**, khác
+`dat_quan_tri_he_thong()`. Hai cờ khác nhau ở chỗ: tắt hết Quản trị hệ thống là
+khoá cả nhà rồi vứt chìa; tắt hết `duoc_tao_cay` thì Quản trị hệ thống **vẫn
+dựng được cây**. Thêm một phép đếm ở đó là thêm một câu từ chối không bảo vệ gì.
+
+Cửa này là `dat_duoc_tao_cay(p_user, p_bat)` ở **`luoc-do/17-quyen-tao-cay.sql`**
+— file chỉ THÊM, không định nghĩa đè hàm nào, nên nó **không** nằm trong hai
+chuỗi dán lại ở đầu `16-thung-rac-cay.sql`. Đo bằng
+`kiem-thu/ban-thu-sql/do-b110b.mjs`: 29 phép, 12 hàng rào, 3 kiểm chứng ngược.
+
+#### c · Không màn hình nào được ngầm định "cây đang hoạt động"
+
+Câu chốt là *"luôn luôn xác định người nào, cây nào, quyền gì"*, và nó áp cho
+cả `THIET-KE-QUAN-TRI.md`. Chỗ sửa thật **không phải câu chữ mà là chữ ký hàm**:
+
+> `veBangViec(t, treeId, …)` → `veBangViec(t, cay, …)` với `cay = {treeId, ten, maCay}`.
+
+Chừng nào tham số còn là một `treeId` trần thì mọi nơi gọi đều đứng trước cùng
+một cám dỗ — truyền cây đang mở rồi để màn hình tự bịa một cái nhãn. Và bản
+0.7.0 của `khu-thanh-vien.js` đã bịa đúng như thế: chuỗi `'Gia phả đang mở'`.
+Đổi hình dạng tham số thì **lời gọi thiếu tên cây không viết ra được nữa**.
+
+Tên cây tới màn hình từ `layPhien()` (`sb.js` 0.14.0): câu đọc `trees` chạy
+song song với câu đọc `user_settings` vốn đã có, nên **không tốn thêm vòng
+mạng nào**.
+
+**Ngoại lệ, và chỉ có hai:** hai cờ ở tầng tài khoản trong bảng a. Chúng không
+hỏi cây nào vì câu ấy không có câu trả lời — và vì một ngoại lệ không nói ra
+thì người đọc tưởng màn hình quên hỏi, nhãn của chúng phải tự khai: *"cả hệ
+thống, không chọn cây"*.
+
+⚠ **Một cái bẫy b110b bắt được, và nó không thuộc bước này.** Từ b110,
+`kiem-thu/sb-gia.mjs` thiếu sáu cửa thùng rác mà `khu-gia-pha.js` `import` —
+ES Modules không tha một `import` thiếu, nên `mountKhung()` không chạy và **cả
+17 tấm ảnh của `xem-khung-quan-tri.mjs` ra nền trơn**, im lặng, suốt một bước.
+Ai thêm một cửa vào `sb.js` thì thêm cả ở bản giả, hoặc phép nhìn-bằng-mắt
+thôi nhìn được gì.
+
+### 8. ⚠⚠ ĐÍNH CHÍNH 10/09/2026 (b110c) — LUẬT HAI CHỮ KÝ ĐÃ TỪNG THỦNG Ở BỐN CỬA
+
+Mục 11.4 chốt: *"Không đường nào đưa được một tài khoản vào cây bằng một cú
+bấm."* Câu ấy **sai trong mã** từ b107 tới b110c. Chủ dự án tìm ra bằng cách
+bấm thử trên máy chủ thật, 10/09/2026:
+
+> *"mời tài khoản khach@io.vn vào làm thành viên, sau đó vào kiểm duyệt thêm
+> được người này luôn và có thể đổi quyền cho tài khoản này mà không đợi
+> khach@io.vn đồng ý."*
+
+**Tái hiện được cả bốn cửa** (`kiem-thu/ban-thu-sql/do-b110c.mjs`, chạy trên
+Postgres thật, mượn danh nghĩa từng tài khoản):
+
+| Cửa | Ghi vào | Hậu quả đo được |
+|---|---|---|
+| `duyet_thanh_vien()` | `approved` | khách đọc **59 người** mà chưa bấm gì |
+| `doi_vai_thanh_vien()` | `role` | khách đọc **59 người NGAY LÚC ẤY** |
+| `gan_nguoi_cho_thanh_vien()` | `person_id` | đặt trước phạm vi sửa, chiếm chỗ mã người |
+| `dat_tin_cay_thanh_vien()` | `tin_cay` | cấp trước quyền bỏ qua kiểm duyệt |
+
+#### Vì sao mục 11.4 nhìn thấy cái bẫy mà vẫn sập
+
+Mục ấy mô tả cái bẫy **chính xác**: `la_thanh_vien()` mở cây khi
+`role in ('quan_tri_he_thong','quan_tri','sao_luu')` mà không hỏi `approved`.
+Nó còn dựng hẳn cột `moi_vai` để `moi_vao_cay()` không chạm vào `role`.
+
+Chỗ sai là **phạm vi của bản vá**: `moi_vao_cay()` được canh, còn bốn hàm của
+`13` — vốn đã tồn tại từ trước, và ghi vào đúng những cột ấy — thì không ai
+đi hỏi lại. Cột `moi_vai` chặn một đường và để ngỏ bốn đường bên cạnh.
+
+> **Câu rút ra, đáng giữ hơn cả bản vá: hàng rào phải gác CỘT, không gác HÀM.**
+> Viết xong một cơ chế bảo vệ thì câu hỏi tiếp theo không phải *"tôi đã chặn
+> hàm này chưa"* mà là *"còn hàm nào khác ghi vào cùng những cột này?"*.
+> Anh em với hai câu đã có: *chạy lại không phải là nâng cấp*, và *hỏi hàm
+> quyết quyền không phải là đo hàng rào*.
+
+#### Vá bằng HAI LỚP — `luoc-do/18-hai-chu-ky.sql`
+
+**Lớp 1** — bốn cửa cộng cửa duyệt hỏi `la_loi_moi_cho_nhan(p_tree, p_user)`
+và từ chối, kèm câu chỉ đúng đường đi (rút lời mời rồi mời lại).
+
+**Lớp 2** — `la_thanh_vien()` **thu hẹp** đường tắt: nó chỉ áp cho dòng
+`moi_boi is null`. Kể cả ngày ai viết cửa thứ năm mà quên lớp 1, một dòng lời
+mời vẫn không mở được cây. Phép `KC1` của `do-b110c.mjs` chứng minh hai lớp
+độc lập thật: bẻ lớp 1 ra, lớp 2 vẫn giữ cây đóng.
+
+⚠ **Thu hẹp, KHÔNG bỏ.** `CHI-DAN.md` và mục 11.6 đều ghi *"đừng sửa
+`la_thanh_vien()`"* vì b102 sửa gọn một dòng ở đó và bản sao lưu đêm ra file
+rỗng, không báo lỗi. Nên `do-b110c.mjs` có phép **K6** đo đúng đường ấy: sau
+khi vá, tài khoản `sao_luu` vẫn đọc đủ 59 người.
+
+#### Và màn hình cũng phải sửa, không chỉ máy chủ
+
+Máy chủ từ chối là đủ để **an toàn**, chưa đủ để **đúng luật nhà**: *"khoá sẵn
+kèm lý do, không cho bấm rồi mới giải thích"* (chủ dự án, 08/09/2026). Ba tấm
+lọc cây không phân biệt được lời mời với đơn xin vào, vì `ds_thanh_vien()`
+không trả `moi_luc` — `khu-thanh-vien.js` đã ghi sẵn lời thú nhận ấy trong một
+khối chú thích từ b109c, và **chính chỗ ấy là đường chủ dự án đi vào**.
+
+`18` mục 6b thêm `moi_luc` · `moi_vai` vào `ds_thanh_vien()`; màn hình nay
+hiện *Được mời — chờ họ bấm Nhận*, khoá nút, và cột Vai trò hiện vai họ **sẽ**
+nhận thay vì `xem`.
+
+#### ⚠ Một chỗ hỏng thứ hai, tìm ra lúc đang vá chỗ thứ nhất
+
+`08-kiem-duyet.sql` cũng định nghĩa `ds_cho_duyet()`, và bản của nó là bản CŨ:
+`coalesce(p_tree, (select id from public.trees limit 1))` — đúng **Hỏng 3** của
+mục 8, thứ `10-sua-nhieu-cay.sql` đã chữa 05/09. Nghĩa là **dán lại `08` mở lại
+Hỏng 3**, im lặng, và với hai cây thì nó *duyệt nhầm hàng chờ của cây khác*.
+
+Không ai ghi chuyện ấy ở đâu cả. Từ b110c, `18` là bản đứng **cuối cùng** cho
+hàm này, nên chuỗi `08` → `18` chữa luôn cả hai.
+
+#### Trả lời câu hỏi thứ hai của chủ dự án
+
+> *"ngoài quyền quản trị hệ thống, một người chỉ có quyền quản trị gia phả,
+> xem khi được gắn 1 cây cụ thể — hệ thống hiện tại có vi phạm không, có ai có
+> quyền mà không gắn với cây không?"*
+
+Đã đo (`do-b110c.mjs` phần 6, Q1–Q13). **Không có vi phạm**, và có đúng **ba**
+thứ đứng ngoài `tree_members` — cả ba đều đã chốt từ trước, không phải lỗi:
+
+| Thứ | Phạm vi | Chốt ở đâu |
+|---|---|---|
+| **Quản trị hệ thống** (`tai_khoan.la_quan_tri_he_thong`) | đọc và sửa mọi cây | mục 11.2 — ngoại lệ chủ dự án đã chốt 05/09 |
+| **Được dựng cây** (`tai_khoan.duoc_tao_cay`) | **không mẩu quyền nào** trên cây đang có; chỉ dựng cây MỚI | mục 11.7 (b110b) — đo Q9·Q10 |
+| **Cây mặc định** (`cau_hinh.cay_mac_dinh`) | người chưa có chân **đọc** được đúng một cây; không sửa, không thấy danh sách thành viên | mục 3 — đo Q7·Q8 |
+
+⚠ **Cây mặc định là cửa duy nhất trong cả dự án mà một người không có dòng
+`tree_members` nào vẫn đọc được nội dung một cây.** Nó có chủ ý, nhưng nó là
+thứ dễ quên nhất khi trả lời câu *"ai đọc được cây này?"*. Tắt nó là đặt
+`cau_hinh.cay_mac_dinh = null`.
+
+Ngoài ba thứ ấy: người ngoài đọc **0 người**, **0 dòng** `tree_members`,
+`vai_tro()` trả `null`, cả ba hàm `co_the_*()` trả `false` (Q1–Q6). Và vai
+`quan_tri` của cây A **không** mang sang cây B (Q12·Q13).

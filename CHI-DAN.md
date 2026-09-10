@@ -1,6 +1,6 @@
 # CHỈ DẪN — đọc file này đầu mỗi phiên
 
-*Nhánh Supabase · cập nhật 09/09/2026 (b110)*
+*Nhánh Supabase · cập nhật 09/09/2026 (b110b)*
 
 ⚠ **TRẦN CỨNG 80 DÒNG.** Vượt là dấu hiệu có thứ đứng nhầm chỗ — chuyển ra
 file riêng, **đừng nới trần**. `MUC-LUC` của nhánh cũ phình tới 590 dòng vì
@@ -15,12 +15,12 @@ nó chính là thứ nó sinh ra để tránh.
 | Mới vào nhánh này lần đầu | + `KIEN-TRUC.md` **cả file** |
 | Đụng `services/` | `KIEN-TRUC.md` mục 1, 3 · `DU-LIEU.md` mục 1, 6 |
 | Đổi lược đồ bảng, thêm/bớt trường | `DU-LIEU.md` **cả file** · `luoc-do/` |
-| **Mời vào cây · cờ QT hệ thống · xoá tài khoản · xoá gia phả** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký)* · **11.5** *(cờ QTHT)* · **11.6** *(xoá cây: chủ xin — QTHT duyệt — thùng rác 30 ngày)* · `luoc-do/14-loi-moi.sql` · **`16-thung-rac-cay.sql`** ⚠ *mục 11.6 nói **sai đường vá**: sửa `co_the_xem_cay()` mà không chừa lối cho vai `sao_luu` là sao lưu đêm ra file THIẾU cây trong thùng rác, không báo lỗi — sáu bảng nội dung gác bằng chính hàm ấy. Đọc khối đầu `16` trước khi đụng. Và ĐỪNG sửa `la_thanh_vien()`* |
-| Đụng phân quyền, RLS | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.3** *(bảng 5 hạng — chốt 08/09)* · `luoc-do/13-quan-ly-thanh-vien.sql` *(ai đổi được quyền · luật KHÔNG tự đặt quyền cho mình)* · `DU-LIEU.md` mục 2 + **2a** + **2b** · `11-quyen-he-thong.sql` ⚠ *(cờ quyền: CHỈ luật đọc)* · `06` · `07` · `02-rls.sql` |
-| **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa |
+| **Mời vào cây · cờ QT hệ thống · xoá tài khoản · xoá gia phả** | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.4** *(vào cây cần HAI chữ ký — và mục **11.8**: luật ấy ĐÃ TỪNG THỦNG ở bốn cửa, vá bằng `18`)* · **11.5** *(cờ QTHT)* · **11.6** *(xoá cây: chủ xin — QTHT duyệt — thùng rác 30 ngày)* · `luoc-do/14-loi-moi.sql` · **`16-thung-rac-cay.sql`** ⚠ *mục 11.6 nói **sai đường vá**: sửa `co_the_xem_cay()` mà không chừa lối cho vai `sao_luu` là sao lưu đêm ra file THIẾU cây trong thùng rác, không báo lỗi — sáu bảng nội dung gác bằng chính hàm ấy. Đọc khối đầu `16` trước khi đụng. Và ĐỪNG sửa `la_thanh_vien()`* |
+| Đụng phân quyền, RLS | ⚠ `THIET-KE-NHIEU-CAY.md` mục **11.3** *(bảng 5 hạng — chốt 08/09)* · `luoc-do/13-quan-ly-thanh-vien.sql` *(ai đổi được quyền · luật KHÔNG tự đặt quyền cho mình)* · `DU-LIEU.md` mục 2 + **2a** + **2b** · `11-quyen-he-thong.sql` ⚠ *(cờ quyền: CHỈ luật ĐỌC)* · **`17`** *(cửa 7: cờ `duoc_tao_cay`)* · ⚠ **`18-hai-chu-ky.sql`** *(bốn cửa KHÔNG ghi được vào lời mời chưa nhận — đây là bản đứng CUỐI của `duyet_thanh_vien` · `doi_vai` · `gan_nguoi` · `dat_tin_cay` · `la_thanh_vien` · `ds_thanh_vien` · `ds_cho_duyet`)* · `06` · `07` · `02-rls.sql` |
+| **Ai là "quản trị"?** — trước khi gõ chữ ấy | ⚠ Ba hạng khác nhau: **Quản trị hệ thống** = cờ `tai_khoan` · **Chủ cây** = cột `trees.chu_so_huu` · **Quản trị gia phả** = `tree_members.role='quan_tri'`, **chỉ sửa + duyệt nội dung, KHÔNG đổi quyền**. Mã `quan_tri_he_thong` **không** đặt vào `tree_members` được nữa. ⚠ **Quyền DỰNG cây là hạng thứ tư** = cờ `tai_khoan.duoc_tao_cay`, **tách hẳn** khỏi ba hạng trên (b110b) |
 | Đụng kiểm duyệt nội dung, hoàn tác | `luoc-do/08-kiem-duyet.sql` · `03-ham-luu-cay.sql` khối *chụp ảnh* · `kiem-thu/thu-hoan-tac.sql` |
 | **Đụng nhiều cây · quyền cấp hệ thống · tạo cây · mã xuyên cây** | ⚠ `THIET-KE-NHIEU-CAY.md` **trước tiên** |
-| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ô gợi ý: `o-goi-y.js` + `luoc-do/15-tim-kiem.sql` · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (12 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép. ⚠ Ảnh 1280px KHÔNG phân giải nổi "đè lên nhau" với "sát nhau" — đo bằng `node ../kiem-thu/do-goi-y.mjs` |
+| **Đụng trang `QuanTri.html` — bất cứ khu nào** | ⚠ `THIET-KE-QUAN-TRI.md` **trước tiên** · `js/pages/quan-tri/` · `quan-tri.css` *(chỗ DUY NHẤT biết bề ngang màn hình)* · ô gợi ý: `o-goi-y.js` + `luoc-do/15-tim-kiem.sql` · ⚠ **nhìn bằng mắt trước khi báo xong**: `node ../kiem-thu/xem-khung-quan-tri.mjs` (17 ảnh) — 154 phép văn bản từng xanh suốt trong lúc cột nút rơi khỏi mép, và b110b bắt được cả 17 ảnh RA NỀN TRƠN vì `kiem-thu/sb-gia.mjs` thiếu sáu cửa của b110: **thêm cửa vào `sb.js` thì thêm cả ở đó**. ⚠ **Không màn hình nào được ngầm định "cây đang mở"** — mọi chỗ gán quyền phải gọi tên cây (b110b); ngoại lệ duy nhất là hai cờ cấp tài khoản. ⚠ Ảnh 1280px KHÔNG phân giải nổi "đè lên nhau" với "sát nhau" — đo bằng `node ../kiem-thu/do-goi-y.mjs` |
 | Bàn thử SQL tại chỗ · phép ĐO hàng rào · tên/mã vai trò | `../kiem-thu/ban-thu-sql/` *(ngoài repo, CÓ trên máy này)* — `do-b102`→`do-b110` ⚠ tiếng Việt vào psql phải đi bằng `-f`, không `-c` · tên vai: `config.js` hàm `vaiTroBangChu()` |
 | Duyệt/gắn tài khoản, hỏi "sao tôi không sửa được" | `HUONG-DAN-PHAN-QUYEN.md` |
 | Đụng cách VẼ sơ đồ | `../tai-lieu/QUY-TAC-VE_V14.md` · `BAT-DAU.md` mục 6 |
@@ -42,19 +42,19 @@ nó chính là thứ nó sinh ra để tránh.
 1. **`domains/` không được sửa.** Cả mười file chép nguyên từ bản Apps Script.
    Thấy mình đang sửa `domains/` là dừng lại hỏi vì sao — `BAT-DAU.md` mục 1.
 2. **Chỉ `services/sb.js` được chạm `window.supabase`.** Không file nào khác.
-3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09
-   11:28; luật trực hệ dán 13:20, phép thử H9 **5/5 hàng rào đạt** (b94);
-   hàng chờ duyệt dán chiều 04/09, người đang chờ đọc **0 dòng** (b96) — đo
-   bằng REST, không qua trình duyệt. `KIEN-TRUC.md` mục 6: còn gì dở.
+3. **Đã chạy thật, và phân quyền đã kiểm chứng.** 59 người vào bảng 04/09;
+   luật trực hệ + hàng chờ duyệt đo bằng REST, **5/5 hàng rào đạt** (b94,
+   b96). `KIEN-TRUC.md` mục 6: còn gì dở.
    ⚠ **Máy chủ thật nay có HAI cây** (b100), khung Quản trị bốn khu (b101),
    tầng quyền hệ thống + tạo cây mới đã dán cả hai Supabase (b102–b104); mã
-   cây nay **3 chữ số** (`NPG473`). `13` đã dán 08/09 (b105), khu Tài khoản
-   chạy 08/09 (b106); `14` đã dán, **b108·b109·b109b chạy thật 09/09**. ⏳ **`15`
-   bản 0.2.0 CHƯA DÁN** (cột `vai_cao_nhat`) — tự kiểm phải ra 13 ĐẠT.
-   ✓ **`16` (thùng rác cây, b110) ĐÃ DÁN cả hai 09/09** — tự kiểm 11 mục đạt.
-   ⏳ Nhưng **chưa ai bấm thử** vòng xin → duyệt → phục hồi trên app.
-   Chuỗi dán lại: `11`/`10` → `14` → **`16`** · và `13`/`14` → `15`.
-   Quên `16` sau khi dán `11`/`14` là **cây trong thùng rác mở lại cho cả họ**.
+   cây nay **3 chữ số** (`NPG473`). `13`·`14` đã dán, `16` (thùng rác) và
+   `17` (cờ dựng cây) dán 10/09 — **chưa ai bấm thử** vòng xin → duyệt →
+   phục hồi. ⏳ **`15` 0.2.0 CHƯA DÁN** (`vai_cao_nhat`).
+   ⚠⚠ ⏳ **`18-hai-chu-ky.sql` CHƯA DÁN** (b110c) — vá lỗ hổng chủ dự án bắt
+   được 10/09: **mời ai vào cây rồi tự duyệt và tự đổi vai hộ họ**. Đo 48/48.
+   Chuỗi dán lại: `11`/`10` → `14` → `16` → **`18`** · `13`/`14` → `15` →
+   **`18`** · `08` → **`18`**. Quên `16` là cây trong thùng rác mở lại; quên
+   **`18`** là mở lại đúng lỗ hổng ấy, và nó không báo gì cả.
 
 ## Quy ước khung tài liệu này
 

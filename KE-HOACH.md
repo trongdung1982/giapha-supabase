@@ -1,6 +1,6 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 09/09/2026 · Bước gần nhất: **b110** · Việc kế tiếp: **b111***
+*Cập nhật 10/09/2026 · Bước gần nhất: **b110c** · Việc kế tiếp: **b111***
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -20,6 +20,15 @@
 ---
 
 ## Đang ở đâu
+
+> ⚠⚠ **10/09/2026 — CÓ MỘT LỖ HỔNG ĐANG MỞ TRÊN MÁY CHỦ THẬT.** Chủ dự án bấm
+> thử và bắt được: mời một tài khoản vào cây rồi **tự duyệt và tự đổi vai hộ
+> họ**, không cần họ đồng ý. Đo ra **bốn cửa** thủng, không phải một. Bản vá
+> `luoc-do/18-hai-chu-ky.sql` đã viết và đo xong (48/48) nhưng **CHƯA DÁN** —
+> đây là việc chặn duy nhất hiện nay. Chi tiết: `nhat-ky/b110c-hai-chu-ky.md`.
+>
+> ⚠ Dán xong còn phải **dọn vết**: bản vá đóng cửa nhưng không tự sửa những
+> dòng đã lọt qua. Xem mục 9 cuối file `18`.
 
 **CẢ CHUỖI ĐÃ THÔNG.** 03/09/2026: bốn file SQL đã chạy thật, tài khoản tạo
 được, đăng nhập được, **và thêm được người mới** — tức trình duyệt ghi xuống
@@ -146,7 +155,8 @@ vẻ ngoài của nó: **mọi hàm quyết quyền đều hỏi đúng một h�
 một. Cái giá đi kèm: hai chỗ ấy là **nền móng**, nên b102 là bước nguy hiểm
 nhất của cả dự án cho tới nay.
 
-**Năm mươi lăm việc đã đóng** — đếm theo đúng số dòng của bảng ngay dưới, đừng
+**Sáu mươi lăm việc đã đóng** *(đếm lại 10/09/2026, b110c — 65 dòng)* — đếm
+theo đúng số dòng của bảng ngay dưới, đừng
 chép lại con số của lần trước (`KE-HOACH_V54` từng đứng nguyên ở *"bảy"* rồi *"hai
 mươi"* trong khi bảng cứ dài thêm).
 
@@ -207,6 +217,16 @@ mươi"* trong khi bảng cứ dài thêm).
 | **Lối riêng cho vai `sao_luu` — sao lưu đêm vẫn chép được cây trong thùng rác** | **b110** | ✓ **09/09/2026** — thiết kế chỉ sai đường vá, đo mới ra |
 | **Cây trong thùng rác biến khỏi danh sách; thành viên nhận lời nhắn `tin_thung_rac()`** | **b110** | ✓ **09/09/2026** — chủ dự án chốt, bác bỏ bản 0.1.0 |
 | **Phép đo `do-b110.mjs` — 62/62 ĐẠT, 5 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 154 → 190** | **b110** | ✓ **09/09/2026** |
+| **Quyền DỰNG CÂY tách khỏi vai Quản trị gia phả — `17-quyen-tao-cay.sql`, cửa thứ BẢY** | **b110b** | ✓ **10/09/2026** — đã dán cả hai |
+| **Ô tích *Tạo gia phả* trong sổ đăng ký tài khoản (một nhịp, chủ dự án đặt hàng)** | **b110b** | ✓ **09/09/2026** |
+| **Không màn hình nào ngầm định "cây đang mở" — `veBangViec/veXetDon` nhận đối tượng cây** | **b110b** | ✓ **09/09/2026** |
+| **Phép đo `do-b110b.mjs` — 29/29 ĐẠT, 3 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 190 → 214** | **b110b** | ✓ **09/09/2026** |
+| **⚠ `kiem-thu/sb-gia.mjs` thiếu 6 cửa của b110 → 17 ảnh chụp ra NỀN TRƠN suốt một bước** | **b110b** | ✓ **09/09/2026** — vá, và ghi vào `CHI-DAN` |
+| ⚠⚠ **LỖ HỔNG: bốn cửa ghi được vào LỜI MỜI chưa ai nhận — `18-hai-chu-ky.sql`** | **b110c** | ⏳ **10/09/2026** — mã xong, **chưa dán** |
+| **Lớp hai: `la_thanh_vien()` thu hẹp đường tắt theo vai, sao lưu đêm còn nguyên** | **b110c** | ⏳ **10/09/2026** |
+| **Màn hình phân biệt LỜI MỜI với ĐƠN XIN VÀO — `ds_thanh_vien()` trả `moi_luc`** | **b110c** | ⏳ **10/09/2026** |
+| **⚠ Hỏng 3 sống lại khi dán lại `08` (`ds_cho_duyet` đoán cây bằng `limit 1`)** | **b110c** | ⏳ **10/09/2026** — `18` chốt lại |
+| **Phép đo `do-b110c.mjs` — 48/48 ĐẠT, 7 lỗ hổng tái hiện, 3 kiểm chứng ngược · `kiem-trang-quan-tri.mjs` 214 → 237** | **b110c** | ✓ **10/09/2026** |
 
 **Địa chỉ thật của app từ 03/09/2026: `https://nguyentrongbac.io.vn`.** Chứng
 chỉ Let's Encrypt hạn 02/12/2026, `Enforce HTTPS` đã bật nên `http://` bị đẩy
@@ -805,6 +825,104 @@ Chủ dự án chốt 09/09/2026, đọc `THIET-KE-NHIEU-CAY.md` mục **11.6** 
 | ~~**Phải hỏi chủ dự án**~~ ✓ **ĐÃ TRẢ LỜI 09/09/2026** | *"dọn thùng rác chỉ có quản trị hệ thống, bấm tay, có chọn hàng loạt"* — loại hẳn đường trigger Apps Script chạy đêm, và quyết hình dạng tham số `don_thung_rac(p_ds uuid[])` |
 | ✓ **Chốt thêm cùng ngày** | *"không hiện cây trong thùng rác. nếu người nào đang có chân trong cây này thì nhận thông báo cây đã bị xoá bởi… vậy không lo màn hình trắng"* — bản 0.1.0 làm ngược lại và bị bác bỏ. Xem khối ✓ đầu mục |
 
+### ✓ b110b — Quyền dựng cây tách riêng · không đâu ngầm định cây · **MÃ XONG 09/09/2026**
+
+> **Chủ dự án đặt hàng, nguyên văn:** *"vì một người chủ cây gia phả có thể tạo
+> nhiều cây gia phả vì vậy khi gán quyền, không nên ngầm định gán quyền cho cây
+> đang hoạt động mà cần luôn luôn xác định người nào, cây nào, quyền gì… quyền
+> tạo cây cần tách riêng khỏi quyền quản trị gia phả… muốn gán quyền cho ai thì
+> tích vào là xong, đây là đặc quyền của tài khoản quản trị hệ thống."*
+>
+> **Đã làm:** `luoc-do/17-quyen-tao-cay.sql` 0.1.0 · `sb.js` 0.14.0 ·
+> `khu-thanh-vien.js` 0.8.0 · `khu-tai-khoan-he-thong.js` 0.5.0 ·
+> `khu-gia-pha.js` 0.7.1 · `kiem-thu/ban-thu-sql/do-b110b.mjs` *(ngoài repo,
+> **29/29 ĐẠT**, 3 kiểm chứng ngược)* · `kiem-trang-quan-tri.mjs` 190 → **214**.
+>
+> ⚠ **CỘT `duoc_tao_cay` CÓ TỪ b102 MÀ KHÔNG HÀM NÀO ĐẶT ĐƯỢC.** Bảy bước
+> liền, đường duy nhất cấp quyền dựng cây là mở SQL Editor gõ `update` tay —
+> và không ai để ý, vì `ds_tai_khoan_he_thong()` vẫn trả cột ấy về đều đặn, chỉ
+> là không màn hình nào đọc. Một cột đọc được mà không ghi được là kiểu thiếu
+> không có triệu chứng.
+>
+> ⚠ **Chỗ sửa THẬT của luật "luôn nói rõ cây nào" là chữ ký hàm, không phải câu
+> chữ.** `veBangViec(t, treeId, …)` → `veBangViec(t, cay, …)`. Chừng nào tham
+> số còn là uuid trần thì nơi gọi còn phải tự bịa một cái nhãn, và bản 0.7.0 đã
+> bịa đúng như thế: chuỗi `'Gia phả đang mở'`. Đổi hình dạng tham số thì lời
+> gọi thiếu tên cây **không viết ra được nữa** — và `kiem-trang-quan-tri.mjs`
+> PHẦN J gác lại đúng câu ấy (G15 bẻ ra để chứng minh phép ấy có đo thật).
+>
+> ⚠⚠ **BẮT ĐƯỢC MỘT LỖI CÂM CỦA b110, KHÔNG THUỘC BƯỚC NÀY.**
+> `kiem-thu/sb-gia.mjs` thiếu sáu cửa thùng rác mà `khu-gia-pha.js` `import`.
+> ES Modules không tha một `import` thiếu: cả mô-đun ném `SyntaxError`,
+> `mountKhung()` không chạy, và **cả 17 tấm ảnh của `xem-khung-quan-tri.mjs`
+> ra nền trơn không một chữ** — im lặng, suốt một bước. Bộ bất biến văn bản
+> không mở trình duyệt nên nó xanh suốt; phép "nhìn bằng mắt" thì có nhìn
+> nhưng không ai nhìn. Đã vá, và ghi thành một dòng cảnh báo ở `CHI-DAN.md`.
+>
+> ⚠ Cũng vì thế `kq-5.png` đổi mục tiêu sang nút *Sửa quyền* thứ **hai**: dòng
+> đầu bảng là dòng của chính người đang đăng nhập, nút ở đó khoá sẵn từ b106,
+> nên tấm ảnh ấy chụp một cái bảng trơn và thôi đo được thứ nó sinh ra để đo.
+>
+> ⏳ **Điểm dừng:** chủ dự án dán `luoc-do/17-quyen-tao-cay.sql` vào **cả hai**
+> Supabase, đọc bảng tự kiểm 8 mục, rồi bấm thử ô tích *Tạo gia phả* trên một
+> tài khoản khác.
+
+### ⚠ b110c — Lỗ hổng HAI CHỮ KÝ · **MÃ XONG 10/09/2026, CHƯA DÁN**
+
+> **Chủ dự án bấm thử trên máy chủ thật và bắt được, nguyên văn:** *"mời tài
+> khoản khach@io.vn vào làm thành viên, sau đó vào kiểm duyệt thêm được người
+> này luôn và có thể đổi quyền cho tài khoản này mà không đợi khach@io.vn đồng
+> ý."*
+>
+> **Đúng, và nặng hơn vẻ ngoài.** Tái hiện được **bốn cửa** trên bàn thử:
+> `duyet_thanh_vien` · `doi_vai_thanh_vien` · `gan_nguoi_cho_thanh_vien` ·
+> `dat_tin_cay_thanh_vien`. Cửa nặng nhất là **đổi vai** — nó đặt `role` vào
+> dòng lời mời, và `la_thanh_vien()` mở cây ra **ngay lúc ấy**, không đợi cả
+> nút Duyệt. Đo: khách chưa bấm gì đọc đủ **59 người**.
+>
+> **Đã làm:** `luoc-do/18-hai-chu-ky.sql` 0.1.0 · `sb.js` 0.15.0 ·
+> `khu-thanh-vien.js` 0.9.0 · `kiem-thu/ban-thu-sql/do-b110c.mjs` *(ngoài
+> repo, **48/48 ĐẠT**, 7 lỗ hổng tái hiện làm chứng, 3 kiểm chứng ngược)* ·
+> `kiem-trang-quan-tri.mjs` 214 → **237** (PHẦN K + G17–G19).
+>
+> ⚠⚠ **VÌ SAO THIẾT KẾ NHÌN THẤY CÁI BẪY MÀ VẪN SẬP.** Mục 11.4 mô tả cái bẫy
+> chính xác và dựng hẳn cột `moi_vai` để tránh — nhưng nó chỉ canh
+> `moi_vao_cay()`. Bốn hàm của `13` đã tồn tại từ trước và ghi vào đúng những
+> cột ấy; không ai đi hỏi lại *"còn hàm nào khác ghi vào `role` và `approved`
+> không?"*. **Hàng rào phải gác CỘT, không gác HÀM** — câu này đứng cạnh
+> *chạy lại không phải là nâng cấp* và *hỏi hàm quyết quyền không phải là đo
+> hàng rào*.
+>
+> ⚠ Vá bằng **hai lớp**, và `KC1` chứng minh chúng độc lập: bẻ lớp một ra thì
+> lớp hai vẫn giữ cây đóng. Lớp hai là `la_thanh_vien()` — hàm mà cả `CHI-DAN`
+> lẫn mục 11.6 đều ghi *"đừng sửa"*. Nó **thu hẹp**, không bỏ, và `K6` đo đúng
+> đường sao lưu: tài khoản `sao_luu` vẫn đọc đủ 59 người sau khi vá.
+>
+> ⚠ **Máy chủ chặn là đủ AN TOÀN, chưa đủ ĐÚNG LUẬT NHÀ.** Ba tấm lọc cây vẫn
+> vẽ chữ *"Đang chờ"* và nút *Xét đơn* lên dòng lời mời, vì `ds_thanh_vien()`
+> không trả `moi_luc`. `khu-thanh-vien.js` đã **ghi sẵn lời thú nhận ấy** trong
+> một khối chú thích từ b109c — và chính chỗ ấy là đường chủ dự án đi vào. Bài
+> học: một khối chú thích nói *"chỗ này chưa phân biệt được"* là một việc phải
+> làm, không phải một lời giải thích đã xong.
+>
+> ⚠ **Bắt thêm một chỗ hỏng thứ hai, không thuộc lỗ hổng này.** `08` định
+> nghĩa `ds_cho_duyet()` bản CŨ — `coalesce(p_tree, … limit 1)`, đúng **Hỏng 3**
+> mà `10` đã chữa 05/09. Dán lại `08` là mở lại, im lặng, và với hai cây thì nó
+> *duyệt nhầm hàng chờ của cây khác*. `18` nay là bản đứng cuối cho hàm ấy.
+>
+> ✓ **Câu hỏi thứ hai của chủ dự án đã đo xong** (`do-b110c.mjs` Q1–Q13):
+> **không có vi phạm**. Đúng ba thứ đứng ngoài `tree_members`, cả ba đã chốt
+> từ trước: cờ **Quản trị hệ thống** · cờ **được dựng cây** *(không kèm một
+> mẩu quyền nào trên cây đang có)* · và **cây mặc định** *(đọc được đúng một
+> cây, không sửa, không thấy danh sách thành viên)*.
+>
+> ⏳ **Điểm dừng:** chủ dự án dán `18` vào **cả hai** Supabase, đọc bảng tự
+> kiểm 13 mục, rồi bấm thử lại đúng đường đã bắt được lỗi — mời một tài khoản,
+> thử Duyệt và thử Đổi vai, cả hai phải bị từ chối.
+>
+> ⚠ Và đọc mục 9 cuối file `18`: bản vá **không tự dọn** những dòng đã lọt qua
+> lỗ hổng. Nếu đã lỡ bấm trên `khach@io.vn` thì chạy tay hai câu ở đó.
+
 ### b111 — Kiểm duyệt: bảng phẳng TRƯỚC/SAU
 
 | | |
@@ -1275,12 +1393,14 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 ## Còn treo — không chặn gì, nhưng đừng quên
 
-*Đếm ngày 09/09/2026: bảng có **31 dòng**, trong đó **10 đã đóng** (gạch
-ngang, giữ làm chứng) — còn **21 việc treo thật**. Đếm lại bằng số dòng mỗi
-lần `/ket-thuc`, đừng chép con số của lần trước.*
+*Đếm ngày 10/09/2026 (b110c): bảng có **36 dòng**, trong đó **12 đã đóng**
+(gạch ngang, giữ làm chứng) — còn **24 việc treo thật**. Đếm lại bằng số dòng
+mỗi lần `/ket-thuc`, đừng chép con số của lần trước.*
 
 | Việc | Ghi ở đâu |
 |---|---|
+| ⚠⚠ **CHẶN — `18-hai-chu-ky.sql` chưa dán.** Lỗ hổng hai chữ ký đang MỞ trên máy chủ thật: mời ai vào cây rồi tự duyệt và tự đổi vai hộ họ. Dán xong còn phải **dọn vết** (mục 9 cuối file `18`) vì bản vá không tự sửa dòng đã lọt qua | `nhat-ky/b110c-hai-chu-ky.md` |
+| ⚠ **HỎI CHỦ DỰ ÁN: `15-tim-kiem.sql` bản 0.2.0 đã dán chưa?** Hai tài liệu nói ngược nhau — bảng này ghi *"đã dán cả hai, 09/09"*, còn `CHI-DAN.md` ghi *"CHƯA DÁN"*. **Không tự chọn một bên**: đoán sai theo chiều "đã dán" là để cột `vai_cao_nhat` vắng mặt mà không ai biết; đoán sai theo chiều kia là dán thừa một file `drop function`. Hỏi rồi sửa chỗ sai, và ghi một dòng Đính chính | `CHI-DAN.md` · bảng này |
 | ~~`15-tim-kiem.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase, bản 0.2.0, tự kiểm ĐẠT** (09/09/2026). ⚠ Vẫn giữ luật: nó **dán đè ba hàm đọc** của `13`/`14`, nên **dán lại `13` hoặc `14` thì bắt buộc dán lại `15`** | `nhat-ky/b109b-o-goi-y.md` |
 | ~~`14-loi-moi.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase**, b108 chạy thật 09/09 | `nhat-ky/b107-moi-vao-gia-pha.md` |
 | ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |

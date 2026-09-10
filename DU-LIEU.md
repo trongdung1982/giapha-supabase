@@ -44,7 +44,7 @@ lại từng cột.
 | Bảng | Vai | Ghi chú |
 |---|---|---|
 | `trees` | Một dòng một gia phả. Chứa `revision` — số chống ghi đè | Thay khối `"tree": {…}` đầu file JSON |
-| `tree_members` | **Ai được vào cây nào** — vai `quan_tri_he_thong`/`quan_tri`/`sua`/`xem`/`sao_luu`, cộng `person_id` + `approved` + `tin_cay` | Thay danh sách chia sẻ Drive · xem mục 2b |
+| `tree_members` | **Ai được vào cây nào** — vai `quan_tri_he_thong`/`quan_tri`/`sua`/`xem`/`sao_luu`, cộng `person_id` + `approved` + `tin_cay` + `moi_boi`/`moi_luc`/`moi_vai` | Thay danh sách chia sẻ Drive · xem mục 2b. ⚠⚠ **BA trạng thái, không phải hai**: `approved`=true là thành viên · `moi_luc` trống + chưa duyệt là **đơn xin vào** · `moi_luc` CÓ + chưa duyệt là **lời mời chưa nhận**, và không cửa nào được ghi vào dòng ấy (`18-hai-chu-ky.sql`, `THIET-KE-NHIEU-CAY.md` mục 11.8) |
 | `branches` | Chi/nhánh | ⚠ **TỪ NAY KHÔNG DÙNG** — luật trực hệ thay chỗ, xem mục 2b |
 | `branch_access` | Ai được sửa nhánh nào | ⚠ **TỪ NAY KHÔNG DÙNG** — xem mục 2b |
 | `persons` | Một dòng một người | Khoá chính `(tree_id, id)` |
@@ -64,7 +64,7 @@ tạo cây mới · mã ngắn của tài khoản là gì*.
 
 | Bảng | Vai | Ghi chú |
 |---|---|---|
-| `tai_khoan` | Một dòng một tài khoản. `ma_ngan` (6 ký tự, `unique`) · `ho_ten` *(b109b — tên để NHẬN MẶT tài khoản trong ô gợi ý, KHÔNG phải tên người trong sơ đồ; đặt bằng `dat_ho_ten_tai_khoan()`, chỉ Quản trị hệ thống)* · `la_quan_tri_he_thong` · `duoc_tao_cay` | Trigger `sau_khi_tao_user` trên `auth.users` tự sinh dòng. ⚠ xem cảnh báo dưới |
+| `tai_khoan` | Một dòng một tài khoản. `ma_ngan` (6 ký tự, `unique`) · `ho_ten` *(b109b — tên để NHẬN MẶT tài khoản trong ô gợi ý, KHÔNG phải tên người trong sơ đồ; đặt bằng `dat_ho_ten_tai_khoan()`, chỉ Quản trị hệ thống)* · `la_quan_tri_he_thong` *(đặt bằng `dat_quan_tri_he_thong()`, `14`)* · `duoc_tao_cay` *(b110b — quyền DỰNG cây mới, **tách hẳn** khỏi vai `quan_tri`; đặt bằng `dat_duoc_tao_cay()`, `17`, chỉ Quản trị hệ thống và **không ai tự trỏ vào mình**)* | Trigger `sau_khi_tao_user` trên `auth.users` tự sinh dòng. ⚠ xem cảnh báo dưới |
 | `cau_hinh` | **Đúng một dòng** (mẹo `boolean primary key check`). Giữ `cay_mac_dinh` | Ghi chỉ qua `dat_cay_mac_dinh()` |
 
 Và hai cột mới trên `trees`: `chu_so_huu` (người dựng cây) ·

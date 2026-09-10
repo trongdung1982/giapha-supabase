@@ -5,7 +5,16 @@
 //            `khu-thanh-vien.js` · `khu-tai-khoan-he-thong.js`, và những cửa
 //            của chúng trong `js/services/sb.js` (b98 + b101 + b106 + b109).
 // Chạy     : cd supabase/kiem-thu && node kiem-trang-quan-tri.mjs
-// Phiên bản: 0.4.0 · Cập nhật: 09/09/2026 10:05
+// Phiên bản: 0.6.0 · Cập nhật: 10/09/2026 (b110c)
+//            0.6.0 PHẦN K — lỗ hổng HAI CHỮ KÝ chủ dự án báo 10/09/2026:
+//            bốn cửa của `13`/`08` ghi được vào một dòng lời mời chưa ai
+//            nhận. Gác cả hai lớp của `18-hai-chu-ky.sql`, cộng phần màn
+//            hình thôi vẽ nút *Xét đơn* lên dòng lời mời. G17 · G18 bẻ
+//            hai phép quan trọng nhất.
+//            0.5.0 PHẦN J mới — hai việc của b110b: cờ QUYỀN DỰNG GIA PHẢ
+//            (`17-quyen-tao-cay.sql`, cửa thứ bảy) và luật **không chỗ nào
+//            đổi quyền mà không gọi tên cây**. G14 · G15 · G16 bẻ ba phép
+//            quan trọng nhất của phần ấy.
 //            0.4.0 (b109) PHẦN I mới — tấm lọc *Toàn hệ thống*: bốn cửa của
 //            `14-loi-moi.sql`, ranh giới "không nạp cây", và phép canh việc
 //            CHÉP năm việc của `13` sang bản thứ hai. G12 · G13 bẻ hai phép ấy.
@@ -73,6 +82,8 @@ const SQL_08 = boGhiChu(doc('../luoc-do/08-kiem-duyet.sql'));
 const SQL_13 = boGhiChu(doc('../luoc-do/13-quan-ly-thanh-vien.sql'));
 const SQL_14 = boGhiChu(doc('../luoc-do/14-loi-moi.sql'));
 const SQL_16 = boGhiChu(doc('../luoc-do/16-thung-rac-cay.sql'));
+const SQL_17 = boGhiChu(doc('../luoc-do/17-quyen-tao-cay.sql'));
+const SQL_18 = boGhiChu(doc('../luoc-do/18-hai-chu-ky.sql'));
 
 /** Tên file có thật ở gốc repo, giữ nguyên chữ hoa chữ thường. */
 const FILE_GOC = readdirSync(resolve(DAY, '..'));
@@ -753,6 +764,243 @@ kiem('màn hình KHÔNG tự đóng cây khi mới có đơn xin xoá',
      'màn hình đóng sớm hơn máy chủ — biến một lá đơn thành một lệnh');
 
 // ============================================================
+// PHẦN J — b110b: quyền dựng cây tách riêng, và không đâu ngầm định cây
+// ============================================================
+//
+// Hai việc chủ dự án chốt 09/09/2026, và chúng hỏng theo hai kiểu khác nhau:
+//
+//   ① **Quyền dựng cây** bị gộp vào vai Quản trị gia phả → người được phong
+//      quản trị một cây dựng được cây riêng, rồi trong cây ấy họ là chủ. Đó
+//      là leo thang, và nó KHÔNG có triệu chứng nào trên màn hình.
+//   ② **Ngầm định "cây đang hoạt động"** → bảng sửa quyền không nói nó đang
+//      đụng cây nào. Với một cây thì vô hại; với nhiều cây thì đổi quyền
+//      nhầm chỗ, và cũng không có gì báo.
+console.log('\nPHẦN J — quyền dựng cây · gọi tên cây (b110b)');
+
+// — Cửa máy chủ —
+
+kiem('`17-quyen-tao-cay.sql` có hàm dat_duoc_tao_cay()',
+     /create\s+or\s+replace\s+function\s+public\.dat_duoc_tao_cay/i.test(SQL_17),
+     'thiếu hàm — cột duoc_tao_cay lại không có đường nào đặt');
+
+kiem('hàm ấy gác bằng la_quan_tri_he_thong()',
+     /la_quan_tri_he_thong/.test(thanHamSql(SQL_17, 'dat_duoc_tao_cay') || ''),
+     'ai cũng cấp được quyền dựng cây');
+
+// ⚠ Cửa thứ BẢY của luật *không ai tự đặt quyền cho mình*.
+kiem('hàm ấy gác bằng la_chinh_minh() — cửa thứ bảy',
+     /la_chinh_minh/.test(thanHamSql(SQL_17, 'dat_duoc_tao_cay') || ''),
+     'tự bật cờ cho mình được');
+
+// ⚠ KHÔNG có `p_tree`, và đó là cả điểm của hàm: cờ ở tầng TÀI KHOẢN.
+kiem('hàm ấy KHÔNG nhận p_tree — cờ tài khoản, không hỏi cây',
+     !(thamSoSql(SQL_17, 'dat_duoc_tao_cay') || []).some((x) => x.ten === 'p_tree'),
+     'cờ tài khoản mà hỏi cây — nói dối về phạm vi');
+
+kiem('anon bị revoke, authenticated được grant',
+     /revoke\s+all\s+on\s+function\s+public\.dat_duoc_tao_cay[^;]*from[^;]*anon/i.test(SQL_17) &&
+     coCapQuyen(SQL_17, 'dat_duoc_tao_cay'),
+     'quên revoke là mở cửa cho cả internet gọi một hàm security definer');
+
+// — Cầu nối —
+
+kiem('sb.js có datDuocTaoCay() gọi RPC dat_duoc_tao_cay',
+     /export\s+async\s+function\s+datDuocTaoCay[\s\S]{0,400}rpc\(\s*'dat_duoc_tao_cay'/
+       .test(JS_SB),
+     'chưa nối được ô tích với máy chủ');
+
+{
+  const lech = lechThamSo(JS_SB, SQL_17, 'dat_duoc_tao_cay');
+  kiem('tên tham số RPC khớp chữ ký SQL (bẫy 1)',
+       lech !== null && lech.length === 0,
+       lech === null ? 'không tìm thấy một trong hai bên' : lech.join(' · '));
+}
+
+kiem('chỉ sb.js gọi RPC ấy',
+     !/\.rpc\(\s*'dat_duoc_tao_cay'/.test(boGhiChuJs(JS_HT)) &&
+     !/\.rpc\(\s*'dat_duoc_tao_cay'/.test(boGhiChuJs(JS_TK)),
+     'trang gọi thẳng máy chủ — phá luật một cửa');
+
+// — Màn hình —
+
+kiem('sổ đăng ký có cột Tạo gia phả',
+     /'Tạo gia phả'/.test(JS_HT), 'không có chỗ tích');
+
+kiem('ô tích ấy gọi datDuocTaoCay()',
+     /datDuocTaoCay\s*\(/.test(boGhiChuJs(JS_HT)), 'ô tích không nối với máy chủ');
+
+// ⚠ Máy chủ từ chối thì ô tích phải TRẢ VỀ CHỖ CŨ. Một ô tích đứng ở trạng
+//   thái mới trong khi máy chủ đã từ chối là màn hình nói dối về một cột quyền.
+kiem('máy chủ từ chối thì ô tích trả về chỗ cũ',
+     /tich\.checked\s*=\s*Boolean\(tk\.duocTaoCay\)/.test(boGhiChuJs(JS_HT)),
+     'ô tích giữ trạng thái mới dù máy chủ đã từ chối');
+
+kiem('ô tích khoá sẵn trên dòng của chính mình',
+     /if\s*\(tk\.laChinhToi\)\s*\{[\s\S]{0,200}tich\.disabled\s*=\s*true/
+       .test(boGhiChuJs(JS_HT)),
+     'mời người ta bấm một thứ chắc chắn bị từ chối');
+
+// ⚠ Hộp Dựng gia phả phải nói quyền ấy TÁCH khỏi vai Quản trị gia phả — câu
+//   cũ đọc lên nghe như hễ quản trị một cây là dựng được cây mới.
+kiem('hộp Dựng gia phả nói quyền dựng cây là quyền RIÊNG của tài khoản',
+     /quyền riêng của tài khoản/i.test(JS_GP),
+     'câu chữ để nguyên thì người đọc vẫn gộp hai hạng làm một');
+
+// — Không đâu ngầm định cây —
+
+// ⚠ PHÉP QUAN TRỌNG NHẤT CỦA PHẦN NÀY. Chừng nào tham số thứ hai còn là một
+//   `treeId` trần thì mọi nơi gọi đều đứng trước cùng một cám dỗ: truyền cây
+//   đang mở rồi để màn hình tự bịa một cái nhãn. Đổi hình dạng tham số thì
+//   lời gọi thiếu tên cây **không viết ra được nữa**.
+kiem('veBangViec() nhận ĐỐI TƯỢNG cây, không nhận treeId trần',
+     /export\s+function\s+veBangViec\s*\(\s*t\s*,\s*cay\s*,/.test(JS_TK),
+     'còn nhận treeId trần — màn hình lại phải tự bịa nhãn cây');
+
+kiem('veXetDon() cũng thế',
+     /export\s+function\s+veXetDon\s*\(\s*t\s*,\s*cay\s*,/.test(JS_TK),
+     'còn nhận treeId trần');
+
+kiem('không lời gọi nào truyền thẳng .treeId vào hai hàm ấy',
+     !/(veBangViec|veXetDon)\s*\([^)]*\.treeId\s*,/
+       .test(boGhiChuJs(JS_TK) + '\n' + boGhiChuJs(JS_HT)),
+     'có chỗ vẫn truyền uuid trần — bảng việc mở ra không gọi được tên cây');
+
+kiem('cả hai bảng việc đều mở đầu bằng dòng "cây nào"',
+     (boGhiChuJs(JS_TK).match(/hop\.append\(dongCay\(cay\)\)/g) || []).length >= 2,
+     'bảng việc không tự nói nó đang đụng cây nào');
+
+// `layPhien()` là nguồn DUY NHẤT của tên cây trên trang này — không có nó thì
+// mọi câu trên lại rơi về một chuỗi thay thế.
+kiem('layPhien() mang tên cây về ở mọi nhánh đọc được cây',
+     /tenCay:\s*\(cay\s*&&\s*cay\.name\)/.test(JS_SB) &&
+     /from\('trees'\)\s*\.select\('name,\s*tree_code'\)/.test(JS_SB),
+     'trang Quản trị không có đường nào biết tên cây đang mở');
+
+// ⚠ Ô chọn gia phả ở form Mời phải mở ra ở MỤC TRỐNG. Chọn sẵn cây đầu danh
+//   sách là đúng thứ "ngầm định" chủ dự án bác bỏ — và ở sổ đăng ký thì cây
+//   đầu danh sách chẳng liên quan gì tới việc đang làm.
+kiem('form Mời mở ra ở mục trống, không chọn sẵn cây nào',
+     /— chọn gia phả —/.test(JS_HT) && /chonCay\.value\s*=\s*''/.test(JS_HT),
+     'mời được mà chưa hề chọn cây');
+
+kiem('nút Gửi lời mời khoá cho tới khi chọn cây',
+     /datKhoaNut/.test(boGhiChuJs(JS_HT)),
+     'nút mở sẵn trong khi chưa có cây — bấm rồi mới biết');
+
+// ⚠ Hai cờ cấp TÀI KHOẢN phải tự nói rằng chúng KHÔNG hỏi cây nào. Đó là
+//   ngoại lệ duy nhất của luật trên, và một ngoại lệ không nói ra thì người
+//   đọc tưởng màn hình quên hỏi.
+kiem('hai cờ cấp tài khoản nói rõ chúng không chọn cây',
+     /Quản trị hệ thống — cả hệ thống, không chọn cây/.test(JS_HT) &&
+     /Quyền dựng gia phả mới — cả hệ thống, không riêng cây nào/.test(JS_HT),
+     'người đọc tưởng màn hình quên hỏi cây');
+
+// ============================================================
+// PHẦN K — b110c: hai chữ ký không bỏ được (lỗ hổng 10/09/2026)
+// ============================================================
+//
+// Chủ dự án báo: *"mời tài khoản khach@io.vn vào làm thành viên, sau đó vào
+// kiểm duyệt thêm được người này luôn và có thể đổi quyền cho tài khoản này
+// mà không đợi khach@io.vn đồng ý."*
+//
+// Tái hiện được, bốn cửa: `duyet_thanh_vien` · `doi_vai_thanh_vien` ·
+// `gan_nguoi_cho_thanh_vien` · `dat_tin_cay_thanh_vien`. Không cửa nào hỏi
+// dòng mình đang ghi có phải một LỜI MỜI CHƯA NHẬN hay không.
+//
+// ⚠ Phép đo thật là `ban-thu-sql/do-b110c.mjs` (48 phép, chạy trên Postgres
+//   thật). Phần này chỉ gác **văn bản** — nó bắt được ngày ai đó dán đè một
+//   bản `13` cũ lên và mất hàng rào, thứ mà phép đo kia không chạy hằng ngày.
+console.log('\nPHẦN K — hai chữ ký (b110c)');
+
+kiem('`18-hai-chu-ky.sql` có hàm la_loi_moi_cho_nhan()',
+     /create\s+or\s+replace\s+function\s+public\.la_loi_moi_cho_nhan/i.test(SQL_18),
+     'thiếu hàm — bốn cửa không có gì để hỏi');
+
+// ⚠ Phân biệt bằng `moi_boi`, KHÔNG bằng `moi_vai`: một lời mời mang vai `xem`
+//   trông y hệt một đơn xin vào nếu chỉ nhìn cột vai.
+kiem('hàm ấy phân biệt bằng moi_boi, không bằng moi_vai',
+     /moi_boi is not null/.test(thanHamSql(SQL_18, 'la_loi_moi_cho_nhan') || ''),
+     'phân biệt sai cột — lời mời vẫn lọt');
+
+for (const ten of ['duyet_thanh_vien', 'doi_vai_thanh_vien',
+                   'gan_nguoi_cho_thanh_vien', 'dat_tin_cay_thanh_vien']) {
+  kiem('cửa `' + ten + '()` hỏi la_loi_moi_cho_nhan()',
+       /la_loi_moi_cho_nhan/.test(thanHamSql(SQL_18, ten) || ''),
+       'cửa này còn ghi được vào một lời mời chưa ai nhận');
+}
+
+// ⚠ LỚP HAI. Kể cả khi có ngày ai đó viết cửa thứ năm mà quên lớp một, một
+//   dòng `approved=false` có `moi_boi` vẫn không được mở cây.
+kiem('LỚP HAI · la_thanh_vien() thu hẹp đường tắt theo vai',
+     /moi_boi is null/.test(thanHamSql(SQL_18, 'la_thanh_vien') || ''),
+     'đường tắt còn nguyên — đặt role là mở cây ngay');
+
+// ⚠⚠ VÀ ĐƯỜNG SAO LƯU PHẢI CÒN. b102 sửa gọn một dòng ở hàm này và bản sao
+//    lưu đêm ra file RỖNG, không báo lỗi.
+kiem('⚠ nhưng VẪN giữ đường tắt cho sao_luu — không vá quá tay',
+     /sao_luu/.test(thanHamSql(SQL_18, 'la_thanh_vien') || ''),
+     'sao lưu đêm sẽ ra file rỗng — đúng lỗi b102');
+
+kiem('go_thanh_vien() KHÔNG bị chặn — rút lời mời vẫn phải được',
+     !/la_loi_moi_cho_nhan/.test(thanHamSql(SQL_18, 'go_thanh_vien') || ''),
+     'chặn nhầm chiều lùi: một lời mời gửi nhầm thành thứ không gỡ được');
+
+// — Hai hàm ĐỌC: màn hình phải phân biệt được, không chỉ máy chủ —
+
+kiem('ds_thanh_vien() trả moi_luc để màn hình tách hai trạng thái',
+     /moi_luc\s+timestamptz/.test(SQL_18),
+     'màn hình lại vẽ nút Xét đơn lên một dòng lời mời');
+
+kiem('ds_cho_duyet() thôi đếm lời mời',
+     /moi_boi is null/.test(thanHamSql(SQL_18, 'ds_cho_duyet') || ''),
+     'con số trên thanh điều hướng nói "có đơn phải duyệt" khi không có');
+
+// ⚠ Hai hàm ấy bị `drop` (đổi danh sách cột / bỏ `default`), nên `drop` xoá cả
+//   quyền gọi. Quên cấp lại là khu Tài khoản đọc ra mảng rỗng — một lời nói
+//   dối trông y hệt sự thật.
+kiem('hai hàm bị drop được cấp lại quyền gọi',
+     coCapQuyen(SQL_18, 'ds_thanh_vien') && coCapQuyen(SQL_18, 'ds_cho_duyet'),
+     'drop xoá grant mà không ai cấp lại');
+
+// ⚠ Chỗ này KHÔNG thuộc lỗ hổng, tìm ra lúc đang vá nó: `08` định nghĩa
+//   `ds_cho_duyet()` bản CŨ, đoán cây bằng `limit 1` không `order by` — đúng
+//   Hỏng 3 của `THIET-KE-NHIEU-CAY.md` mục 8. Dán lại `08` là mở lại.
+kiem('⚠ `18` chốt lại Hỏng 3 — ds_cho_duyet() thôi đoán cây bằng limit 1',
+     !/trees limit 1/.test(thanHamSql(SQL_18, 'ds_cho_duyet') || ''),
+     'dán lại `08` sẽ duyệt nhầm hàng chờ của cây khác, im lặng');
+
+// — Màn hình —
+
+kiem('khu Tài khoản có hàm trangThaiDong() — một chỗ trả lời ba trạng thái',
+     /export function trangThaiDong/.test(JS_TK),
+     'hai chỗ tự đoán trạng thái là hai chỗ để lệch nhau');
+
+kiem('và nó phân biệt bằng moiLuc',
+     /return t\.moiLuc \? 'duocmoi' : 'donxin'/.test(boGhiChuJs(JS_TK)),
+     'phân biệt bằng người mời thì lời mời mồ côi thành đơn xin vào');
+
+kiem('dòng LỜI MỜI khoá sẵn nút mở bảng việc',
+     /khoaMo\s*=[^;]*trangThai === 'duocmoi'/.test(boGhiChuJs(JS_TK)),
+     'còn mời người ta bấm một thứ chắc chắn bị từ chối');
+
+kiem('và nói ra lý do ngay trên nút',
+     /Chờ họ bấm Nhận/.test(JS_TK),
+     'khoá mà không nói vì sao');
+
+kiem('cột Vai trò hiện vai SẼ nhận, không hiện `xem`',
+     /vaiHien\s*=\s*trangThaiDong\(t\) === 'duocmoi'/.test(boGhiChuJs(JS_TK)),
+     'người quản trị đọc "Khách" rồi đi đổi vai — đúng đường vào lỗ hổng');
+
+kiem('con số tấm lọc đếm ĐƠN XIN VÀO, không đếm lời mời',
+     /soDonXin\s*=\s*ds\.filter\(\(t\) => trangThaiDong\(t\) === 'donxin'\)/
+       .test(boGhiChuJs(JS_TK)),
+     'hai con số trên màn hình lệch nhau');
+
+kiem('sb.js đọc moiLuc · moiVai từ ds_thanh_vien()',
+     /moiLuc: r\.moi_luc/.test(JS_SB) && /moiVai: r\.moi_vai/.test(JS_SB),
+     'cầu nối nuốt mất hai cột — màn hình lại mù');
+
+// ============================================================
 // PHẦN G — KIỂM CHỨNG NGƯỢC: bẻ gãy mã rồi xem bài kiểm có bắt được không
 // ============================================================
 console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
@@ -872,6 +1120,64 @@ console.log('\nPHẦN G — kiểm chứng ngược (bẻ gãy có chủ ý)');
        'không bắt được — phép ở PHẦN I vô dụng');
 }
 
+
+// G14 — bỏ cửa thứ BẢY khỏi `dat_duoc_tao_cay()`. Không có phép này thì Quản
+// trị hệ thống tự bật cờ cho mình được — chính lỗ hổng b102 đã bắt được một
+// lần, ở một cột khác.
+{
+  const hong14 = SQL_17.replace(/la_chinh_minh/g, 'la_khach_la');
+  kiem('bắt được việc bỏ cửa thứ bảy khỏi dat_duoc_tao_cay()',
+       !/la_chinh_minh/.test(thanHamSql(hong14, 'dat_duoc_tao_cay') || ''),
+       'không bắt được — phép ở PHẦN J vô dụng');
+}
+
+// G15 — quay lại truyền `treeId` trần vào bảng việc. Đây là chỗ hỏng CÂM nhất
+// của b110b: mã vẫn chạy, bảng vẫn mở, chỉ là nó thôi gọi tên cây — và với
+// nhiều cây thì người bấm không biết mình đang đổi quyền ở đâu.
+{
+  const hong15 = JS_TK.replace(/veBangViec\(t, cay,/, 'veBangViec(t, cay.treeId,');
+  kiem('bắt được lời gọi truyền lại uuid trần',
+       /(veBangViec|veXetDon)\s*\([^)]*\.treeId\s*,/.test(boGhiChuJs(hong15)),
+       'không bắt được — phép ở PHẦN J vô dụng');
+}
+
+// G16 — ô chọn gia phả ở form Mời quay lại chọn sẵn cây đầu danh sách. Cũng
+// là hỏng câm: lời mời vẫn gửi được, chỉ là gửi vào một cây không ai chọn.
+{
+  const hong16 = JS_HT.replace(/chonCay\.value = '';/, '');
+  kiem('bắt được việc form Mời chọn sẵn cây đầu danh sách',
+       !/chonCay\.value\s*=\s*''/.test(hong16),
+       'không bắt được — phép ở PHẦN J vô dụng');
+}
+
+
+// G17 — bỏ cửa lời mời khỏi một trong bốn cửa. Đây là chỗ hỏng CÂM nhất của
+// b110c: mã vẫn chạy, nút vẫn bấm được, chỉ là người chưa đồng ý đã vào cây.
+{
+  const than = thanHamSql(SQL_18, 'doi_vai_thanh_vien') || '';
+  const hong17 = SQL_18.replace(than, than.replace(/la_loi_moi_cho_nhan/g, 'la_chinh_minh'));
+  kiem('bắt được việc bỏ cửa lời mời khỏi doi_vai_thanh_vien()',
+       !/la_loi_moi_cho_nhan/.test(thanHamSql(hong17, 'doi_vai_thanh_vien') || ''),
+       'không bắt được — phép ở PHẦN K vô dụng');
+}
+
+// G18 — vá quá tay: bỏ luôn `sao_luu` khỏi đường tắt của `la_thanh_vien()`.
+// Đây đúng lỗi b102, và nó không báo gì cả — bản sao lưu đêm chỉ ra file rỗng.
+{
+  const than = thanHamSql(SQL_18, 'la_thanh_vien') || '';
+  const hong18 = SQL_18.replace(than, than.replace(/'sao_luu'/g, "'khong_co_vai_nay'"));
+  kiem('bắt được việc vá quá tay, gạt sao_luu khỏi đường tắt',
+       !/sao_luu/.test(thanHamSql(hong18, 'la_thanh_vien') || ''),
+       'không bắt được — sao lưu đêm hỏng mà bài kiểm vẫn xanh');
+}
+
+// G19 — màn hình quay lại vẽ nút Xét đơn lên dòng lời mời.
+{
+  const hong19 = JS_TK.replace(/\|\| trangThai === 'duocmoi'/, '');
+  kiem('bắt được việc mở lại nút trên dòng lời mời',
+       !/khoaMo\s*=[^;]*trangThai === 'duocmoi'/.test(boGhiChuJs(hong19)),
+       'không bắt được — phép ở PHẦN K vô dụng');
+}
 // ------------------------------------------------------------
 console.log('\n' + (hong === 0 ? 'TẤT CẢ ĐẠT' : 'CÓ PHÉP HỎNG') +
             ' — ' + dat + ' đạt, ' + hong + ' hỏng.');

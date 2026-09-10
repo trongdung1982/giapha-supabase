@@ -1,6 +1,6 @@
 # THIẾT KẾ — Trang Quản trị (`QuanTri.html`)
 
-*Cập nhật 09/09/2026 (b109) · Chốt trước khi viết dòng mã đầu tiên*
+*Cập nhật 09/09/2026 (b110b) · Chốt trước khi viết dòng mã đầu tiên*
 
 > **Tên file cố định, không có `_Vxx`** — lịch sử để git giữ.
 >
@@ -162,6 +162,17 @@ tô đậm cái đang chọn. Dùng lại đúng ngôn ngữ hình ấy.
 
 **Ba tấm lọc, dùng lại `veThanhLoc()`:** `Đang chờ duyệt` · `Đã duyệt` · `Tất cả`.
 
+⚠⚠ **BA TRẠNG THÁI, KHÔNG PHẢI HAI — sửa 10/09/2026 (b110c).** Một dòng chưa
+duyệt có thể là **đơn xin vào** (chờ NGƯỜI QUẢN TRỊ bấm) hoặc **lời mời** (chờ
+CHÍNH NGƯỜI ẤY bấm Nhận). Bản trước gộp cả hai thành chữ *"Đang chờ"* kèm nút
+*Xét đơn*, và bấm nút ấy trên một lời mời là **đưa người ta vào cây khi họ chưa
+đồng ý** — lỗ hổng chủ dự án bắt được, xem `THIET-KE-NHIEU-CAY.md` mục **11.8**.
+
+Nay: dòng lời mời mang huy hiệu *Được mời — chờ họ bấm Nhận*, **không có nút
+nào**, và cột Vai trò hiện vai họ **sẽ** nhận (`moi_vai`) chứ không phải `xem`.
+Con số trên tấm lọc *Đang chờ* đếm **đơn xin vào**, không đếm lời mời — nó nói
+*"còn bao nhiêu việc BẠN phải bấm"*, đúng luật 1 của mục 3.
+
 ⚠ **Gộp "Đơn chờ duyệt" vào đây, không làm khu riêng.** Cả hai đọc cùng một
 bảng `tree_members`; khác nhau đúng một cột `approved`. Hai màn hình cho một
 bảng là hai chỗ để lệch nhau.
@@ -192,8 +203,9 @@ thấy tấm này, và hàng rào nằm trong chính câu truy vấn của
 |---|---|
 | **Mã ở đâu** | `js/pages/quan-tri/khu-tai-khoan-he-thong.js` — **file riêng**, không viết thêm vào `khu-thanh-vien.js`. Hai chế độ, hai câu hỏi, hai bảng khác cột |
 | **Nối bằng gì** | `khu-thanh-vien.js` nạp nó bằng `import()` **động**; nó `import` ngược lại để dùng năm việc của `13`. Tĩnh cả hai chiều là **vòng import**, và vòng import trong ES Modules gốc không ném lỗi lúc nạp — nó để một hàm thành `undefined`, chỉ vỡ lúc ai đó bấm đúng nút ấy |
-| **Cột** | Tài khoản *(+ huy hiệu QTHT / Bạn)* · Mã tài khoản · Số cây *(kèm dòng nhỏ "n chờ · n mời")* · Xác nhận email · Đăng ký · Đăng nhập gần nhất |
-| **Bảng sâu, bốn việc** | ① bảng các cây + năm việc của `13` theo từng dòng *(hoặc Duyệt/Từ chối nếu là đơn đang chờ)* · ② mời thẳng vào một cây · ③ bật/tắt cờ Quản trị hệ thống · ④ xoá hẳn tài khoản, gõ lại email |
+| **Cột** | Tài khoản *(+ huy hiệu QTHT / Bạn)* · Mã tài khoản · Vai trò · **Tạo gia phả** *(ô tích, b110b)* · Số cây *(kèm dòng nhỏ "n chờ · n mời")* · Xác nhận email · Đăng ký · Đăng nhập gần nhất |
+| **Bảng sâu, năm việc** | ① họ tên · ② bật/tắt cờ Quản trị hệ thống · ③ **ô tích Quyền dựng gia phả** *(b110b)* · ④ bảng các cây + năm việc của `13` theo từng dòng *(hoặc Duyệt/Từ chối nếu là đơn đang chờ)* · ⑤ mời thẳng vào một cây · ⑥ xoá hẳn tài khoản, gõ lại email |
+| **⚠ Hai việc KHÔNG hỏi cây** | Cờ Quản trị hệ thống và ô tích Quyền dựng gia phả là cờ ở tầng **tài khoản** — chúng đứng cạnh nhau, TRƯỚC mọi việc theo cây, và nhãn của chúng tự khai *"cả hệ thống, không chọn cây"*. Mọi việc còn lại phải gọi tên cây, xem mục 5a |
 | **Khoá trên dòng của chính mình** | Ba việc: cờ QTHT · mời · xoá. Cộng nút mở năm việc trong bảng cây. **Khoá sẵn kèm lý do, không mở ra rồi mới giải thích** |
 | **⚠ Lời mời không có nút** | Dòng *"được mời"* không có thao tác nào — nhận hộ người khác là bỏ mất chữ ký thứ hai |
 
@@ -290,14 +302,48 @@ khôi phục được. Khu này ban đầu chỉ **hiện trạng thái**, và n
 | Khu 2 · gắn / đổi mã người | ✓ | ✗ | ✗ | ✗ |
 | Khu 2 · bật / tắt `tin_cay` | ✓ | ✗ | ✗ | ✗ |
 | Khu 2 · duyệt / từ chối đơn vào họ | ✓ | ✗ | ✗ | ✗ |
+| Khu 2 · ⚠ duyệt một **LỜI MỜI** chưa ai nhận | ✗ | ✗ | ✗ | ✗ |
 | Khu 2 · gỡ thành viên | ✓ | ✗ | ✗ | ✗ |
 | Khu 3 · xem hàng chờ | ✓ | ✓ | ✗ | ✗ |
 | Khu 3 · xem chi tiết trước/sau | ✓ | ✓ | ✗ | ✗ |
 | Khu 3 · duyệt · từ chối và hoàn tác | ✓ | ✓ | ✗ | ✗ |
 | Khu 4 · xem trạng thái sao lưu | ✓ | ✗ | ✗ | ✗ |
+| Khu 2 · bật/tắt cờ **Quản trị hệ thống** | ✓ | ✗ | ✗ | ✗ |
+| Khu 2 · tích **Quyền dựng gia phả** *(b110b)* | ✓ | ✗ | ✗ | ✗ |
 
 Vai máy `sao_luu` **không dùng giao diện** — nó là script chạy đêm, không có
 người ngồi sau để bấm nút.
+
+## 5a. Luật gọi tên cây — chốt 09/09/2026 (b110b)
+
+> *"khi gán quyền, không nên ngầm định gán quyền cho cây đang hoạt động mà cần
+> luôn luôn xác định người nào, cây nào, quyền gì."* — chủ dự án
+
+**Không màn hình nào của trang này được ngầm định "cây đang mở".** Một người
+có thể dựng nhiều cây, nên câu *"sửa quyền của X"* mà không nói cây nào là một
+câu chưa đủ nghĩa — và với nhiều cây thì nó là đổi quyền nhầm chỗ, im lặng.
+
+Chỗ thi hành luật này **không phải câu chữ mà là chữ ký hàm**:
+
+```
+veBangViec(t, treeId, …)   →   veBangViec(t, cay, …)
+veXetDon  (t, treeId, …)   →   veXetDon  (t, cay, …)
+                                cay = { treeId, ten, maCay }
+```
+
+Chừng nào tham số còn là `treeId` trần thì nơi gọi còn phải tự bịa một cái
+nhãn, và bản 0.7.0 đã bịa đúng như thế (`'Gia phả đang mở'`). Kèm theo:
+
+- mỗi bảng việc mở đầu bằng `dongCay()` — *"Gia phả bị tác động: <tên> · <mã>"*;
+- tiêu đề khung và câu giải thích của mỗi việc gọi đúng tên cây ấy;
+- ba tấm lọc cây có một dòng *"Đang xét quyền trong: …"* dưới dòng danh tính;
+- ô chọn gia phả ở form **Mời** mở ra ở mục trống, nút Gửi khoá tới khi chọn.
+
+**Ngoại lệ, và chỉ có hai** — hai cờ ở tầng tài khoản (mục 4, khu 2). Chúng
+không hỏi cây nào vì câu ấy không có câu trả lời, và nhãn của chúng phải tự
+khai điều đó.
+
+---
 
 ⚠ **Mọi ô trong bảng này là mô tả hành vi máy chủ, KHÔNG phải hàng rào.** App
 hỏi máy chủ chỉ để hiện một câu giải thích tử tế thay vì một cái bảng trống.
@@ -346,6 +392,17 @@ Ba điều file ấy canh, và cả ba đều có phép đo mượn danh nghĩa
 2. **Không `like` một chỗ nào**, chỉ `position()`. Một chữ `%` trong ô gõ mà
    đi vào mẫu `like` là lấy về tám dòng đầu của cả danh bạ.
 3. **Trần số dòng nằm trong hàm**, không ở trình duyệt.
+
+### ✓ ĐÃ CÓ — `luoc-do/17-quyen-tao-cay.sql` (b110b, 09/09/2026)
+
+| Hàm | Tham số | Trả về | Ai gọi được |
+|---|---|---|---|
+| `dat_duoc_tao_cay` | `p_user, p_bat` — ⚠ **KHÔNG có `p_tree`** | `jsonb` | chỉ Quản trị hệ thống, và **không cho tự trỏ vào mình** |
+
+Cờ này là **cửa thứ bảy** của luật *không ai tự đặt quyền cho mình*, và nó ở
+tầng TÀI KHOẢN — `THIET-KE-NHIEU-CAY.md` mục **11.7** kể vì sao nó phải tách
+khỏi vai Quản trị gia phả. Đo: `ban-thu-sql/do-b110b.mjs`, 29 phép, 3 kiểm
+chứng ngược.
 
 ### Cần cho khu 3 và khu 4
 

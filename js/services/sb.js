@@ -5,7 +5,26 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.13.0 · Cập nhật: 09/09/2026 (b110)
+// Phiên bản: 0.15.0 · Cập nhật: 10/09/2026 (b110c)
+//            0.15.0 `dsThanhVien()` đọc thêm `moiLuc` · `moiVai` — hai cột
+//            `ds_thanh_vien()` mới trả về từ `18-hai-chu-ky.sql`. Chúng là
+//            thứ DUY NHẤT phân biệt được *đơn xin vào* với *lời mời chưa
+//            nhận*, và thiếu chúng thì màn hình vẽ nút **Xét đơn** lên một
+//            dòng lời mời — bấm vào là đưa người ta vào cây khi họ chưa đồng
+//            ý. Chủ dự án báo lỗ hổng ấy 10/09/2026.
+//            0.14.0 hai việc, cùng một yêu cầu của chủ dự án 09/09/2026:
+//            ① `datDuocTaoCay()` — cửa thứ BẢY của luật *không ai tự đặt
+//            quyền cho mình* (`17-quyen-tao-cay.sql`). Quyền DỰNG GIA PHẢ là
+//            cờ của TÀI KHOẢN, tách hẳn khỏi vai Quản trị gia phả, và chỉ
+//            Quản trị hệ thống cấp được.
+//            ② `layPhien()` mang thêm **`tenCay` · `maCay`** ở mọi nhánh đọc
+//            được cây. ⚠ Trước bản này chúng chỉ có ở nhánh *được mời*, nên
+//            trang Quản trị **không có cách nào gọi tên cây đang mở** — và
+//            mọi bảng sửa quyền ở đó phải nói "gia phả" trống không. Chủ dự
+//            án chỉ đúng chỗ ấy: *"không nên ngầm định gán quyền cho cây đang
+//            hoạt động mà cần luôn luôn xác định người nào, cây nào, quyền
+//            gì"*. Không tốn thêm vòng mạng — câu đọc `trees` chạy SONG SONG
+//            với câu đọc `user_settings` vốn đã có trong `caiDatCay()`.
 //            0.13.0 năm cửa THÙNG RÁC GIA PHẢ của `16-thung-rac-cay.sql`:
 //            `xinXoaCay()` · `huyXinXoaCay()` · `duyetXoaCay()` ·
 //            `phucHoiCay()` · `donThungRac()`. Và `layDanhSachGiaPha()` đọc
@@ -179,6 +198,10 @@ export async function nguoiDangNhap() {
  *   trangThai?:string, soCay?:number,
  *   tenCay?:string, maCay?:string, moiVai?:string, emailNguoiMoi?:string,
  *   loi:string|null}>}
+ *
+ * ⚠ `tenCay`/`maCay` từ b110b có ở MỌI nhánh đọc được một cây, không riêng
+ *   nhánh *được mời* như trước. Trang Quản trị dựa vào chúng để gọi đúng tên
+ *   cây trong mọi bảng sửa quyền — xem `caiDatCay()`.
  */
 export async function layPhien() {
   const nen = {
@@ -419,18 +442,36 @@ async function cayDauTien(k) {
 }
 
 /**
- * Cài đặt của MỘT người trên MỘT cây. Một lần gọi lấy cả hai giá trị — chúng
- * nằm cùng một dòng, và hỏi hai lần là hai vòng mạng cho cùng một dòng ấy.
+ * Cài đặt của MỘT người trên MỘT cây, **cộng TÊN và MÃ của chính cây ấy**.
+ *
+ * ⚠ Tên cây đi kèm ở đây từ b110b, và lý do không phải "cho tiện": chủ dự án
+ *   chốt 09/09/2026 rằng **mọi màn hình gán quyền phải nói rõ người nào, cây
+ *   nào, quyền gì** — không được ngầm định "cây đang hoạt động". Trước bản
+ *   này `layPhien()` chỉ mang `tenCay` về ở đúng một nhánh (*người được
+ *   mời*), nên trang Quản trị không có đường nào biết tên cây đang mở, và
+ *   `khu-thanh-vien.js` phải viết chuỗi thay thế `'Gia phả đang mở'`.
+ *
+ * ⚠ Hai câu đi SONG SONG, không nối tiếp. Chúng không phụ thuộc nhau, và
+ *   `layPhien()` chạy ở đầu MỌI trang — nối tiếp là cộng thêm một vòng mạng
+ *   vào đúng chỗ đắt nhất.
+ *
+ * ⚠ `tenCay` rỗng là một câu trả lời HỢP LỆ, không phải lỗi: RLS có thể không
+ *   cho người này đọc dòng `trees` (cây trong thùng rác, chẳng hạn). Nơi gọi
+ *   phải chịu được chuỗi rỗng — đừng vẽ chữ "Không rõ", `CLAUDE.md` mục 7.
  */
 async function caiDatCay(k, userId, treeId) {
-  const { data } = await k
-    .from('user_settings')
-    .select('focus_person_id, hien_ngay_gio')
-    .eq('user_id', userId).eq('tree_id', treeId)
-    .maybeSingle();
+  const [{ data }, { data: cay }] = await Promise.all([
+    k.from('user_settings')
+      .select('focus_person_id, hien_ngay_gio')
+      .eq('user_id', userId).eq('tree_id', treeId)
+      .maybeSingle(),
+    k.from('trees').select('name, tree_code').eq('id', treeId).maybeSingle(),
+  ]);
   return {
     nguoiTrungTamMacDinh: (data && data.focus_person_id) || null,
     hienNgayGio: !!(data && data.hien_ngay_gio),
+    tenCay: (cay && cay.name) || '',
+    maCay: (cay && cay.tree_code) || '',
   };
 }
 
@@ -1202,6 +1243,17 @@ export async function dsThanhVien(treeId) {
     xinLuc: r.xin_luc || null,
     loiNhan: r.loi_nhan || '',
     thamGia: r.added_at || null,
+    // ⚠ HAI CỘT NÀY LÀ THỨ PHÂN BIỆT **ĐƠN XIN VÀO** VỚI **LỜI MỜI CHƯA
+    //   NHẬN** — thêm ở b110c, cùng lúc với bản vá `18-hai-chu-ky.sql`. Trước
+    //   đó `ds_thanh_vien()` không trả chúng, nên màn hình vẽ chữ "Đang chờ"
+    //   cộng một nút "Xét đơn" lên cả hai, và bấm vào là đưa người ta vào cây
+    //   mà họ chưa đồng ý.
+    //
+    // ⚠ Phân biệt bằng `moiLuc`, KHÔNG bằng người mời: `moi_boi` khai
+    //   `on delete set null` (`14` mục 1), nên xoá tài khoản người mời sẽ biến
+    //   một lời mời thành thứ trông y hệt đơn xin vào.
+    moiLuc: r.moi_luc || null,
+    moiVai: r.moi_vai || '',
   }));
   return { ok: true, loi: null, ds };
 }
@@ -1415,6 +1467,39 @@ export async function datQuanTriHeThong(userId, bat) {
   if (error) return { ok: false, loi: cauLoi(error) };
   if (!data || data.ok !== true) {
     return { ok: false, loi: noiTuChoi(data, 'Không đặt được cờ Quản trị hệ thống.') };
+  }
+  return { ok: true, loi: null, bat: Boolean(data.bat) };
+}
+
+/**
+ * Bật/tắt cờ `tai_khoan.duoc_tao_cay` — **cửa thứ BẢY** của luật *không ai tự
+ * đặt quyền cho mình* (`luoc-do/17-quyen-tao-cay.sql`).
+ *
+ * ⚠ **KHÔNG có `treeId`, và đó là cả điểm của hàm.** Mọi cửa đổi quyền khác
+ *   trong `sb.js` bắt truyền `treeId` tường minh, vì chúng đổi quyền TRONG
+ *   một cây. Hai cửa duy nhất không có tham số ấy là hàm này và
+ *   `datQuanTriHeThong()` — cả hai đặt cờ ở tầng TÀI KHOẢN, không thuộc cây
+ *   nào. Thêm `treeId` vào đây là nói dối về phạm vi: cờ bật một lần thì
+ *   người ấy dựng được cây, chấm hết, không riêng cây nào.
+ *
+ * ⚠ Quyền này **tách hẳn khỏi vai Quản trị gia phả**. Người được phong
+ *   `quan_tri` của một cây, và cả chủ cây, đều KHÔNG vì thế mà dựng được cây
+ *   mới — đo bằng `kiem-thu/ban-thu-sql/do-b110b.mjs` HR8 và HR9.
+ *
+ * ⚠ Khác `datQuanTriHeThong()` một chỗ có chủ ý: **không có phép "không tắt
+ *   được người cuối cùng"**. Tắt hết cờ này không khoá cửa nào, vì Quản trị
+ *   hệ thống vẫn dựng được cây qua nhánh `la_quan_tri_he_thong()` của
+ *   `duoc_tao_cay()`.
+ */
+export async function datDuocTaoCay(userId, bat) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('dat_duoc_tao_cay', {
+    p_user: userId, p_bat: !!bat,
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  if (!data || data.ok !== true) {
+    return { ok: false, loi: noiTuChoi(data, 'Không đặt được quyền dựng gia phả.') };
   }
   return { ok: true, loi: null, bat: Boolean(data.bat) };
 }

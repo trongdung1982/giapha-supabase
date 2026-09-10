@@ -5,7 +5,14 @@
 //            người lạ thấy tên", và ô đặt cây mặc định của hệ thống.
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: services/sb, config, utils/id, quan-tri/o-goi-y
-// Phiên bản: 0.7.0 · Cập nhật: 09/09/2026 (b110)
+// Phiên bản: 0.7.1 · Cập nhật: 09/09/2026 (b110b)
+//            0.7.1 chỉ đổi CHỮ trong hộp *Dựng gia phả mới*: nói rõ quyền
+//            dựng cây là cờ riêng của tài khoản (`tai_khoan.duoc_tao_cay`,
+//            `luoc-do/17-quyen-tao-cay.sql`), **tách hẳn** khỏi vai Quản trị
+//            gia phả. Câu cũ — *"bạn là người quản trị của nó"* — đọc lên
+//            nghe như hễ quản trị một cây là dựng được cây mới, đúng chỗ chủ
+//            dự án chỉ ra 09/09/2026. Không đổi một dòng LỆNH nào: nút vẫn
+//            hiện cho mọi người, hàng rào vẫn ở máy chủ (`veHopTaoCay()`).
 //            0.7.0 THÙNG RÁC GIA PHẢ. Cột *Xoá* trong bảng (xin xoá · rút
 //            đơn · duyệt), và khối **Thùng rác** riêng bên dưới với ô tích
 //            chọn hàng loạt. ⚠ Cây đã vào thùng rác **rời khỏi bảng chính**
@@ -1153,10 +1160,21 @@ function veHopTaoCay(napLai) {
   tua.textContent = 'Dựng gia phả mới';
   tua.style.cssText = 'font-size:19px;font-weight:600';
 
+  // ⚠ Câu thứ hai thêm ở b110b, và nó sửa một chỗ dễ hiểu ngược. Bản trước chỉ
+  //   nói *"bạn là người quản trị của nó"* — đọc lên nghe như hễ ai quản trị
+  //   một gia phả là dựng được gia phả mới. Ngược hẳn: quyền dựng cây là một
+  //   CỜ RIÊNG của tài khoản (`tai_khoan.duoc_tao_cay`), tách hẳn khỏi vai
+  //   Quản trị gia phả, và chỉ Quản trị hệ thống cấp. Chủ dự án chốt
+  //   09/09/2026.
+  //
+  // ⚠ Nói ra KHÔNG phải là hỏi trước rồi giấu nút — nút vẫn hiện cho mọi
+  //   người, hàng rào vẫn ở máy chủ. Xem khối chú thích trên hàm này.
   const dan = document.createElement('div');
   dan.textContent =
-    'Gia phả mới dựng ra sẽ rỗng, và bạn là người quản trị của nó. ' +
-    'Thêm người đầu tiên ở màn hình sơ đồ.';
+    'Gia phả mới dựng ra sẽ rỗng, và bạn là chủ kiêm người quản trị của nó. ' +
+    'Thêm người đầu tiên ở màn hình sơ đồ. Dựng gia phả là một ' +
+    'quyền riêng của tài khoản, do Quản trị hệ thống cấp — quản trị một gia ' +
+    'phả có sẵn không đồng nghĩa với dựng được gia phả mới.';
   dan.style.cssText =
     'font-size:13px;line-height:1.55;color:#8a8078;margin:6px 0 14px';
 
