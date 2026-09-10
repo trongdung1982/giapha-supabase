@@ -66,7 +66,7 @@ thường, không phải thiếu sót.
 | 110c | 10/09/2026 | Vá lỗ hổng: bốn cửa ghi được vào lời mời chưa ai nhận, đưa người vào cây hộ họ | `b110c-hai-chu-ky.md` |
 | 110d | 10/09/2026 | Sau khi dán `18`: 2 phép tự kiểm của nó tự sai (báo nhầm cả hai chiều), tìm và dọn 1 vết thật | `b110d-vet-phep-kiem-sai.md` |
 | 111 | 10/09/2026 | Bảng phẳng TRƯỚC/SAU khi mở rộng dòng chờ duyệt; đã dán SQL, chưa bấm thử thật | `b111-bang-phang-truoc-sau.md` |
-| 111b | 10/09/2026 | Ô chọn cây thay chỗ khoá cứng; cột Người được gắn bấm được cả hai tấm; `20` chưa dán | `b111b-nguoi-duoc-gan-va-o-chon-cay.md` |
+| 111b | 10/09/2026 | Ô chọn cây thay chỗ khoá cứng; cột Người được gắn bấm được cả hai tấm; `20` đã dán | `b111b-nguoi-duoc-gan-va-o-chon-cay.md` |
 
 *Cột "Nội dung một dòng": **một câu, tối đa 110 ký tự**. Nói bước ấy làm được
 cái gì, không nói vì sao. Đây là dòng để người đọc quyết định có mở file bước

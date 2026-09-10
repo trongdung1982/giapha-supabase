@@ -1,8 +1,8 @@
 # KẾ HOẠCH — nhánh Supabase
 
-*Cập nhật 10/09/2026 · Bước gần nhất: **b111b** (mã xong, ⏳ CHỜ DÁN
-`luoc-do/20-nguoi-duoc-gan.sql`, chưa bấm thử) · Việc kế tiếp: **b111c** —
-đơn ĐỀ XUẤT gắn mã người cho chính mình, người khác duyệt; xem bảng bên dưới*
+*Cập nhật 10/09/2026 17:03 · Bước gần nhất: **b111b** (mã xong, **`20` đã
+dán**, chưa bấm thử điểm dừng) · Việc kế tiếp: **b111c** — đơn ĐỀ XUẤT gắn mã
+người cho chính mình, người khác duyệt; xem bảng bên dưới*
 
 > ✓ **b109 XONG, chạy thật.** Tấm lọc *Toàn hệ thống* + bảng sâu + bốn việc
 > — chủ dự án đã bấm thử trên máy chủ thật, đạt: đúng số cây, cả bốn việc
@@ -983,7 +983,7 @@ nguyên văn:
 | **Điểm dừng** | Chủ dự án tự gắn mã người cho MỘT TÀI KHOẢN KHÁC (không phải tài khoản của chính mình — luật cũ vẫn giữ) từ cả hai tấm, và đổi được cây đang xét ở dòng "Đang xét quyền trong" mà không cần rời trang |
 | **⚠ Không phải đường thử b111** | Việc này KHÔNG mở khoá "tự gắn mã người cho chính mình" — luật ấy giữ nguyên. Muốn thử b111 (kiểm duyệt) thì vẫn cần MỘT TÀI KHOẢN KHÁC đóng vai Thành viên thường, xem ghi chú ở mục "Đang ở đâu" phía trên |
 
-> ✓ **10/09/2026 — b111b XONG PHẦN MÃ. ⏳ CHỜ DÁN `20`, CHƯA BẤM THỬ THẬT.**
+> ✓ **10/09/2026 — b111b XONG PHẦN MÃ, `20` ĐÃ DÁN. CHƯA BẤM THỬ ĐIỂM DỪNG.**
 >
 > Ba việc chủ dự án đặt đều xong, cộng hai chỗ hỏng phép đo dò ra dọc đường:
 >
@@ -1007,9 +1007,13 @@ nguyên văn:
 > thật. **Bài học chung: file nào dựng lại một hàm đã có thì phải chép theo cả
 > dòng `grant`.**
 >
-> ⚠ **`20` cũng mang theo bản 0.2.0 của `15`** (cột `vai_cao_nhat`) — máy chủ
-> thật chưa kịp dán `15` 0.2.0, nên cột *Vai trò* của tấm *Toàn hệ thống* đang
-> trống trơn ở đó. Dán `20` là có luôn, không phải dán hai lần.
+> ✓ **`20` cũng mang theo bản 0.2.0 của `15`** (cột `vai_cao_nhat`), nên việc
+> dán nó **trả nốt món nợ ấy** — cột *Vai trò* của tấm *Toàn hệ thống* thôi
+> trống trơn trên máy chủ thật. **Không phải dán `15` nữa.**
+>
+> ⚠ Từ nay `20` là **bản đứng CUỐI** của `ds_tai_khoan_he_thong()`. Dán lại
+> `14` hay `15` thì phải dán lại `20` ngay sau, không thì mất cả hai cột mới
+> lẫn dòng `revoke` — chuỗi đầy đủ ở `CHI-DAN.md` mục 3.
 >
 > ⚠⚠ **BỘ ẢNH ĐÃ TRẮNG TỪ b111 MÀ KHÔNG AI BIẾT.** `kiem-thu/sb-gia.mjs`
 > thiếu cửa `chiTietKiemDuyet()` mà b111 thêm vào `sb.js`; một `import` tên
@@ -1019,8 +1023,8 @@ nguyên văn:
 > `trang-quan-tri-gia.html` nay có khối bắt lỗi in ra chữ đỏ ngay đầu trang,
 > nên lần sau ảnh chụp sẽ NÓI nó hỏng vì sao thay vì trắng bóc.
 >
-> ⏳ **Việc của chủ dự án:** dán `luoc-do/20-nguoi-duoc-gan.sql` vào **cả hai**
-> Supabase, đọc bảng tự kiểm 10 mục, rồi bấm thử điểm dừng ở trên.
+> ✓ **Đã dán ~17:00 10/09/2026, bảng tự kiểm 10 mục ĐẠT hết.**
+> ⏳ Còn lại: **bấm thử điểm dừng** ở bảng b111b bên dưới.
 
 ### b111c — Đơn ĐỀ XUẤT gắn mã người cho chính mình
 
@@ -1497,21 +1501,23 @@ vợ chồng không sửa nổi hồ sơ của nhau**. Luật trực hệ cho tr
 
 ## Còn treo — không chặn gì, nhưng đừng quên
 
-*Đếm ngày 10/09/2026 (b110c): bảng có **36 dòng**, trong đó **12 đã đóng**
-(gạch ngang, giữ làm chứng) — còn **24 việc treo thật**. Đếm lại bằng số dòng
+*Đếm ngày 10/09/2026 (b111b): bảng có **38 dòng**, trong đó **16 đã đóng**
+(gạch ngang, giữ làm chứng) — còn **22 việc treo thật**. Đếm lại bằng số dòng
 mỗi lần `/ket-thuc`, đừng chép con số của lần trước.*
 
 | Việc | Ghi ở đâu |
 |---|---|
-| ⚠⚠ **CHẶN — `18-hai-chu-ky.sql` chưa dán.** Lỗ hổng hai chữ ký đang MỞ trên máy chủ thật: mời ai vào cây rồi tự duyệt và tự đổi vai hộ họ. Dán xong còn phải **dọn vết** (mục 9 cuối file `18`) vì bản vá không tự sửa dòng đã lọt qua | `nhat-ky/b110c-hai-chu-ky.md` |
-| ⚠ **HỎI CHỦ DỰ ÁN: `15-tim-kiem.sql` bản 0.2.0 đã dán chưa?** Hai tài liệu nói ngược nhau — bảng này ghi *"đã dán cả hai, 09/09"*, còn `CHI-DAN.md` ghi *"CHƯA DÁN"*. **Không tự chọn một bên**: đoán sai theo chiều "đã dán" là để cột `vai_cao_nhat` vắng mặt mà không ai biết; đoán sai theo chiều kia là dán thừa một file `drop function`. Hỏi rồi sửa chỗ sai, và ghi một dòng Đính chính | `CHI-DAN.md` · bảng này |
+| ⚠ **MỘT EMAIL THỨ HAI là thứ đang chặn BA điểm dừng cùng lúc** — b111 (dựng một hàng chờ kiểm duyệt thật), b111b (gắn mã người cho tài khoản khác), và b111c (luật hai chữ ký cần **hai** Quản trị hệ thống mới bấm thử hết đường duyệt). Một việc mở khoá cả ba, nên làm nó trước khi bắt đầu b111c | `nhat-ky/b111b-*.md` mục *Còn treo* |
+| ⚠ **Bảng tấm *Toàn hệ thống* nay CHÍN cột** (b111b thêm *Người được gắn*), và ở 1280px nó tràn khỏi khu — câu nhắc *"kéo ngang"* có bật, và nó **đo `scrollWidth` thật** nên không nói dối. Chưa vỡ, nhưng cột thứ mười là cột làm vỡ: lần sau muốn thêm cột thì phải bỏ một cột, hoặc xếp chồng hai dòng trong một ô như cột *Tài khoản* đã làm | `THIET-KE-QUAN-TRI.md` khu 2 |
+| ~~**CHẶN — `18-hai-chu-ky.sql` chưa dán**~~ — ✓ **đã dán cả hai Supabase, đã dọn vết** (b110c → b110d, 10/09/2026). Một vết thật tìm thấy trên máy chủ (`khach@io.vn` sửa được ở vai `sua` trên hai cây dù chưa bấm Nhận) và đã dọn sạch | `nhat-ky/b110d-vet-phep-kiem-sai.md` |
+| ~~**HỎI CHỦ DỰ ÁN: `15-tim-kiem.sql` bản 0.2.0 đã dán chưa?**~~ — ✓ **CÂU HỎI ĐÃ TAN, không cần hỏi nữa** (b111b, 10/09/2026). `20-nguoi-duoc-gan.sql` dựng lại `ds_tai_khoan_he_thong()` **mang theo cả cột `vai_cao_nhat`**, và nó đã dán — nên dù `15` 0.2.0 từng dán hay chưa thì máy chủ nay đều có cột ấy. ⚠ Giữ lại làm chứng vì cách nó tan **không phải cách nó lẽ ra được giải**: hai tài liệu nói ngược nhau suốt một ngày, và thứ cứu là một file thứ ba tình cờ chồng lên. Bài học đã áp: `CHI-DAN.md` thôi giữ bản thứ hai của trạng thái dán, chỉ trỏ về `KE-HOACH.md` | `CHI-DAN.md` · bảng này |
 | ~~`15-tim-kiem.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase, bản 0.2.0, tự kiểm ĐẠT** (09/09/2026). ⚠ Vẫn giữ luật: nó **dán đè ba hàm đọc** của `13`/`14`, nên **dán lại `13` hoặc `14` thì bắt buộc dán lại `15`** | `nhat-ky/b109b-o-goi-y.md` |
 | ~~`14-loi-moi.sql` chưa dán~~ — ✓ **đã dán cả hai Supabase**, b108 chạy thật 09/09 | `nhat-ky/b107-moi-vao-gia-pha.md` |
 | ⚠ **Hai việc của điểm dừng b106 chưa nghiệm thu bằng mắt**: gắn được mã người · đăng nhập bằng vai `sua` xem `pham_vi_sua()` đúng chưa | `nhat-ky/b106-khu-tai-khoan.md` |
 | ⚠ **Ai gọi `don_thung_rac()`** — nút bấm tay hay trigger Apps Script đêm? Chưa hỏi chủ dự án; hỏi ở b110 | `THIET-KE-NHIEU-CAY.md` mục 11.6 |
 | ⚠ **`settings.js` vẫn gọi thứ này là *Quyền*** ở màn hình Cài đặt của mỗi người, trong khi khu Quản trị đã đổi hết sang **Vai trò** (b109c). Chủ dự án chỉ nói tới hai tấm lọc, nên chưa đụng — nhưng chính luật *"hai màn hình gọi một thứ bằng hai tên"* là lý do đổi tên lần này | `nhat-ky/b109c-o-vai-tro.md` |
-| ⚠ **`ds_thanh_vien()` không trả `moi_luc`**, nên ở ba tấm lọc cây **không phân biệt được** *đơn xin vào* với *lời mời chưa nhận* — bảng hai cột ở đó chỉ dám ghi "Đang chờ". Sửa được nhưng phải dán lại SQL, để dồn vào lần dán kế tiếp | `nhat-ky/b109c-o-vai-tro.md` |
-| ⚠⚠ **CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0.** Máy chủ thật chưa có gì; **Staging đang giữ bản 0.1.0 MANG HAI LỖ HỔNG** (leo quyền · sao lưu rỗng) — dán đè lên là vá. Chưa dán thì b103 chưa bắt đầu được | `nhat-ky/b102-tang-quyen-he-thong.md` |
+| ~~`ds_thanh_vien()` không trả `moi_luc`~~ — ✓ **đã trả, từ `18` mục 6b** (b110c, đã dán). Ba tấm lọc cây nay phân biệt đủ ba trạng thái. ⚠ Món nợ này **không tự đóng mà nổ**: đúng chỗ "chưa phân biệt được" ấy là đường vào lỗ hổng hai chữ ký chủ dự án bắt được 10/09 | `nhat-ky/b110c-hai-chu-ky.md` |
+| ~~**CHỦ DỰ ÁN PHẢI DÁN `11-quyen-he-thong.sql` bản 0.2.0**~~ — ✓ **đã dán cả hai Supabase** (b102–b104, xem mục *Đang ở đâu*). Hai lỗ hổng của bản 0.1.0 (leo quyền · sao lưu rỗng) đã vá | `nhat-ky/b102-tang-quyen-he-thong.md` |
 | ⚠ **b103 → b105 của Antigravity vẫn nằm NGOÀI repo**, trong `codex/`, mới chỉ dán lên Staging. Đã soi lướt: `12` và `13` **không thêm luật ghi nào**, nên lỗ hổng loại b102 không lặp ở đó — nhưng chưa rà kỹ, chưa đo | `PHOI-HOP-AI.md` mục *Đề nghị cho Claude Code* |
 | ~~Hai file SQL phân quyền chưa ai dán~~ — ✓ **đã dán 04/09/2026 13:20**, đối chiếu khớp | `HUONG-DAN-PHAN-QUYEN.md` |
 | ~~Chưa có màn hình quản lý thành viên~~ — ✓ **XONG b106 (09/09/2026)**: khu Tài khoản làm cả năm việc, xoá sổ mục 3 của `HUONG-DAN-PHAN-QUYEN.md` | `nhat-ky/b106-khu-tai-khoan.md` |

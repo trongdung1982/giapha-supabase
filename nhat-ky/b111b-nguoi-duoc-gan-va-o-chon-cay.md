@@ -1,6 +1,7 @@
 # b111b — Cột *Người được gắn* bấm được, và ô chọn cây
 
-*10/09/2026 · nhánh Supabase · mã xong, ⏳ chờ dán `20`, chưa bấm thử thật*
+*10/09/2026 17:03 · nhánh Supabase · mã xong, **`20` đã dán cả hai máy chủ**,
+chưa bấm thử điểm dừng*
 
 ---
 
@@ -208,13 +209,26 @@ chúng chỉ hỏi đúng cây đang mở. Nhưng với ô chọn cây thì ản
   Apps Script; `so-sanh.js` chỉ có ở Supabase, đúng chủ ý của b111.
 - 22 ảnh, nhìn bằng mắt.
 
+## Đã dán, và những gì việc dán ấy đóng lại
+
+✓ **10/09/2026 ~17:00 — chủ dự án dán `20-nguoi-duoc-gan.sql`, bảng tự kiểm
+10 mục ĐẠT hết.** Kéo theo ba món nợ đóng cùng lúc:
+
+1. Cột *Người được gắn* ở tấm *Toàn hệ thống* có dữ liệu thật.
+2. **Cửa `anon` của hai hàm `15` dựng lại đã đóng.** Nó hở từ 09/09 tới nay.
+3. **Món nợ `15` 0.2.0 trả xong** — `20` mang theo cột `vai_cao_nhat`, nên
+   cột *Vai trò* của tấm ấy thôi trống trơn trên máy chủ thật. Không phải dán
+   `15` nữa.
+
+⚠ Từ nay `20` là **bản đứng cuối** của `ds_tai_khoan_he_thong()`. Dán lại
+`14` hay `15` là phải dán lại `20` ngay sau — `CHI-DAN.md` mục 3 giữ chuỗi ấy.
+
 ## Còn treo
 
-- ⏳ **Chưa dán `20-nguoi-duoc-gan.sql`** lên hai máy chủ thật. Trước khi dán
-  thì cột *Người được gắn* ở tấm *Toàn hệ thống* hiện dấu gạch cho mọi dòng —
-  không vỡ, chỉ trống.
-- ⏳ **Chưa bấm thử điểm dừng** của b111b, và vẫn chưa bấm thử điểm dừng của
-  b111.
-- `20` mang theo cả bản 0.2.0 của `15` (cột `vai_cao_nhat`), nên dán nó là
-  trả nốt món nợ ấy — cột *Vai trò* của tấm *Toàn hệ thống* đang trống trơn
-  trên máy chủ thật vì `15` 0.2.0 chưa ai dán.
+- ⏳ **Chưa bấm thử điểm dừng của b111b**: tự gắn mã người cho MỘT TÀI KHOẢN
+  KHÁC từ cả hai tấm, và đổi cây ở ô chọn mà không rời trang.
+- ⏳ **Vẫn chưa bấm thử điểm dừng của b111** (bảng phẳng TRƯỚC/SAU). Đường
+  thử không đổi: mời một email thứ hai vào cây, gắn mã người cho tài khoản
+  ấy, rồi đăng nhập bằng nó để Lưu một sửa đổi thật.
+- Cùng một email thứ hai ấy còn cần cho **b111c**: luật hai chữ ký nghĩa là
+  đường *duyệt đề xuất* chỉ bấm thử hết được khi có **hai** Quản trị hệ thống.
