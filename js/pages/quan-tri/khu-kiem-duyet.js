@@ -3,8 +3,10 @@
 // Vai trò  : Khu KIỂM DUYỆT của trang Quản trị — bảng hàng chờ, mỗi dòng
 //            một lần Lưu. Nhận chính thức, hoặc từ chối và hoàn tác.
 // Lớp      : pages — được phép gọi mọi lớp dưới
-// Phụ thuộc: services/sb, pages/dang-nhap, utils/date
-// Phiên bản: 0.2.0 · Cập nhật: 07/09/2026 19:33
+// Phụ thuộc: services/sb, domains/so-sanh, pages/dang-nhap, utils/date
+// Phiên bản: 0.3.0 · Cập nhật: 10/09/2026 (b111) — "Xem chi tiết" mở ra bảng
+//            phẳng TRƯỚC/SAU (`chiTietKiemDuyet()` + `domains/so-sanh.js`),
+//            và khoá sẵn nút Từ chối kèm lý do khi có ai đã sửa tiếp.
 // ============================================================
 //
 // ═══ VÌ SAO NÓ LÀ MỘT TRANG RIÊNG, KHÔNG PHẢI MỘT KHỐI TRONG CÀI ĐẶT ═══
@@ -39,14 +41,23 @@
 // hồ sơ Nguyễn Văn A bằng form nhập liệu"*, *"Thêm người con Nguyễn Thị B vào
 // U0007"*. Cột **Đụng** đếm số bản ghi lần Lưu ấy chạm vào.
 //
-// ⚠ **Chưa có màn hình xem TRƯỚC/SAU từng ô.** Bản đầu cố ý dừng ở đây, đúng
-//   luật "dựng bản gọn nhất trước": `ds_kiem_duyet()` không trả cột `truoc`
-//   (nó nặng — xem `08-kiem-duyet.sql` mục 9), nên xem chi tiết là một vòng
-//   gọi nữa và một màn hình nữa. Đừng mô tả trang này như đã có chỗ soi từng
-//   ô — người duyệt hôm nay đọc câu `note` và tin nó.
+// ═══ b111 — "XEM CHI TIẾT" LÀ MỘT VÒNG GỌI RIÊNG ═══
+//
+// `ds_kiem_duyet()` (mục trên) vẫn KHÔNG trả cột `truoc` — đúng luật cũ,
+// không đổi. Bấm "Xem chi tiết" mới gọi `chiTietKiemDuyet()`
+// (`19-kiem-duyet-chi-tiet.sql`), và `domains/so-sanh.js` xếp kết quả ấy
+// thành bảng phẳng Người · Trường · Trước · Sau — chỉ những Ô THẬT SỰ ĐỔI.
+//
+// ⚠ Xem theo Ô, nhưng DUYỆT VẪN THEO LẦN LƯU — bảng chi tiết không có nút
+//   nhận riêng từng ô. Hai nút Duyệt/Từ chối vẫn đứng nguyên chỗ cũ.
+//
+// ⚠ Nếu ai đó đã sửa tiếp lên đúng những bản ghi này SAU lần Lưu đang xem,
+//   `biKhoa` báo về và nút Từ chối bị khoá NGAY — kèm lý do hiện ra trong
+//   bảng chi tiết, không đợi người duyệt bấm rồi mới nghe máy chủ từ chối.
 
 import { layPhien, coTheKiemDuyet, dsKiemDuyet, demChoKiemDuyet,
-         duyetThayDoi, tuChoiThayDoi } from '../../services/sb.js';
+         duyetThayDoi, tuChoiThayDoi, chiTietKiemDuyet } from '../../services/sb.js';
+import { bangPhang } from '../../domains/so-sanh.js';
 import { mountDangNhap } from '../dang-nhap.js';
 import { stampNow } from '../../utils/date.js';
 
@@ -319,12 +330,56 @@ function veMotDong(ruot, d, phien, napLai) {
 
   hang.append(o(gioVietNam(d.ts), 'color:#6a625a;white-space:nowrap'));
   hang.append(o(d.by_email || '(không rõ)', 'word-break:break-all'));
-  hang.append(o(viecGi(d), 'line-height:1.45'));
+
+  const oViec = document.createElement('td');
+  oViec.style.cssText = 'padding:8px;line-height:1.45';
+  const dongViec = document.createElement('div');
+  dongViec.textContent = viecGi(d);
+  oViec.append(dongViec);
+  hang.append(oViec);
+
   hang.append(o(dungVao(d), 'color:#6a625a;white-space:nowrap'));
 
   const oCuoi = document.createElement('td');
   oCuoi.style.cssText = 'padding:8px';
   hang.append(oCuoi);
+
+  // Dòng phụ THỨ NHẤT — bảng chi tiết TRƯỚC/SAU (b111), gấp/mở độc lập với
+  // dòng phụ thứ hai bên dưới. Tách riêng vì hai nội dung KHÁC NHAU và có
+  // thể cùng mở một lúc: chi tiết là để ĐỌC, còn ô lý do là để BẤM Từ chối.
+  const phuChiTiet = document.createElement('tr');
+  const oPhuChiTiet = document.createElement('td');
+  oPhuChiTiet.colSpan = 5;
+  oPhuChiTiet.style.cssText = 'padding:0 8px 10px';
+  phuChiTiet.append(oPhuChiTiet);
+  phuChiTiet.hidden = true;
+
+  // Gán lại ở khối nút Duyệt/Từ chối bên dưới (chỉ tồn tại khi `trang_thai
+  // === 'cho'`) — `taiChiTiet()` gọi hàm này để khoá nút Từ chối NGAY khi
+  // biết có người đã sửa tiếp, không đợi người duyệt tự bấm rồi mới hay.
+  let khoaTuChoiKemLyDo = null;
+
+  let daTaiChiTiet = false;
+  const nChiTiet = document.createElement('button');
+  nChiTiet.type = 'button';
+  nChiTiet.textContent = 'Xem chi tiết ▾';
+  nChiTiet.style.cssText =
+    'margin-top:4px;padding:0;border:0;background:none;font:inherit;' +
+    'font-size:12px;color:#6a625a;text-decoration:underline;cursor:pointer';
+  nChiTiet.addEventListener('click', async () => {
+    if (phuChiTiet.hidden) {
+      phuChiTiet.hidden = false;
+      nChiTiet.textContent = 'Ẩn chi tiết ▴';
+      if (!daTaiChiTiet) {
+        daTaiChiTiet = true;
+        await taiChiTiet(oPhuChiTiet, d, phien, (bk) => khoaTuChoiKemLyDo && khoaTuChoiKemLyDo(bk));
+      }
+    } else {
+      phuChiTiet.hidden = true;
+      nChiTiet.textContent = 'Xem chi tiết ▾';
+    }
+  });
+  oViec.append(nChiTiet);
 
   const phu = document.createElement('tr');
   const oPhu = document.createElement('td');
@@ -333,9 +388,10 @@ function veMotDong(ruot, d, phien, napLai) {
   phu.append(oPhu);
   phu.hidden = true;
 
-  ruot.append(hang, phu);
+  ruot.append(hang, phuChiTiet, phu);
 
-  // Đã xử lý rồi thì không còn nút nào — chỉ một nhãn nói nó đã đi đường nào.
+  // Đã xử lý rồi thì không còn nút Duyệt/Từ chối — chỉ một nhãn nói nó đã đi
+  // đường nào. "Xem chi tiết" vẫn còn, để soát lại một lần Lưu đã xong.
   if (d.trang_thai !== 'cho') {
     oCuoi.append(veNhanTrangThai(d.trang_thai));
     return;
@@ -377,8 +433,98 @@ function veMotDong(ruot, d, phien, napLai) {
     }
   }
 
+  khoaTuChoiKemLyDo = (bk) => {
+    nTuChoi.disabled = true;
+    nTuChoi.style.opacity = '0.45';
+    nTuChoi.style.cursor = 'not-allowed';
+    nTuChoi.title = 'Đã bị sửa tiếp bởi ' + (bk.byEmail || 'người khác')
+      + ' — xem trong bảng chi tiết ở trên.';
+  };
+
   hangNut.append(nDuyet, nTuChoi);
   oCuoi.append(hangNut);
+}
+
+// ============================================================
+// b111 — BẢNG PHẲNG TRƯỚC/SAU
+// ============================================================
+
+/**
+ * Gọi `chiTietKiemDuyet()`, xếp phẳng bằng `domains/so-sanh.js`, rồi vẽ.
+ * Gọi ĐÚNG MỘT LẦN mỗi dòng (bên gọi tự nhớ `daTaiChiTiet`) — không phải vì
+ * tốn kém, mà vì dữ liệu của một lần Lưu ĐÃ QUA không đổi nữa, tải lại chỉ
+ * tốn một vòng mạng vô ích. Cột SAU vẫn luôn là trạng thái HÔM NAY (đọc thẳng
+ * bảng thật), nên nó cứ đúng dù có ai sửa tiếp sau khi bảng này đã vẽ.
+ *
+ * @param {HTMLElement} noiVe   `oPhuChiTiet` — nơi vẽ bảng
+ * @param {object} d            dòng đang mở (từ `dsKiemDuyet()`)
+ * @param {object} phien
+ * @param {(bk:{id:number,byEmail:string,ts:string})=>void} khiBiKhoa
+ *   gọi lại NGAY nếu máy chủ báo có người đã sửa tiếp — để khoá nút Từ chối
+ *   sớm, kèm lý do, thay vì để người duyệt bấm rồi mới nghe từ chối.
+ */
+async function taiChiTiet(noiVe, d, phien, khiBiKhoa) {
+  noiVe.innerHTML = '';
+  noiVe.append(veLoiNhan('Đang tải chi tiết…', false));
+
+  const kq = await chiTietKiemDuyet(phien.treeId, d.id);
+  noiVe.innerHTML = '';
+
+  if (!kq || !kq.ok) {
+    noiVe.append(veLoiNhan((kq && kq.loi) || 'Không tải được chi tiết.', true));
+    return;
+  }
+
+  if (kq.biKhoa) {
+    khiBiKhoa(kq.biKhoa);
+    noiVe.append(veLoiNhan(
+      (kq.biKhoa.byEmail || 'Người khác') + ' đã sửa tiếp lên đúng những bản ghi '
+      + 'này lúc ' + gioVietNam(kq.biKhoa.ts) + '. Không hoàn tác được lần Lưu này '
+      + 'nữa — nút Từ chối đã tắt.', true));
+  }
+
+  const dong = bangPhang(kq.banGhi);
+  if (!dong.length) {
+    noiVe.append(veLoiNhan(
+      'Không có ô nào còn khác nhau giữa trước và sau (hoặc lần Lưu này quá cũ, '
+      + 'không có ảnh chụp để so).', false));
+    return;
+  }
+
+  const khung = document.createElement('div');
+  khung.style.cssText = 'overflow-x:auto;margin-top:6px';
+
+  const bang = document.createElement('table');
+  bang.style.cssText = 'width:100%;min-width:560px;border-collapse:collapse;font-size:12px';
+
+  const dau = document.createElement('thead');
+  const hangDau = document.createElement('tr');
+  for (const chu of ['Loại', 'Người', 'Trường', 'Trước', 'Sau']) {
+    const th = document.createElement('th');
+    th.textContent = chu;
+    th.style.cssText =
+      'text-align:left;padding:5px 8px;font-size:10px;font-weight:600;' +
+      'letter-spacing:.04em;color:#8a8078;border-bottom:1px solid #e6e0d8;' +
+      'background:#faf8f5';
+    hangDau.append(th);
+  }
+  dau.append(hangDau);
+  bang.append(dau);
+
+  const than = document.createElement('tbody');
+  for (const r of dong) {
+    const tr = document.createElement('tr');
+    tr.style.cssText = 'border-bottom:1px solid #f0ebe4';
+    tr.append(o(r.nhanLoai, 'color:#8a8078;white-space:nowrap'));
+    tr.append(o(r.nguoi, ''));
+    tr.append(o(r.truong, ''));
+    tr.append(o(r.truoc, 'color:#8a3a2a'));
+    tr.append(o(r.sau, 'color:#2a6a3a'));
+    than.append(tr);
+  }
+  bang.append(than);
+  khung.append(bang);
+  noiVe.append(khung);
 }
 
 /**

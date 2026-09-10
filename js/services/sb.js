@@ -5,7 +5,10 @@
 // Lớp      : services — được gọi bởi: services/repo, pages/dang-nhap,
 //            pages/settings, pages/form-anh, pages/quan-tri · gọi: cau-hinh
 // Phụ thuộc: cau-hinh.js, vendor/supabase.js (nạp bằng thẻ <script>)
-// Phiên bản: 0.15.0 · Cập nhật: 10/09/2026 (b110c)
+// Phiên bản: 0.16.0 · Cập nhật: 10/09/2026 (b111)
+//            0.16.0 `chiTietKiemDuyet()` — cửa cho bảng phẳng TRƯỚC/SAU của
+//            màn hình Duyệt (`19-kiem-duyet-chi-tiet.sql`). Vòng gọi RIÊNG,
+//            không gộp vào `dsKiemDuyet()` — xem lý do ngay cạnh hàm ấy.
 //            0.15.0 `dsThanhVien()` đọc thêm `moiLuc` · `moiVai` — hai cột
 //            `ds_thanh_vien()` mới trả về từ `18-hai-chu-ky.sql`. Chúng là
 //            thứ DUY NHẤT phân biệt được *đơn xin vào* với *lời mời chưa
@@ -1148,6 +1151,30 @@ export async function tuChoiThayDoi(treeId, id, lyDo = '') {
   if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
   const { data, error } = await k.rpc('tu_choi_thay_doi', {
     p_tree: treeId, p_id: id, p_ly_do: String(lyDo || ''),
+  });
+  if (error) return { ok: false, loi: cauLoi(error) };
+  return data || { ok: false, loi: 'Máy chủ không trả lời.' };
+}
+
+/**
+ * Mở rộng MỘT dòng "chờ duyệt" thành bảng phẳng TRƯỚC/SAU — `19-kiem-duyet-
+ * chi-tiet.sql`. Vòng gọi RIÊNG với `dsKiemDuyet()`, đúng thiết kế "dựng bản
+ * gọn nhất trước" của `08` mục 9: bảng danh sách không cần `truoc`, chỉ màn
+ * hình mở rộng một dòng mới cần.
+ *
+ * `banGhi` trả về NGUYÊN VĂN dòng Postgres (snake_case) ở cả `truoc`/`sau` —
+ * đây là RPC quản trị, cùng nếp `dsKiemDuyet()`/`dsThanhVien()` đã chọn: máy
+ * chủ trả gì thì `domains/so-sanh.js` nhận đúng thế, không đi qua `hinh-dang.js`
+ * (chỗ ấy chỉ phục vụ đường `repo.js` ráp cây cho sơ đồ).
+ *
+ * @returns {Promise<{ok:boolean, loi?:string, lyDo?:string, id?:number,
+ *   trangThai?:string, banGhi?:object, biKhoa?:{id:number,byEmail:string,ts:string}}>}
+ */
+export async function chiTietKiemDuyet(treeId, id) {
+  const k = layKhach();
+  if (!k) return { ok: false, loi: 'Chưa nối được máy chủ.' };
+  const { data, error } = await k.rpc('chi_tiet_kiem_duyet', {
+    p_tree: treeId, p_id: id,
   });
   if (error) return { ok: false, loi: cauLoi(error) };
   return data || { ok: false, loi: 'Máy chủ không trả lời.' };
