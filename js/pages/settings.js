@@ -4,9 +4,8 @@
 //            đường sang Chọn gia phả · Sao lưu & khôi phục · Xuất/Nhập GEDCOM
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, services/sb, utils/text, pages/export-image
-// Phiên bản: 1.31.0 · Cập nhật: 08/09/2026 20:30
-//            1.31.0 (b106) gỡ khối *Đơn chờ duyệt* — nay là khu 2 của trang
-//            Quản trị. Cài đặt còn **7 khối**, về 6 ở b108 khi khu Sao lưu xong.
+// Phiên bản: 1.32.0 · Cập nhật: 12/09/2026 12:45
+//            1.32.0: thêm lại khối Chọn gia phả để đổi nhanh cây gia phả
 // ============================================================
 //
 // Màn hình này tồn tại vì MỘT việc: đặt và bỏ người trung tâm mặc định của
@@ -158,6 +157,7 @@ export function openSettings(xuLy = {}) {
   veKhoiQuanLy(hop);
   veKhoiMacDinh(hop);
   veKhoiHienThi(hop);
+  veKhoiChonGiaPha(hop);
   veKhoiSaoLuu(hop);
   veKhoiXuat(hop);
   veKhoiNhap(hop);
@@ -366,16 +366,35 @@ function veKhoiHienThi(vao) {
 }
 
 // ============================================================
-// Khối "Gia phả" — DỜI SANG TRANG QUẢN TRỊ 08/09/2026 (b103)
+// Khối "Gia phả" — chọn nhanh cây gia phả
 // ============================================================
 //
-// Nay là khu 1 của `QuanTri.html` (`js/pages/quan-tri/khu-gia-pha.js`,
-// `QuanTri.html#gia-pha`). Ở đó nó làm được ba việc màn hình này không làm
-// nổi: hiện cả những cây người ta CHƯA có chân, cho bấm xin quyền, và bật
-// công tắc cho người lạ thấy tên cây.
-//
-// ⚠ Nút "Chọn gia phả khác" cũ đi cùng nó. `onMoChonGiaPha` giờ không còn ai
-//   gọi từ đây — nếu bạn đang tìm chỗ mở màn hình chọn cây, nó ở khu 1.
+// Mở màn hình Chọn gia phả để đổi nhanh sang cây gia phả khác ngay từ Cài đặt
+// của index.html mà không cần phải chuyển sang trang Quản trị.
+
+function veKhoiChonGiaPha(vao) {
+  if (!xuLyNgoai.onMoChonGiaPha) return null;
+
+  const khoi = document.createElement('div');
+  khoi.style.cssText = 'margin-top:20px';
+  khoi.append(veNhanKhoi('Gia phả'));
+
+  const dangMo = state.phien && (state.phien.tenCay || state.phien.tenHo || state.phien.tenFileDuLieu);
+  const giaiThich = document.createElement('div');
+  giaiThich.textContent =
+    (dangMo ? 'Đang mở ' + dangMo + '. ' : '') +
+    'Đổi sang một cây khác được chia sẻ cho bạn. Lựa chọn này của riêng tài khoản bạn.';
+  giaiThich.style.cssText =
+    'font-size:13px;line-height:1.55;color:#8a8078;margin-bottom:10px';
+  khoi.append(giaiThich);
+
+  const b = nut('Chọn gia phả khác', false, true, () => xuLyNgoai.onMoChonGiaPha());
+  b.dataset.viec = 'chon-gia-pha';
+  khoi.append(b);
+
+  vao.append(khoi);
+  return khoi;
+}
 
 
 // ============================================================

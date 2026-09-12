@@ -1,10 +1,10 @@
 // ============================================================
 // giapha · js/pages/chon-gia-pha.js
 // Vai trò  : Màn hình Chọn gia phả — kể các cây mở được, đổi sang một cây
-//            khác, quay về cây mặc định, và (chỉ chủ dự án) dựng gia phả mới
+//            khác
 // Lớp      : pages — được phép gọi mọi lớp dưới
 // Phụ thuộc: state, services/tuong-thich, config
-// Phiên bản: 0.3.0 · Cập nhật: 29/08/2026 09:44
+// Phiên bản: 0.4.0 · Cập nhật: 12/09/2026 13:30
 // ============================================================
 //
 // Nửa MÁY CHỦ đã xong ở bước 52: `layDanhSachGiaPha` · `chonGiaPha` ·
@@ -179,7 +179,7 @@ async function napDanhSach() {
   if (!khoi) return;
   khoi.innerHTML = '';
   khoi.append(nhan('Các gia phả bạn mở được'));
-  khoi.append(doanChu('Đang hỏi Google Drive…'));
+  khoi.append(doanChu('Đang tải danh sách gia phả…'));
 
   let kq;
   try {
@@ -189,10 +189,6 @@ async function napDanhSach() {
     khoi.innerHTML = '';
     khoi.append(nhan('Các gia phả bạn mở được'));
     khoi.append(loiNhan(cauLoiMayChu(e), true));
-    // Vẫn vẽ đường quay về mặc định, và đây là chỗ nó CẦN nhất: hỏng danh
-    // sách thường vì cây từng chọn nay không mở được nữa (bị bỏ chia sẻ, bị
-    // xoá). Bỏ chọn là đường ra duy nhất còn lại, ngay trên màn hình này.
-    veKhoiMacDinh(khoi);
     return;
   }
   if (khoiDs !== khoi) return;
@@ -202,21 +198,15 @@ async function napDanhSach() {
 
   if (!kq || !kq.ok) {
     khoi.append(loiNhan((kq && kq.loi) || 'Máy chủ không trả về danh sách.', true));
-    veKhoiMacDinh(khoi);
-    veNutTaoMoi(khoi);
     return;
   }
 
   const ds = Array.isArray(kq.ds) ? kq.ds : [];
   if (ds.length === 0) {
-    // Danh sách rỗng KHÔNG phải lỗi, và cũng không phải "chưa có gia phả nào"
-    // — Drive lọc theo quyền, nên đây thường là người chưa được chia sẻ gì.
     khoi.append(doanChu(
       'Không có gia phả nào được chia sẻ cho tài khoản này. Nhờ ' +
       ((state.phien && state.phien.nguoiQuanLy) || 'người quản lý') +
-      ' chia sẻ file gia phả trên Google Drive.'));
-    veKhoiMacDinh(khoi);
-    veNutTaoMoi(khoi);
+      ' chia sẻ gia phả cho tài khoản này.'));
     return;
   }
 
@@ -224,9 +214,6 @@ async function napDanhSach() {
 
   khoi.append(doanChu(
     'Bấm một dòng để đổi sang cây ấy. App sẽ hỏi lại trước khi đổi.'));
-
-  veKhoiMacDinh(khoi);
-  veNutTaoMoi(khoi);
 }
 
 /**
@@ -241,16 +228,17 @@ function dongGiaPha(muc) {
   const b = document.createElement('button');
   b.type = 'button';
   b.dataset.giaPha = muc.fileId;
-  if (muc.dangChon) b.dataset.dangMo = '1';
+  const laDangMo = !!(muc.dangChon || (state.phien && (state.phien.treeId === muc.fileId || state.phien.tenFileDuLieu === muc.treeCode || state.phien.maCay === muc.treeCode)));
+  if (laDangMo) b.dataset.dangMo = '1';
   b.style.cssText =
     'display:block;width:100%;text-align:left;margin-top:6px;padding:10px 11px;' +
-    'border:1px solid ' + (muc.dangChon ? '#c8bfb2' : '#e6e0d8') + ';' +
-    'border-radius:9px;background:' + (muc.dangChon ? '#f4efe7' : '#faf8f5') + ';' +
+    'border:1px solid ' + (laDangMo ? '#c8bfb2' : '#e6e0d8') + ';' +
+    'border-radius:9px;background:' + (laDangMo ? '#f4efe7' : '#faf8f5') + ';' +
     'font-family:inherit;color:#2a2622;cursor:pointer;touch-action:manipulation';
 
   const d1 = document.createElement('div');
-  d1.textContent = muc.ten + (muc.dangChon ? '   ·   đang mở' : '');
-  d1.style.cssText = 'font-size:14px' + (muc.dangChon ? ';font-weight:600' : '');
+  d1.textContent = muc.ten + (laDangMo ? '   ·   đang mở' : '');
+  d1.style.cssText = 'font-size:14px' + (laDangMo ? ';font-weight:600' : '');
 
   const d2 = document.createElement('div');
   d2.textContent = [
@@ -265,7 +253,7 @@ function dongGiaPha(muc) {
   if (d2.textContent === '') d2.remove();
 
   b.addEventListener('click', () => {
-    if (muc.dangChon) return moHopDangMo(muc);
+    if (laDangMo) return moHopDangMo(muc);
     moHopDoiCay(muc);
   });
   return b;
@@ -321,9 +309,8 @@ function moHopDoiCay(muc) {
  * lần sau người ta không dám bấm một cái nút vốn an toàn.
  */
 function bonDongHauQua(muc) {
-  const dangMo = (state.phien && state.phien.tenFileDuLieu)
-    ? 'App đang mở ' + state.phien.tenFileDuLieu + '. '
-    : '';
+  const tenDangMo = state.phien && (state.phien.tenCay || state.phien.tenHo || state.phien.tenFileDuLieu);
+  const dangMo = tenDangMo ? 'App đang mở ' + tenDangMo + '. ' : '';
 
   const veCay = dangMo + 'Bấm xong, app mở ' + muc.ten + ': ' +
                 [demNguoi(muc.soNguoi),
