@@ -1,4 +1,4 @@
-name: Đồng bộ sang repo LeVanTrac
+name: Đồng bộ sang các repo vệ tinh
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Chuẩn bị nội dung cho repo LeVanTrac
+      - name: Chuẩn bị nội dung cho các repo vệ tinh
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -33,11 +33,15 @@ jobs:
           fi
 
           if ! git diff --cached --quiet; then
-            git commit -m "Bỏ CNAME trên LeVanTrac"
+            git commit -m "Bỏ CNAME trên repo vệ tinh"
           fi
 
-      - name: Đẩy sang repo LeVanTrac
+      - name: Đẩy sang các repo vệ tinh
         env:
           PAT: ${{ secrets.DONG_BO_APP_GIA_PHA_SANG_REPO_KHAC }}
         run: |
-          git push --force https://x-access-token:${PAT}@github.com/trongdung1982/LeVanTrac.git HEAD:main
+          for REPO in "LeVanTrac" "HoTrinh" "NguyenQuang"; do
+            echo "--- Đang đồng bộ sang $REPO ---"
+            git push --force https://x-access-token:${PAT}@github.com/trongdung1982/${REPO}.git HEAD:main
+          done
+
